@@ -1,24 +1,24 @@
 import { LitElement, html } from 'lit';
-import { state, customElement, property } from 'lit/decorators.js';
+import { state, property } from 'lit/decorators.js';
 import { InstalledCell, ActionHash, Record, EntryHash, AppWebsocket, InstalledAppInfo } from '@holochain/client';
 import { RecordBag, EntryRecord } from '@holochain-open-dev/utils';
 import { hashState, hashProperty } from '@holochain-open-dev/elements';
 import { contextProvided } from '@lit-labs/context';
 import { decode } from '@msgpack/msgpack';
-import { Button, Formfield, Snackbar } from '@scoped-elements/material-web';
+import { Button, Formfield, Snackbar, TextField } from '@scoped-elements/material-web';
 
 import { TextArea } from '@scoped-elements/material-web';
 import { UploadFiles, ShowImage } from '@holochain-open-dev/file-storage';
 import '@vaadin/date-time-picker/theme/material/vaadin-date-time-picker.js';
 import { Checkbox } from '@scoped-elements/material-web';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 
 import { GatherStore } from '../gather-store';
 import { gatherStoreContext } from '../context';
 import { Event } from '../types';
 import { sharedStyles } from '../../../shared-styles';
 
-export class EditEvent extends LitElement {
-
+export class EditEvent extends ScopedElementsMixin(LitElement) {
   @property(hashProperty('original-event-hash'))
   originalEventHash!: ActionHash;
   
@@ -29,29 +29,40 @@ export class EditEvent extends LitElement {
   gatherStore!: GatherStore;
  
   @state()
-  _title: string = this.currentRecord.entry.title;
+  _title!: string;
 
   @state()
-  _description: string = this.currentRecord.entry.description;
+  _description!: string;
 
   @state()
-  _image: EntryHash = this.currentRecord.entry.image;
+  _image!: EntryHash;
 
   @state()
-  _location: string = this.currentRecord.entry.location;
+  _location!: string;
 
   @state()
-  _startTime: number = this.currentRecord.entry.start_time;
+  _startTime!: number;
 
   @state()
-  _endTime: number = this.currentRecord.entry.end_time;
+  _endTime!: number;
 
   @state()
-  _private: boolean = this.currentRecord.entry.private;
+  _private!: boolean;
 
   @state()
-  _cost: string | undefined = this.currentRecord.entry.cost;
+  _cost: string | undefined;
 
+  connectedCallback() {
+    super.connectedCallback();
+    this._title = this.currentRecord.entry.title;
+    this._description = this.currentRecord.entry.description;
+    this._image = this.currentRecord.entry.image;
+    this._location = this.currentRecord.entry.location;
+    this._startTime = this.currentRecord.entry.start_time;
+    this._endTime = this.currentRecord.entry.end_time;
+    this._private = this.currentRecord.entry.private;
+    this._cost  = this.currentRecord.entry.cost;
+  }
 
   isEventValid() {
     return true && this._title && this._description && this._image && this._location && this._startTime && this._endTime && this._private !== undefined;
@@ -93,6 +104,7 @@ export class EditEvent extends LitElement {
   }
 
   render() {
+    console.log(this.currentRecord.entry)
     return html`
       <mwc-snackbar id="update-error" leading>
       </mwc-snackbar>
@@ -139,10 +151,13 @@ export class EditEvent extends LitElement {
   static get scopedElements() {
     return {
       'mwc-snackbar': Snackbar,
-    'mwc-formfield': Formfield
+    'mwc-formfield': Formfield,
+      'mwc-textfield': TextField
 ,      'mwc-button': Button,
+      'vaadin-date-time-picker': customElements.get('vaadin-date-time-picker'),      
             'mwc-textarea': TextArea,      'upload-files': UploadFiles,
-      'show-image': ShowImage,          'vaadin-date-time-picker': customElements.get('vaadin-date-time-picker'),        'mwc-checkbox': Checkbox,         };
+      'show-image': ShowImage,                'mwc-checkbox': Checkbox,        
+       };
   }
 
   static styles = [sharedStyles];

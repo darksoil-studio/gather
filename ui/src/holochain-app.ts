@@ -1,7 +1,7 @@
-import { fileStorageClientContext, FileStorageClient } from '@holochain-open-dev/file-storage';
 
 import '@webcomponents/scoped-custom-element-registry';
 
+import { fileStorageClientContext, FileStorageClient } from '@holochain-open-dev/file-storage';
 import { CellClient, HolochainClient } from '@holochain-open-dev/cell-client';
 import {
   AgentAvatar,
@@ -35,7 +35,7 @@ import { GatherClient } from './gather/gather/gather-client';
 import { GatherStore } from './gather/gather/gather-store';
 import { sharedStyles } from './shared-styles';
 import { AllEvents} from './gather/gather/elements/all-events';
-import { EventDetail} from './gather/gather/elements/event-detail';
+import { EventDetail } from './gather/gather/elements/event-detail';
 import { CreateEvent } from './gather/gather/elements/create-event';
 
 type View = {view:'all_events'} | {view: 'event_detail', selectedEventHash: ActionHash}|{view: 'create_event'};
@@ -104,7 +104,7 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
   }
   
   renderContent() {
-    if (this._view.view === 'event_detail') return html`<event-detail .eventHash=${this._view.selectedEventHash}></event-detail>`;
+    if (this._view.view === 'event_detail') return html`<event-detail style="flex: 1" .eventHash=${this._view.selectedEventHash} @event-deleted=${() => this._view = {view: 'all_events'}}></event-detail>`;
     if (this._view.view === 'create_event') return html`<create-event @event-created=${(e: CustomEvent) => this._view ={view:'event_detail', selectedEventHash: e.detail.eventHash} }></event-detail>`;
     
     return html`<all-events @event-selected=${(e: CustomEvent) => this._view ={view:'event_detail', selectedEventHash: e.detail.eventHash} }></all-events>
@@ -146,6 +146,7 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
       'mwc-circular-progress': CircularProgress,
       'all-events': AllEvents,
       'create-event': CreateEvent,
+      'event-detail': EventDetail,
       'mwc-fab': Fab
     };
   }

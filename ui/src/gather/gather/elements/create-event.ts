@@ -119,7 +119,10 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
       'mwc-card': Card,
       'mwc-textfield': TextField,      'mwc-textarea': TextArea,      'upload-files': UploadFiles,
     'mwc-formfield': Formfield,
-      'show-image': ShowImage,          'vaadin-date-time-picker': customElements.get('vaadin-date-time-picker'),       'mwc-checkbox': Checkbox,        };
+      'show-image': ShowImage,          
+      'vaadin-date-time-picker': customElements.get('vaadin-date-time-picker'),      
+      'mwc-checkbox': Checkbox,        
+    };
   }
   
   static styles = [sharedStyles];

@@ -29,34 +29,13 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
     () => [this.gatherStore, this.eventHash] as [GatherStore, ActionHash]
   );
 
-  async deleteEvent() {
-    try {
-      await this.gatherStore.deleteEvent(this.eventHash);
- 
-      this.dispatchEvent(new CustomEvent('event-deleted', {
-        bubbles: true,
-        composed: true,
-        detail: {
-          eventHash: this.eventHash
-        }
-      }));
-    } catch (e: any) {
-      const errorSnackbar = this.shadowRoot?.getElementById('delete-error') as Snackbar;
-      errorSnackbar.labelText = `Error deleting the event: ${e.data.data}`;
-      errorSnackbar.show();
-    }
-  }
-
   renderSummary(maybeEntryRecord: EntryRecord<Event>) {
     return html`
-      <mwc-snackbar id="delete-error" leading>
-      </mwc-snackbar>
 
       <div style="display: flex; flex-direction: column">
       	<div style="display: flex; flex-direction: row">
           <span style="font-size: 18px; flex: 1;">Event</span>
 
-          <mwc-icon-button style="margin-left: 8px" icon="delete" @click=${() => this.deleteEvent()}></mwc-icon-button>
         </div>
 
  	<div style="display: flex; flex-direction: row">
@@ -110,7 +89,13 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
-    return html`<mwc-card style="display: flex; flex: 1;">
+    return html`<mwc-card style="display: flex; flex: 1;" @click=${() => this.dispatchEvent(new CustomEvent('event-selected', {
+      bubbles: true,
+      composed: true,
+      detail: {
+      eventHash: this.eventHash
+    }
+    }))}>
       ${this._fetchEvent.render({
         pending: () => html`<div style="display: flex; flex: 1; align-items: center; justify-content: center">
           <mwc-circular-progress indeterminate></mwc-circular-progress>

@@ -9,8 +9,11 @@
     <meta name="Description" content="Put your description here." />
     <base href="/" />
 
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <script src="../node_modules/@webcomponents/scoped-custom-element-registry/scoped-custom-element-registry.min.js"></script>
 
     <style>
       html,
@@ -26,8 +29,8 @@
       }
 
       :root {
-        --mdc-theme-primary: #7B1FA2;
-        --mdc-theme-secondary: #FF5722;
+        --mdc-theme-primary: #7b1fa2;
+        --mdc-theme-secondary: #ff5722;
       }
     </style>
     <title>Gather</title>
@@ -37,10 +40,9 @@
     <holochain-app style="flex: 1"></holochain-app>
 
     <script type="module">
-      import { HolochainApp } from './out-tsc/holochain-app.js';
+      import { HolochainApp } from "./out-tsc/holochain-app.js";
 
-      customElements.define('holochain-app', HolochainApp);
+      customElements.define("holochain-app", HolochainApp);
     </script>
-
   </body>
 </html>

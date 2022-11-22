@@ -8,7 +8,7 @@ import { hashProperty } from '@holochain-open-dev/elements';
 import { contextProvided } from '@lit-labs/context';
 import { Task } from '@lit-labs/task';
 import { decode } from '@msgpack/msgpack';
-import { CircularProgress, Card, Button,Formfield, Snackbar } from '@scoped-elements/material-web';
+import { CircularProgress, Card, Button,Formfield, Snackbar, IconButton } from '@scoped-elements/material-web';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { ShowImage } from '@holochain-open-dev/file-storage';
 
@@ -111,13 +111,13 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
   
   renderEvent(maybeEntryState: EntryState<Event> | undefined) {
     if (!maybeEntryState) return html`<span>The requested event doesn't exist</span>`;
-    
+    console.log(maybeEntryState)
     if (this._editing) {
     	return html`<edit-event
     	  .originalEventHash=${this.eventHash}
-    	  .currentRecord=${ maybeEntryState.lastUpdate }
-    	  @event-updated=${async () => { this._editing = false; } }
-    	  @edit-canceled=${() => { this._editing = false; } }
+    	  .currentRecord=${maybeEntryState.lastUpdate}
+    	  @event-updated=${async () => { this._editing = false; }}
+    	  @edit-canceled=${() => { this._editing = false; }}
     	  style="display: flex; flex: 1;"
     	></edit-event>`;
     }
@@ -142,8 +142,9 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       'edit-event': EditEvent,
       'mwc-snackbar': Snackbar,
       'mwc-card': Card,
-                  'show-image': ShowImage,                                  
-      };
+      'mwc-icon-button': IconButton,
+      'show-image': ShowImage,                                  
+    };
   }
   
   static styles = [sharedStyles];
