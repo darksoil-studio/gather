@@ -73,7 +73,7 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
               slot="actionItems"
             >
               <agent-avatar
-                .agentPubKey=${serializeHash(this._profilesStore.myAgentPubKey)}
+                .agentPubKey=${this._profilesStore.myAgentPubKey}
               ></agent-avatar>
               <span style="margin: 0 16px;">${profile?.nickname}</span>
             </div>`

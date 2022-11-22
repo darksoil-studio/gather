@@ -10,10 +10,8 @@ import { Task } from '@lit-labs/task';
 import { decode } from '@msgpack/msgpack';
 import { CircularProgress, Card, Button, Snackbar } from '@scoped-elements/material-web';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-
 {{#each entry_type.fields}}
 {{> (concat field_type "/" widget "/detail/imports") }}
-
 {{/each}}
 
 import { {{pascal_case coordinator_zome_manifest.name}}Store } from '../{{kebab_case coordinator_zome_manifest.name}}-store';
@@ -33,39 +31,12 @@ export class {{pascal_case entry_type.name}}Summary extends ScopedElementsMixin(
     () => [this.{{camel_case coordinator_zome_manifest.name}}Store, this.{{camel_case entry_type.name}}Hash] as [{{pascal_case coordinator_zome_manifest.name}}Store, {{#if entry_type.reference_entry_hash}}EntryHash{{else}}ActionHash{{/if}}]
   );
 
-  {{#if crud.delete}}
-  async delete{{pascal_case entry_type.name}}() {
-    try {
-      await this.{{camel_case coordinator_zome_manifest.name}}Store.delete{{pascal_case entry_type.name}}(this.{{camel_case entry_type.name}}Hash);
- 
-      this.dispatchEvent(new CustomEvent('{{kebab_case entry_type.name}}-deleted', {
-        bubbles: true,
-        composed: true,
-        detail: {
-          {{camel_case entry_type.name}}Hash: this.{{camel_case entry_type.name}}Hash
-        }
-      }));
-    } catch (e: any) {
-      const errorSnackbar = this.shadowRoot?.getElementById('delete-error') as Snackbar;
-      errorSnackbar.labelText = `Error deleting the {{lower_case entry_type.name}}: ${e.data.data}`;
-      errorSnackbar.show();
-    }
-  }
-  {{/if}}
-
   renderSummary(maybeEntryRecord: EntryRecord<{{pascal_case entry_type.name}}>) {
-    return html`{{#if crud.delete}}
-      <mwc-snackbar id="delete-error" leading>
-      </mwc-snackbar>
-      {{/if}}
-
+    return html`
       <div style="display: flex; flex-direction: column">
       	<div style="display: flex; flex-direction: row">
           <span style="font-size: 18px; flex: 1;">{{title_case entry_type.name}}</span>
 
-          {{#if crud.delete}}
-          <mwc-icon-button style="margin-left: 8px" icon="delete" @click=${() => this.delete{{pascal_case entry_type.name}}()}></mwc-icon-button>
-          {{/if}}
         </div>
 
 	{{#each entry_type.fields}}
@@ -92,7 +63,13 @@ export class {{pascal_case entry_type.name}}Summary extends ScopedElementsMixin(
   }
 
   render() {
-    return html`<mwc-card style="display: flex; flex: 1;">
+    return html`<mwc-card style="display: flex; flex: 1;" @click=${() => this.dispatchEvent(new CustomEvent('{{kebab_case entry_type.name}}-selected', {
+          composed: true,
+          bubbles: true,
+          detail: {
+            {{camelCase entry_type.name}}Hash: this.{{camel_case entry_type.name}}Hash
+          }
+        }))}>
       ${this._fetch{{pascal_case entry_type.name}}.render({
         pending: () => html`<div style="display: flex; flex: 1; align-items: center; justify-content: center">
           <mwc-circular-progress indeterminate></mwc-circular-progress>
@@ -112,6 +89,7 @@ export class {{pascal_case entry_type.name}}Summary extends ScopedElementsMixin(
       {{> (concat field_type "/" widget "/detail/scoped-elements") }}
           {{/if}}
         {{/each}}
+
     };
   }
   

@@ -1,0 +1,8 @@
+{{#if initial_value_variable}}
+<div style="display: flex; flex-direction: row;">
+<agent-avatar .agentPubKey=${ {{initial_value_variable}} }></agent-avatar>
+{{/if}}
+<search-agent field-label="{{label}}" @agent-selected=${(e: CustomEvent) => { {{variable_to_change}} = e.detail.agentPubKey; } }></search-agent>
+{{#if initial_value_variable}}
+</div>
+{{/if}}

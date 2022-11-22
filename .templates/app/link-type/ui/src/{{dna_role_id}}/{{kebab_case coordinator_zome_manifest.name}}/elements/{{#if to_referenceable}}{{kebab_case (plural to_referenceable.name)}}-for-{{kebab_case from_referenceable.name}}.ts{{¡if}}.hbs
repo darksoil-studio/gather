@@ -1,0 +1,70 @@
+import { LitElement, html } from 'lit';
+import { state, property, customElement } from 'lit/decorators.js';
+import { InstalledCell, AgentPubKey, EntryHash, ActionHash, Record, AppWebsocket, InstalledAppInfo } from '@holochain/client';
+import { contextProvided } from '@lit-labs/context';
+import { hashProperty } from '@holochain-open-dev/elements';
+import { TaskSubscriber } from 'lit-svelte-stores';
+import { CircularProgress } from '@scoped-elements/material-web';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+
+{{#if (not (eq to_referenceable.hash_type "AgentPubKey") )}}
+import { {{pascal_case to_referenceable.name}}Summary } from './{{kebab_case to_referenceable.name}}-summary';
+{{else}}
+import { AgentAvatar } from '@holochain-open-dev/profiles';
+{{/if}}
+import { {{pascal_case coordinator_zome_manifest.name}}Store } from '../{{kebab_case coordinator_zome_manifest.name}}-store';
+import { {{camel_case coordinator_zome_manifest.name}}StoreContext } from '../context';
+import { sharedStyles } from '../../../shared-styles';
+
+export class {{pascal_case (plural to_referenceable.name)}}For{{pascal_case from_referenceable.name}} extends ScopedElementsMixin(LitElement) {
+
+  @property(hashProperty('{{kebab_case from_referenceable.singular_arg}}'))
+  {{camel_case from_referenceable.singular_arg}}!: {{from_referenceable.hash_type}}; 
+
+  @contextProvided({ context: {{camel_case coordinator_zome_manifest.name}}StoreContext, subscribe: true })
+  {{camel_case coordinator_zome_manifest.name}}Store!: {{pascal_case coordinator_zome_manifest.name}}Store;
+
+  _fetch{{pascal_case (plural to_referenceable.name)}} = new TaskSubscriber(this,
+    ([store, {{camel_case from_referenceable.singular_arg}}]) => store.fetch{{pascal_case (plural to_referenceable.name)}}For{{pascal_case from_referenceable.name}}({{camel_case from_referenceable.singular_arg}}), 
+    () => [this.{{camel_case coordinator_zome_manifest.name}}Store, this.{{camel_case from_referenceable.singular_arg}}] as [{{pascal_case coordinator_zome_manifest.name}}Store, {{from_referenceable.hash_type}}]
+  );
+
+  renderList(hashes: Array<{{to_referenceable.hash_type}}>) {
+    if (hashes.length === 0) return html`<span>No {{lower_case (plural to_referenceable.name)}} found for this {{lower_case from_referenceable.name}}</span>`;
+    
+    return html`
+      <div style="display: flex; flex-direction: column">
+        ${hashes.map(hash => 
+      {{#if (not (eq to_referenceable.hash_type "AgentPubKey") )}}
+          html`<{{kebab_case to_referenceable.name}}-summary .{{camel_case to_referenceable.name}}Hash=${hash} style="margin-bottom: 16px;" ></{{kebab_case to_referenceable.name}}-summary>`
+      {{else}}
+          html`<agent-avatar .agentPubKey=${hash}></agent-avatar>`
+      {{/if}}
+        )}
+      </div>
+    `;
+  }
+
+  render() {
+    return this._fetch{{pascal_case (plural to_referenceable.name)}}.render({
+      pending: () => html`<div style="display: flex; flex: 1; align-items: center; justify-content: center">
+        <mwc-circular-progress indeterminate></mwc-circular-progress>
+      </div>`,
+      complete: (hashes) => this.renderList(hashes),
+      error: (e: any) => html`<span>Error fetching the {{lower_case (plural to_referenceable.name)}}: ${e.data.data}.</span>`
+    });
+  }
+
+  static get scopedElements() {
+    return {
+      'mwc-circular-progress': CircularProgress,
+      {{#if (not (eq to_referenceable.hash_type "AgentPubKey") )}}
+      '{{kebab_case to_referenceable.name}}-summary': {{pascal_case to_referenceable.name}}Summary,
+      {{else}}
+      'agent-avatar': AgentAvatar
+      {{/if}}
+    };
+  }
+  
+  static styles = [sharedStyles];
+}
