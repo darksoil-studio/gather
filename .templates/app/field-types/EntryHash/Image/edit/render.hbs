@@ -1,0 +1,8 @@
+{{#if initial_value_variable}}
+<div class="row">
+  <show-image .imageHash=${ {{initial_value_variable}} } style="height: 60px; width: 60px"></show-image>
+  <upload-files one-file accepted-files="image/jpeg,image/png,image/gif" @file-uploaded=${(e: CustomEvent) => { {{variable_to_change}} = e.detail.hash;} }></upload-files>
+</div>
+{{else}}
+<upload-files one-file accepted-files="image/jpeg,image/png,image/gif" @file-uploaded=${(e: CustomEvent) => { {{variable_to_change}} = e.detail.hash;} }></upload-files>
+{{/if}}

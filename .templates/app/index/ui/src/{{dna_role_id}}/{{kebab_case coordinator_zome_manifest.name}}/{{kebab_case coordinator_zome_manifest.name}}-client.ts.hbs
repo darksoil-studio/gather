@@ -1,0 +1,10 @@
+{{#merge_scope previous_file_content (concat "export class " (pascal_case coordinator_zome_manifest.name) "Client {" ) }}
+  {{previous_scope_content}}
+
+  /** {{title_case index_name}} */
+
+  get{{pascal_case index_name}}({{#if (eq index_type.type "ByAuthor")}}author: AgentPubKey{{else}}{{/if}}): Promise<Array<{{referenceable.hash_type}}>> {
+    return this.callZome('get_{{snake_case index_name}}', {{#if (eq index_type.type "ByAuthor")}}author{{else}}null{{/if}});
+  }
+
+{{/merge_scope}}

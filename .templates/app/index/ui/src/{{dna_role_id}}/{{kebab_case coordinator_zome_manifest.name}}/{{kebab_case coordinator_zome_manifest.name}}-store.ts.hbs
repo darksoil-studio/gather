@@ -1,0 +1,30 @@
+{{#merge_scope previous_file_content (concat "export class " (pascal_case coordinator_zome_manifest.name) "Store {" ) }}
+  {{previous_scope_content}}
+  
+  /** {{title_case index_name}} */
+  {{#if (eq index_type.type "ByAuthor")}}
+  private _{{camel_case index_name}}: Writable<AgentPubKeyMap<Array<{{referenceable.hash_type}}>>> = writable(new AgentPubKeyMap());
+
+  async fetch{{pascal_case index_name}}(author: AgentPubKey): Promise<Readable<Array<{{referenceable.hash_type}}>>> {
+    const hashes = await this.client.get{{pascal_case index_name}}(author);
+    
+    this._{{camel_case index_name}}.update(hashMap => {
+      const previousHashes = hashMap.get(author) || [];
+      hashMap.put(author, [...previousHashes, ...hashes]);
+      return hashMap;
+    });
+    
+    return derived(this._{{camel_case index_name}}, hashMap => hashMap.get(author));
+  }
+  {{else}}
+  private _{{camel_case index_name}}: Writable<Array<{{referenceable.hash_type}}>> = writable([]);
+
+  async fetch{{pascal_case index_name}}(): Promise<Readable<Array<{{referenceable.hash_type}}>>> {
+    const hashes = await this.client.get{{pascal_case index_name}}();
+    
+    this._{{camel_case index_name}}.set(hashes);
+    
+    return derived(this._{{camel_case index_name}}, i => i);
+  }
+  {{/if}}
+{{/merge_scope}}

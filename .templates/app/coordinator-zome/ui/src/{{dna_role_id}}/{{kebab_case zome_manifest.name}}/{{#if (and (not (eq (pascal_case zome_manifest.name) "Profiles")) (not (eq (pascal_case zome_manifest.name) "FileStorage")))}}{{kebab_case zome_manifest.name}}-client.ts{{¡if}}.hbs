@@ -1,0 +1,11 @@
+import { Record, ActionHash, EntryHash, AgentPubKey } from '@holochain/client';
+import { CellClient } from '@holochain-open-dev/cell-client';
+
+export class {{pascal_case zome_manifest.name}}Client {
+  constructor(public cellClient: CellClient, public zomeName = '{{snake_case zome_manifest.name}}') {}
+  
+  private callZome(fn_name: string, payload: any) {
+    return this.cellClient.callZome(this.zomeName, fn_name, payload);
+  }
+
+}

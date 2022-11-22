@@ -1,0 +1,60 @@
+import { LitElement, html } from 'lit';
+import { state, customElement, property } from 'lit/decorators.js';
+import { InstalledCell, Record, AppWebsocket, EntryHash, ActionHash, InstalledAppInfo, AgentPubKey } from '@holochain/client';
+import { RecordBag, EntryRecord } from '@holochain-open-dev/utils';
+import { hashProperty } from '@holochain-open-dev/elements';
+import { contextProvided } from '@lit-labs/context';
+import { CircularProgress } from '@scoped-elements/material-web';
+import { TaskSubscriber } from 'lit-svelte-stores';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+
+import { {{pascal_case ../coordinator_zome_manifest.name}}Store } from '../{{kebab_case ../coordinator_zome_manifest.name}}-store';
+import { {{camel_case ../coordinator_zome_manifest.name}}StoreContext } from '../context';
+import { {{pascal_case ../entry_type.name}} } from '../types';
+import { {{pascal_case ../entry_type.name}}Detail } from './{{kebab_case ../entry_type.name}}-detail';
+import { sharedStyles } from '../../../shared-styles';
+
+export class {{pascal_case (plural ../entry_type.name)}}For{{pascal_case linked_from.name}} extends ScopedElementsMixin(LitElement) {
+
+  @property(hashProperty('{{kebab_case linked_from.singular_arg}}'))
+  {{camel_case linked_from.singular_arg}}!: {{linked_from.hash_type}};
+
+  @contextProvided({ context: {{camel_case ../coordinator_zome_manifest.name}}StoreContext, subscribe: true })
+  {{camel_case ../coordinator_zome_manifest.name}}Store!: {{pascal_case ../coordinator_zome_manifest.name}}Store;
+
+  _fetch{{pascal_case (plural ../entry_type.name)}} = new TaskSubscriber(this, 
+    ([store, {{camel_case linked_from.singular_arg}}]) => store.fetch{{pascal_case (plural ../entry_type.name)}}For{{pascal_case linked_from.name}}({{camel_case linked_from.singular_arg}}), 
+    () => [this.{{camel_case ../coordinator_zome_manifest.name}}Store, this.{{camel_case linked_from.singular_arg}}] as [{{pascal_case ../coordinator_zome_manifest.name}}Store, {{linked_from.hash_type}}]
+  );
+
+  renderList(hashes: Array<{{#if ../entry_type.fixed}}EntryHash{{else}}ActionHash{{/if}}>) {
+    if (hashes.length === 0) return html`<span>No {{lower_case (plural ../entry_type.name)}} found for this {{lower_case linked_from.name}}.</span>`;
+    
+    return html`
+      <div style="display: flex; flex-direction: column">
+        ${hashes.map(hash =>
+          html`<{{kebab_case ../entry_type.name}}-detail .{{camel_case ../entry_type.name}}Hash=${hash}></{{kebab_case ../entry_type.name}}-detail>`
+        )}
+      </div>
+    `;
+  }
+
+  render() {
+    return this._fetch{{pascal_case (plural ../entry_type.name)}}.render({
+      pending: () => html`<div style="display: flex; flex: 1; align-items: center; justify-content: center">
+        <mwc-circular-progress indeterminate></mwc-circular-progress>
+      </div>`,
+      complete: (hashes) => this.renderList(hashes),
+      error: (e: any) => html`<span>Error fetching {{lower_case (plural ../entry_type.name)}}: ${e.data.data}.</span>`
+    });
+  }
+  
+  static get scopedElements() {
+    return {
+      'mwc-circular-progress': CircularProgress,
+      '{{kebab_case ../entry_type.name}}-detail': {{pascal_case ../entry_type.name}}Detail
+    };
+  }
+  
+  static styles = [sharedStyles];
+}

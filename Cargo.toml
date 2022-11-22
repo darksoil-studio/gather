@@ -1,0 +1,31 @@
+[profile.dev]
+opt-level = "z"
+
+[profile.release]
+opt-level = "z"
+
+[workspace]
+members = ["dnas/*/zomes/coordinator/*", "dnas/*/zomes/integrity/*"]
+
+[workspace.dependencies]
+hdi = "0.1"
+hdk = "0.0.161"
+serde = "1"
+
+[workspace.dependencies.file_storage]
+path = "dnas/gather/zomes/coordinator/file_storage"
+
+[workspace.dependencies.file_storage_integrity]
+path = "dnas/gather/zomes/integrity/file_storage"
+
+[workspace.dependencies.gather]
+path = "dnas/gather/zomes/coordinator/gather"
+
+[workspace.dependencies.gather_integrity]
+path = "dnas/gather/zomes/integrity/gather"
+
+[workspace.dependencies.profiles]
+path = "dnas/gather/zomes/coordinator/profiles"
+
+[workspace.dependencies.profiles_integrity]
+path = "dnas/gather/zomes/integrity/profiles"

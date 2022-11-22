@@ -1,0 +1,17 @@
+---
+manifest_version: "1"
+name: gather
+description: ~
+roles:
+  - id: gather
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: "../dnas/gather/workdir/gather.dna"
+      modifiers:
+        network_seed: ~
+        properties: ~
+        origin_time: ~
+      version: ~
+      clone_limit: 0

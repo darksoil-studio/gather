@@ -1,0 +1,98 @@
+import { {{pascal_case entry_type.name}} } from './types';
+
+{{#merge_scope previous_file_content (concat "export class " (pascal_case coordinator_zome_manifest.name) "Store {" ) }}
+  {{previous_scope_content}}
+  
+  /** {{title_case entry_type.name}} */
+
+  private _{{camel_case (plural entry_type.name)}}: Writable<RecordBag<{{pascal_case entry_type.name}}>> = writable(new RecordBag());
+
+  {{#each entry_type.fields}}
+    {{#if linked_from}}
+  private _{{camel_case (plural ../entry_type.name)}}For{{pascal_case linked_from.name}}: Writable<{{linked_from.hash_type}}Map<Array<{{#if ../entry_type.reference_entry_hash}}EntryHash{{else}}ActionHash{{/if}}>>> = writable(new {{linked_from.hash_type}}Map());
+
+    {{/if}}
+  {{/each}}
+  async create{{pascal_case entry_type.name}}({{camel_case entry_type.name}}: {{pascal_case entry_type.name}}): Promise<Record> {
+    const record = await this.client.create{{pascal_case entry_type.name}}({{camel_case entry_type.name}});
+    
+    this._{{camel_case (plural entry_type.name)}}.update(bag => {
+      bag.add([record]);
+      return bag;
+    });
+    
+    return record;
+  }
+
+  {{#if entry_type.reference_entry_hash}}
+  async fetch{{pascal_case entry_type.name}}({{camel_case entry_type.name}}: EntryHash): Promise<EntryRecord<{{pascal_case entry_type.name}}> | undefined> {
+    const record = await this.client.get{{pascal_case entry_type.name}}({{camel_case entry_type.name}});
+    
+    if (!record) return undefined;
+    
+    this._{{camel_case (plural entry_type.name)}}.update(bag => {
+      bag.add([record]);
+      return bag;
+    });
+    
+    return new EntryRecord(record);
+  }
+  {{else}}
+  async fetch{{pascal_case entry_type.name}}({{camel_case entry_type.name}}Hash: ActionHash): Promise<Readable<EntryState<{{pascal_case entry_type.name}}> | undefined>> {
+    const record = await this.client.get{{pascal_case entry_type.name}}({{camel_case entry_type.name}}Hash);
+    
+    if (record) {   
+      this._{{camel_case (plural entry_type.name)}}.update(bag => {
+        bag.add([record]);
+        return bag;
+      });
+    }
+    
+    return derived(this._{{camel_case (plural entry_type.name)}}, bag => entryState(bag, {{camel_case entry_type.name}}Hash));
+  }
+  {{/if}}
+  
+  {{#if crud.delete}}
+  async delete{{pascal_case entry_type.name}}(original{{pascal_case entry_type.name}}Hash: ActionHash): Promise<void> {
+    const deleteActionHash = await this.client.delete{{pascal_case entry_type.name}}(original{{pascal_case entry_type.name}}Hash);
+    
+    this._{{camel_case (plural entry_type.name)}}.update(bag => {
+      const deletes = bag.deletes.get(original{{pascal_case entry_type.name}}Hash) || [];
+      bag.deletes.put(original{{pascal_case entry_type.name}}Hash, [...deletes, deleteActionHash]);
+      return bag;
+    });
+  }
+  {{/if}}
+
+  {{#if crud.update}}
+  async update{{pascal_case entry_type.name}}(original{{pascal_case entry_type.name}}Hash: ActionHash, previous{{pascal_case entry_type.name}}Hash: ActionHash, updated{{pascal_case entry_type.name}}: {{pascal_case entry_type.name}}): Promise<EntryRecord<{{pascal_case entry_type.name}}>> {
+    const updateRecord = await this.client.update{{pascal_case entry_type.name}}({{#if link_from_original_to_each_update}}original{{pascal_case entry_type.name}}Hash,{{/if}} previous{{pascal_case entry_type.name}}Hash, updated{{pascal_case entry_type.name}});
+    
+    this._{{camel_case (plural entry_type.name)}}.update(bag => {
+      bag.add([updateRecord]);
+      const updates = bag.updates.get(original{{pascal_case entry_type.name}}Hash) || [];
+      bag.updates.put(original{{pascal_case entry_type.name}}Hash, [...updates, updateRecord.signed_action.hashed.hash]);
+      return bag;
+    });
+    
+    return new EntryRecord(updateRecord);
+  }
+  {{/if}}
+  
+  {{#each entry_type.fields}}
+    {{#if linked_from}}
+  async fetch{{pascal_case (plural ../entry_type.name)}}For{{pascal_case linked_from.name}}({{camel_case linked_from.singular_arg}}: {{linked_from.hash_type}}): Promise<Readable<Array<{{#if ../entry_type.fixed}}EntryHash{{else}}ActionHash{{/if}}>>> {
+    const hashes = await this.client.get{{pascal_case (plural ../entry_type.name)}}For{{pascal_case linked_from.name}}({{camel_case linked_from.singular_arg}});
+    
+    this._{{camel_case (plural ../entry_type.name)}}For{{pascal_case linked_from.name}}.update(hashMap => {
+      const previousHashes = hashMap.get({{camel_case linked_from.singular_arg}}) || [];
+      hashMap.put({{camel_case linked_from.singular_arg}}, [...previousHashes, ...hashes]);
+      return hashMap;
+    });
+    
+    return derived(this._{{camel_case (plural ../entry_type.name)}}For{{pascal_case linked_from.name}}, hashMap => hashMap.get({{camel_case linked_from.singular_arg}}));
+  }
+    {{/if}}
+  {{/each}}
+  
+{{/merge_scope}}

@@ -1,0 +1,37 @@
+---
+manifest_version: "1"
+name: gather
+integrity:
+  network_seed: ~
+  properties: ~
+  origin_time: 1669136217555883
+  zomes:
+    - name: profiles_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/profiles_integrity.wasm"
+      dependencies: ~
+    - name: gather_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/gather_integrity.wasm"
+      dependencies: ~
+    - name: file_storage_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/file_storage_integrity.wasm"
+      dependencies: ~
+coordinator:
+  zomes:
+    - name: profiles
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/profiles.wasm"
+      dependencies:
+        - name: profiles_integrity
+    - name: gather
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/gather.wasm"
+      dependencies:
+        - name: gather_integrity
+    - name: file_storage
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/file_storage.wasm"
+      dependencies:
+        - name: file_storage_integrity
