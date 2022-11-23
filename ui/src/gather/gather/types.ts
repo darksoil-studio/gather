@@ -1,7 +1,6 @@
 import { ActionHash, AgentPubKey, EntryHash, Record } from '@holochain/client';
 
-
-export interface Event { 
+export interface Event {
   title: string;
 
   description: string;
@@ -19,13 +18,8 @@ export interface Event {
   cost: string | undefined;
 }
 
-
-
-
-export interface AttendeesAttestation { 
+export interface AttendeesAttestation {
   ateendees: Array<AgentPubKey>;
 
   event_hash: ActionHash;
 }
-
-

@@ -1,9 +1,8 @@
-import { AttendeesAttestation } from './types';
-
-import { Event } from './types';
-
 import { CellClient } from '@holochain-open-dev/cell-client';
 import { ActionHash, AgentPubKey, EntryHash, Record } from '@holochain/client';
+
+import { AttendeesAttestation } from './types';
+import { Event } from './types';
 
 export class GatherClient {
   constructor(public cellClient: CellClient, public zomeName = 'gather') {}
@@ -16,7 +15,7 @@ export class GatherClient {
   createEvent(event: Event): Promise<Record> {
     return this.callZome('create_event', event);
   }
-  
+
   getEvent(eventHash: ActionHash): Promise<Record | undefined> {
     return this.callZome('get_event', eventHash);
   }
@@ -25,11 +24,15 @@ export class GatherClient {
     return this.callZome('delete_event', originalEventHash);
   }
 
-  updateEvent(originalEventHash: ActionHash, previousEventHash: ActionHash, updatedEvent: Event): Promise<Record> {
+  updateEvent(
+    originalEventHash: ActionHash,
+    previousEventHash: ActionHash,
+    updatedEvent: Event
+  ): Promise<Record> {
     return this.callZome('update_event', {
       original_event_hash: originalEventHash,
       previous_event_hash: previousEventHash,
-      updated_event: updatedEvent
+      updated_event: updatedEvent,
     });
   }
 
@@ -38,39 +41,53 @@ export class GatherClient {
   getAttendeesForEvent(eventHash: ActionHash): Promise<Array<AgentPubKey>> {
     return this.callZome('get_attendees_for_event', eventHash);
   }
-  
-  addAttendeesForEvent(eventHash: ActionHash, attendee: AgentPubKey): Promise<void> {
-    return this.callZome('add_attendees_for_event', {
+
+  addAttendeeForEvent(
+    eventHash: ActionHash,
+    attendee: AgentPubKey
+  ): Promise<void> {
+    return this.callZome('add_attendee_for_event', {
       event_hash: eventHash,
-      attendee: attendee,
+      attendee,
     });
-  }  
-	
+  }
+
   getEventsForAttendee(attendee: AgentPubKey): Promise<Array<ActionHash>> {
     return this.callZome('get_events_for_attendee', attendee);
   }
   /** Attendees Attestation */
 
-  createAttendeesAttestation(attendeesAttestation: AttendeesAttestation): Promise<Record> {
+  createAttendeesAttestation(
+    attendeesAttestation: AttendeesAttestation
+  ): Promise<Record> {
     return this.callZome('create_attendees_attestation', attendeesAttestation);
   }
-  
-  getAttendeesAttestation(attendeesAttestationHash: ActionHash): Promise<Record | undefined> {
+
+  getAttendeesAttestation(
+    attendeesAttestationHash: ActionHash
+  ): Promise<Record | undefined> {
     return this.callZome('get_attendees_attestation', attendeesAttestationHash);
   }
 
-
-  updateAttendeesAttestation( previousAttendeesAttestationHash: ActionHash, updatedAttendeesAttestation: AttendeesAttestation): Promise<Record> {
+  updateAttendeesAttestation(
+    previousAttendeesAttestationHash: ActionHash,
+    updatedAttendeesAttestation: AttendeesAttestation
+  ): Promise<Record> {
     return this.callZome('update_attendees_attestation', {
       previous_attendees_attestation_hash: previousAttendeesAttestationHash,
-      updated_attendees_attestation: updatedAttendeesAttestation
+      updated_attendees_attestation: updatedAttendeesAttestation,
     });
   }
-  
-  getAttendeesAttestationsForAteendee(ateendee: AgentPubKey): Promise<Array<ActionHash>> {
+
+  getAttendeesAttestationsForAteendee(
+    ateendee: AgentPubKey
+  ): Promise<Array<ActionHash>> {
     return this.callZome('get_attendees_attestations_for_ateendee', ateendee);
   }
-  getAttendeesAttestationsForEvent(eventHash: ActionHash): Promise<Array<ActionHash>> {
+
+  getAttendeesAttestationsForEvent(
+    eventHash: ActionHash
+  ): Promise<Array<ActionHash>> {
     return this.callZome('get_attendees_attestations_for_event', eventHash);
   }
 
@@ -79,5 +96,4 @@ export class GatherClient {
   getAllEvents(): Promise<Array<ActionHash>> {
     return this.callZome('get_all_events', null);
   }
-
 }

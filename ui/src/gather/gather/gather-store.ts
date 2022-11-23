@@ -1,6 +1,3 @@
-import { GatherClient } from "./gather-client";
-import { AttendeesAttestation } from "./types";
-import { Event } from "./types";
 import {
   ActionHashMap,
   AgentPubKeyMap,
@@ -9,9 +6,14 @@ import {
   EntryState,
   RecordBag,
   entryState,
-} from "@holochain-open-dev/utils";
-import { ActionHash, AgentPubKey, EntryHash, Record } from "@holochain/client";
-import { Readable, Writable, derived, get, writable } from "svelte/store";
+} from '@holochain-open-dev/utils';
+import { ActionHash, AgentPubKey, EntryHash, Record } from '@holochain/client';
+import { isEqual, uniqWith } from 'lodash-es';
+import { Readable, Writable, derived, get, writable } from 'svelte/store';
+
+import { GatherClient } from './gather-client';
+import { AttendeesAttestation } from './types';
+import { Event } from './types';
 
 export class GatherStore {
   /** Static info */
@@ -28,7 +30,7 @@ export class GatherStore {
   async createEvent(event: Event): Promise<Record> {
     const record = await this.client.createEvent(event);
 
-    this._events.update((bag) => {
+    this._events.update(bag => {
       bag.add([record]);
       return bag;
     });
@@ -42,21 +44,24 @@ export class GatherStore {
     const record = await this.client.getEvent(eventHash);
 
     if (record) {
-      this._events.update((bag) => {
+      this._events.update(bag => {
         bag.add([record]);
         return bag;
       });
     }
 
-    return derived(this._events, (bag) => entryState(bag, eventHash));
+    return derived(this._events, bag => entryState(bag, eventHash));
   }
 
   async deleteEvent(originalEventHash: ActionHash): Promise<void> {
     const deleteActionHash = await this.client.deleteEvent(originalEventHash);
 
-    this._events.update((bag) => {
+    this._events.update(bag => {
       const deletes = bag.deletes.get(originalEventHash) || [];
-      bag.deletes.put(originalEventHash, [...deletes, deleteActionHash]);
+      bag.deletes.put(
+        originalEventHash,
+        uniqWith([...deletes, deleteActionHash])
+      );
       return bag;
     });
   }
@@ -72,22 +77,24 @@ export class GatherStore {
       updatedEvent
     );
 
-    this._events.update((bag) => {
+    this._events.update(bag => {
       bag.add([updateRecord]);
       const updates = bag.updates.get(originalEventHash) || [];
       console.log(updates);
-      bag.updates.put(originalEventHash, [
-        ...updates,
-        updateRecord.signed_action.hashed.hash,
-      ]);
+      bag.updates.put(
+        originalEventHash,
+        uniqWith([...updates, updateRecord.signed_action.hashed.hash])
+      );
       return bag;
     });
 
     return new EntryRecord(updateRecord);
   }
+
   /** Attendees for Event */
   private _attendeesForEvent: Writable<ActionHashMap<Array<AgentPubKey>>> =
     writable(new ActionHashMap());
+
   private _eventsForAttendee: Writable<AgentPubKeyMap<Array<ActionHash>>> =
     writable(new AgentPubKeyMap());
 
@@ -96,32 +103,30 @@ export class GatherStore {
   ): Promise<Readable<Array<AgentPubKey>>> {
     const hashes = await this.client.getAttendeesForEvent(eventHash);
 
-    this._attendeesForEvent.update((hashMap) => {
+    this._attendeesForEvent.update(hashMap => {
       const previousHashes = hashMap.get(eventHash) || [];
-      hashMap.put(eventHash, [...previousHashes, ...hashes]);
+      hashMap.put(eventHash, uniqWith([...previousHashes, ...hashes], isEqual));
       return hashMap;
     });
 
-    return derived(this._attendeesForEvent, (hashMap) =>
-      hashMap.get(eventHash)
-    );
+    return derived(this._attendeesForEvent, hashMap => hashMap.get(eventHash));
   }
 
-  async addAttendeesForEvent(
+  async addAttendeeForEvent(
     eventHash: ActionHash,
     attendee: AgentPubKey
   ): Promise<void> {
-    await this.client.addAttendeesForEvent(eventHash, attendee);
+    await this.client.addAttendeeForEvent(eventHash, attendee);
 
-    this._attendeesForEvent.update((hashMap) => {
+    this._attendeesForEvent.update(hashMap => {
       const previousHashes = hashMap.get(eventHash) || [];
-      hashMap.put(eventHash, [...previousHashes, attendee]);
+      hashMap.put(eventHash, uniqWith([...previousHashes, attendee], isEqual));
       return hashMap;
     });
 
-    this._eventsForAttendee.update((hashMap) => {
+    this._eventsForAttendee.update(hashMap => {
       const previousHashes = hashMap.get(attendee) || [];
-      hashMap.put(attendee, [...previousHashes, eventHash]);
+      hashMap.put(attendee, uniqWith([...previousHashes, eventHash]));
       return hashMap;
     });
   }
@@ -131,13 +136,13 @@ export class GatherStore {
   ): Promise<Readable<Array<ActionHash>>> {
     const hashes = await this.client.getEventsForAttendee(attendee);
 
-    this._eventsForAttendee.update((hashMap) => {
+    this._eventsForAttendee.update(hashMap => {
       const previousHashes = hashMap.get(attendee) || [];
-      hashMap.put(attendee, [...previousHashes, ...hashes]);
+      hashMap.put(attendee, uniqWith([...previousHashes, ...hashes], isEqual));
       return hashMap;
     });
 
-    return derived(this._eventsForAttendee, (hashMap) => hashMap.get(attendee));
+    return derived(this._eventsForAttendee, hashMap => hashMap.get(attendee));
   }
 
   /** Attendees Attestation */
@@ -160,7 +165,7 @@ export class GatherStore {
       attendeesAttestation
     );
 
-    this._attendeesAttestations.update((bag) => {
+    this._attendeesAttestations.update(bag => {
       bag.add([record]);
       return bag;
     });
@@ -176,13 +181,13 @@ export class GatherStore {
     );
 
     if (record) {
-      this._attendeesAttestations.update((bag) => {
+      this._attendeesAttestations.update(bag => {
         bag.add([record]);
         return bag;
       });
     }
 
-    return derived(this._attendeesAttestations, (bag) =>
+    return derived(this._attendeesAttestations, bag =>
       entryState(bag, attendeesAttestationHash)
     );
   }
@@ -197,13 +202,13 @@ export class GatherStore {
       updatedAttendeesAttestation
     );
 
-    this._attendeesAttestations.update((bag) => {
+    this._attendeesAttestations.update(bag => {
       bag.add([updateRecord]);
       const updates = bag.updates.get(originalAttendeesAttestationHash) || [];
-      bag.updates.put(originalAttendeesAttestationHash, [
-        ...updates,
-        updateRecord.signed_action.hashed.hash,
-      ]);
+      bag.updates.put(
+        originalAttendeesAttestationHash,
+        uniqWith([...updates, updateRecord.signed_action.hashed.hash], isEqual)
+      );
       return bag;
     });
 
@@ -217,16 +222,17 @@ export class GatherStore {
       ateendee
     );
 
-    this._attendeesAttestationsForAteendee.update((hashMap) => {
+    this._attendeesAttestationsForAteendee.update(hashMap => {
       const previousHashes = hashMap.get(ateendee) || [];
-      hashMap.put(ateendee, [...previousHashes, ...hashes]);
+      hashMap.put(ateendee, uniqWith([...previousHashes, ...hashes], isEqual));
       return hashMap;
     });
 
-    return derived(this._attendeesAttestationsForAteendee, (hashMap) =>
+    return derived(this._attendeesAttestationsForAteendee, hashMap =>
       hashMap.get(ateendee)
     );
   }
+
   async fetchAttendeesAttestationsForEvent(
     eventHash: ActionHash
   ): Promise<Readable<Array<ActionHash>>> {
@@ -234,13 +240,13 @@ export class GatherStore {
       eventHash
     );
 
-    this._attendeesAttestationsForEvent.update((hashMap) => {
+    this._attendeesAttestationsForEvent.update(hashMap => {
       const previousHashes = hashMap.get(eventHash) || [];
-      hashMap.put(eventHash, [...previousHashes, ...hashes]);
+      hashMap.put(eventHash, uniqWith([...previousHashes, ...hashes], isEqual));
       return hashMap;
     });
 
-    return derived(this._attendeesAttestationsForEvent, (hashMap) =>
+    return derived(this._attendeesAttestationsForEvent, hashMap =>
       hashMap.get(eventHash)
     );
   }
@@ -253,6 +259,6 @@ export class GatherStore {
 
     this._allEvents.set(hashes);
 
-    return derived(this._allEvents, (i) => i);
+    return derived(this._allEvents, i => i);
   }
 }
