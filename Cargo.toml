@@ -9,7 +9,7 @@ members = ["dnas/*/zomes/coordinator/*", "dnas/*/zomes/integrity/*"]
 
 [workspace.dependencies]
 hdi = "0.1"
-hdk = "0.0.161"
+hdk = "0.0.157"
 serde = "1"
 
 [workspace.dependencies.file_storage]

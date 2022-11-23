@@ -8,7 +8,7 @@ crate-type = ["cdylib", "rlib"]
 name = "profiles_integrity"
 
 [dependencies]
-hc_zome_profiles_integrity = { git = "https://github.com/holochain-open-dev/profiles", version = "0.0.1" }
+hc_zome_profiles_integrity = { git = "https://github.com/holochain-open-dev/profiles", branch = "for-hdk-v0.0.157" }
 hdi = { workspace = true }
 
 serde = { workspace = true }

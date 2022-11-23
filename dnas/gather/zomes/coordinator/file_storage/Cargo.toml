@@ -12,5 +12,5 @@ hdk = { workspace = true }
 
 serde = { workspace = true }
 
-file_storage_integrity = { workspace = true } 
-hc_zome_file_storage_coordinator = { git = "https://github.com/holochain-open-dev/file-storage", version = "0.0.1" }
+file_storage_integrity = { workspace = true }
+hc_zome_file_storage_coordinator = { git = "https://github.com/holochain-open-dev/file-storage", branch = "for-hdk-v0.0.157" }
