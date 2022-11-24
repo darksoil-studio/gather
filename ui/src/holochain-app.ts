@@ -114,56 +114,61 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
   renderContent() {
     if (this._view.view === 'event_detail')
       return html`
-      <div class="flex-scrollable-parent">
-      <div class="flex-scrollable-container">
-      <div class="flex-scrollable-y">
-      <div class="column" style="flex: 1; align-items: center;">
-        <event-detail
-          style="flex: 1; margin-right: 16px"
-          .eventHash=${this._view.selectedEventHash}
-          @event-deleted=${() => {
+        <div class="flex-scrollable-parent">
+          <div class="flex-scrollable-container">
+            <div class="flex-scrollable-y">
+              <div class="column" style="flex: 1; align-items: center;">
+                <event-detail
+                  style="flex: 1; margin-right: 16px"
+                  .eventHash=${this._view.selectedEventHash}
+                  @event-deleted=${() => {
           this._view = { view: 'all_events' };
         }}
-        ></event-detail>
-      </div>
-      </div>
-      </div>
-      </div> `;
+                ></event-detail>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
     if (this._view.view === 'create_event')
-      return html`
-      <div class="flex-scrollable-parent">
-      <div class="flex-scrollable-container">
-      <div class="flex-scrollable-y">
-      <div class="column" style="flex: 1; align-items: center;">
-      <create-event @event-created=${(e: CustomEvent) => {
+      return html` <div class="flex-scrollable-parent">
+        <div class="flex-scrollable-container">
+          <div class="flex-scrollable-y">
+            <div class="column" style="flex: 1; align-items: center;">
+              <create-event
+                @event-created=${(e: CustomEvent) => {
           this._view = {
             view: 'event_detail',
             selectedEventHash: e.detail.eventHash,
           };
-        }} style="margin-top: 16px"></event-detail>
-      </div></div></div></div>`;
+        }}
+                style="margin-top: 16px"
+              ></create-event>
+            </div>
+          </div>
+        </div>
+      </div>`;
 
-    return html`
-      <div class="flex-scrollable-parent">
-      <div class="flex-scrollable-container">
-      <div class="flex-scrollable-y">
-      <div class="column" style="flex: 1; align-items: center;">
-        <div class="column" style="width: 800px;">
-        <span class="title" style="margin: 16px 0;">All Events</span>
-        <all-events
-          @event-selected=${(e: CustomEvent) => {
+    return html` <div class="flex-scrollable-parent">
+        <div class="flex-scrollable-container">
+          <div class="flex-scrollable-y">
+            <div class="column" style="flex: 1; align-items: center;">
+              <div class="column" style="width: 800px;">
+                <span class="title" style="margin: 16px 0;">All Events</span>
+                <all-events
+                  @event-selected=${(e: CustomEvent) => {
         this._view = {
           view: 'event_detail',
           selectedEventHash: e.detail.eventHash,
         };
       }}
-        style="flex: 1"
-        >
-        </all-events>
-      </div>
-      </div>
-      </div>
-      </div>
+                  style="flex: 1"
+                >
+                </all-events>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <mwc-fab

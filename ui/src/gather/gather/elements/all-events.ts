@@ -35,12 +35,12 @@ export class AllEvents extends ScopedElementsMixin(LitElement) {
     return html`
       <div style="display: flex; flex-direction: column; flex: 1">
         ${hashes.map(
-      hash =>
-        html`<event-summary
+          hash =>
+            html`<event-summary
               .eventHash=${hash}
               style="margin-bottom: 16px;"
             ></event-summary>`
-    )}
+        )}
       </div>
     `;
   }

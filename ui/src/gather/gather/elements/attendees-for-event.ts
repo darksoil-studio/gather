@@ -63,7 +63,9 @@ export class AttendeesForEvent extends ScopedElementsMixin(LitElement) {
 
   renderList(hashes: Array<AgentPubKey>) {
     if (hashes.length === 0)
-      return html`<span style="margin: 16px">This event has no attendees yet</span>`;
+      return html`<span style="margin: 16px"
+        >This event has no attendees yet</span
+      >`;
     return this._fetchProfiles.render({
       pending: () => html`<div
         style="display: flex; flex: 1; align-items: center; justify-content: center"
@@ -73,7 +75,7 @@ export class AttendeesForEvent extends ScopedElementsMixin(LitElement) {
       complete: profiles => html`
         <mwc-list style="display: flex; flex-direction: column">
           ${hashes.map(
-        pubkey => html`<mwc-list-item graphic="avatar" noninteractive>
+            pubkey => html`<mwc-list-item graphic="avatar" noninteractive>
               <agent-avatar
                 size="40"
                 slot="graphic"
@@ -81,7 +83,7 @@ export class AttendeesForEvent extends ScopedElementsMixin(LitElement) {
               ></agent-avatar>
               <span>${profiles.get(pubkey)?.nickname}</span>
             </mwc-list-item>`
-      )}
+          )}
         </mwc-list>
       `,
       error: (e: any) =>
@@ -99,7 +101,11 @@ export class AttendeesForEvent extends ScopedElementsMixin(LitElement) {
       complete: hashes => html`
         <mwc-card style="flex: 1; display: flex;">
           <div class="column">
-            <span class="title" style="margin-left: 16px; margin-top: 16px; margin-bottom: 8px">Attendees</span>
+            <span
+              class="title"
+              style="margin-left: 16px; margin-top: 16px; margin-bottom: 8px"
+              >Attendees</span
+            >
             ${this.renderList(hashes)}
           </div>
         </mwc-card>

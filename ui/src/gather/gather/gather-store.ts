@@ -80,7 +80,6 @@ export class GatherStore {
     this._events.update(bag => {
       bag.add([updateRecord]);
       const updates = bag.updates.get(originalEventHash) || [];
-      console.log(updates);
       bag.updates.put(
         originalEventHash,
         uniqWith([...updates, updateRecord.signed_action.hashed.hash])

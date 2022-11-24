@@ -113,88 +113,108 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       this.gatherStore.myAgentPubKey.toString();
     return html`
       <mwc-snackbar id="error" leading> </mwc-snackbar>
-      
-      <mwc-card class="column">
 
+      <mwc-card class="column">
         <show-image .imageHash=${entryRecord.entry.image}></show-image>
 
-      <div style="display: flex; flex-direction: column; margin-left: 16px; margin-bottom: 16px;">
-        <div style="display: flex; flex-direction: row">
-          <span class="title" style="flex: 1; margin-top: 16px; margin-bottom: 16px;">${entryRecord.entry.title}</span>
-
-          ${amIAuthor
-        ? html`
-                <mwc-icon-button
-                  style="margin-left: 8px"
-                  icon="edit"
-                  @click=${() => {
-            this._editing = true;
-          }}
-                ></mwc-icon-button>
-                <mwc-icon-button
-                  style="margin-left: 8px"
-                  icon="delete"
-                  @click=${() => this.deleteEvent()}
-                ></mwc-icon-button>
-              `
-        : html``}
-        </div>
-
-        <div style="display: flex; flex-direction: column; margin-right: 16px">
-        <span style="white-space: pre-line; margin-bottom: 16px;"
-          >${entryRecord.entry.description}</span
+        <div
+          style="display: flex; flex-direction: column; margin-left: 16px; margin-bottom: 16px;"
         >
+          <div style="display: flex; flex-direction: row">
+            <span
+              class="title"
+              style="flex: 1; margin-top: 16px; margin-bottom: 16px;"
+              >${entryRecord.entry.title}</span
+            >
 
-        <div style="display: flex; flex-direction: row;">
-
-      <div class="column" style="justify-content: end">      
-        <div style="display: flex; flex-direction: row; align-items: center;">
-          <mwc-icon>location_on</mwc-icon>
-          <span style="white-space: pre-line"
-            >${entryRecord.entry.location}</span
-          >
-        </div>
-
-        <div style="display: flex; flex-direction: row; align-items: center">
-          <mwc-icon>schedule</mwc-icon>
-          <span style="white-space: pre-line"
-            >${new Date(
-          entryRecord.entry.start_time / 1000
-        ).toLocaleString()}</span
-          >
-        </div>
-      
-        ${entryRecord.entry.cost ? html`
-        <div style="display: flex; flex-direction: row; align-items: center">
-          <mwc-icon>payments</mwc-icon>
-          <span style="white-space: pre-line"
-            >${entryRecord.entry.cost}</span
-          >
-        </div>`: html``} 
-        </div>
-
-          <span style="flex: 1"></span>
- 
-          <div class="column" style="justify-content: end">
-          <div class="row" style="align-items: center; margin-bottom: 8px;">
-            <span style="margin-right: 8px">Hosted by</span>
-            <agent-avatar .agentPubKey=${entryRecord.action.author}></agent-avatar>
-          </div>
-              
-          </div>
+            ${amIAuthor
+              ? html`
+                  <mwc-icon-button
+                    style="margin-left: 8px"
+                    icon="edit"
+                    @click=${() => {
+                      this._editing = true;
+                    }}
+                  ></mwc-icon-button>
+                  <mwc-icon-button
+                    style="margin-left: 8px"
+                    icon="delete"
+                    @click=${() => this.deleteEvent()}
+                  ></mwc-icon-button>
+                `
+              : html``}
           </div>
 
-        ${this.renderAttendButton(entryRecord)}
+          <div
+            style="display: flex; flex-direction: column; margin-right: 16px"
+          >
+            <span style="white-space: pre-line; margin-bottom: 16px;"
+              >${entryRecord.entry.description}</span
+            >
+
+            <div style="display: flex; flex-direction: row;">
+              <div class="column" style="justify-content: end">
+                <div
+                  style="display: flex; flex-direction: row; align-items: center;"
+                >
+                  <mwc-icon>location_on</mwc-icon>
+                  <span style="white-space: pre-line"
+                    >${entryRecord.entry.location}</span
+                  >
+                </div>
+
+                <div
+                  style="display: flex; flex-direction: row; align-items: center"
+                >
+                  <mwc-icon>schedule</mwc-icon>
+                  <span style="white-space: pre-line"
+                    >${new Date(
+                      entryRecord.entry.start_time / 1000
+                    ).toLocaleString()}</span
+                  >
+                </div>
+
+                ${entryRecord.entry.cost
+                  ? html` <div
+                      style="display: flex; flex-direction: row; align-items: center"
+                    >
+                      <mwc-icon>payments</mwc-icon>
+                      <span style="white-space: pre-line"
+                        >${entryRecord.entry.cost}</span
+                      >
+                    </div>`
+                  : html``}
+              </div>
+
+              <span style="flex: 1"></span>
+
+              <div class="column" style="justify-content: end">
+                <div
+                  class="row"
+                  style="align-items: center; margin-bottom: 8px;"
+                >
+                  <span style="margin-right: 8px">Hosted by</span>
+                  <agent-avatar
+                    .agentPubKey=${entryRecord.action.author}
+                  ></agent-avatar>
+                </div>
+              </div>
+            </div>
+
+            ${this.renderAttendButton(entryRecord)}
+          </div>
         </div>
-      </div>
-      
       </mwc-card>
     `;
   }
 
   renderAttendButton(event: EntryRecord<Event>) {
     return this._fetchAttendees.render({
-      pending: () => html`<sl-skeleton style="margin-top: 16px;" effect="pulse"></sl-skeleton>`,
+      pending: () =>
+        html`<sl-skeleton
+          style="margin-top: 16px;"
+          effect="pulse"
+        ></sl-skeleton>`,
       complete: attendees => {
         if (
           event.action.author.toString() ===
@@ -235,21 +255,22 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       ></edit-event>`;
     }
 
-    return html`<div class="row">${this.renderDetail(maybeEntryState.lastUpdate)}
-        <attendees-for-event
-      style="margin-left: 16px;"
-          .eventHash=${this.eventHash}
-        ></attendees-for-event>
-    </div>      `;
+    return html`<div class="row">
+      ${this.renderDetail(maybeEntryState.lastUpdate)}
+      <attendees-for-event
+        style="margin-left: 16px;"
+        .eventHash=${this.eventHash}
+      ></attendees-for-event>
+    </div> `;
   }
 
   render() {
     return this._fetchEvent.render({
       pending: () => html`<div
-          style="display: flex; flex: 1; align-items: center; justify-content: center"
-        >
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
-        </div>`,
+        style="display: flex; flex: 1; align-items: center; justify-content: center"
+      >
+        <mwc-circular-progress indeterminate></mwc-circular-progress>
+      </div>`,
       complete: entry => this.renderEvent(entry),
       error: (e: any) =>
         html`<span>Error fetching the event: ${e.data.data}</span>`,
