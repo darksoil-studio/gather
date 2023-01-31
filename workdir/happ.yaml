@@ -3,7 +3,7 @@ manifest_version: "1"
 name: gather
 description: ~
 roles:
-  - id: gather
+  - name: gather
     provisioning:
       strategy: create
       deferred: false

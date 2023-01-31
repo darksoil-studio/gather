@@ -1,20 +1,18 @@
-import { hashProperty } from '@holochain-open-dev/elements';
-import { ShowImage } from '@holochain-open-dev/file-storage';
-import { AgentAvatar } from '@holochain-open-dev/profiles';
-import { EntryRecord, RecordBag } from '@holochain-open-dev/utils';
-import { EntryState } from '@holochain-open-dev/utils';
+import { hashProperty } from "@holochain-open-dev/elements";
+import { ShowImage } from "@holochain-open-dev/file-storage";
+import { AgentAvatar } from "@holochain-open-dev/profiles";
+import { EntryRecord, RecordBag } from "@holochain-open-dev/utils";
+import { EntryState } from "@holochain-open-dev/utils";
 import {
   ActionHash,
   AppWebsocket,
   EntryHash,
-  InstalledAppInfo,
   InstalledCell,
   Record,
-} from '@holochain/client';
-import { contextProvided } from '@lit-labs/context';
-import { Task } from '@lit-labs/task';
-import { decode } from '@msgpack/msgpack';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+} from "@holochain/client";
+import { consume, contextProvided } from "@lit-labs/context";
+import { localized } from "@lit/localize";
+import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
   Button,
   Card,
@@ -25,47 +23,55 @@ import {
   List,
   ListItem,
   Snackbar,
-} from '@scoped-elements/material-web';
-import { SlSkeleton } from '@scoped-elements/shoelace';
-import { LitElement, html } from 'lit';
-import { TaskSubscriber } from 'lit-svelte-stores';
-import { customElement, property, state } from 'lit/decorators.js';
+} from "@scoped-elements/material-web";
+import { SlSkeleton } from "@scoped-elements/shoelace";
+import { LitElement, html } from "lit";
+import { StoreSubscriber, TaskSubscriber } from "lit-svelte-stores";
+import { customElement, property, state } from "lit/decorators.js";
 
-import { sharedStyles } from '../../../shared-styles';
-import { gatherStoreContext } from '../context';
-import { GatherStore } from '../gather-store';
-import { Event } from '../types';
-import { AttendeesForEvent } from './attendees-for-event';
-import { EditEvent } from './edit-event';
+import { gatherStoreContext } from "../context";
+import { GatherStore } from "../gather-store";
+import { Event } from "../types";
+import { AttendeesForEvent } from "./attendees-for-event";
+import { EditEvent } from "./edit-event";
 
+@localized()
 export class EventDetail extends ScopedElementsMixin(LitElement) {
-  @property(hashProperty('event-hash'))
+  @property(hashProperty("event-hash"))
   eventHash!: ActionHash;
 
-  @contextProvided({ context: gatherStoreContext, subscribe: true })
+  /**
+   * @internal
+   */
+  @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  _fetchEvent = new TaskSubscriber(
-    this,
-    ([store, eventHash]) => store.fetchEvent(eventHash),
-    () => [this.gatherStore, this.eventHash] as [GatherStore, ActionHash]
+  /**
+   * @internal
+   */
+  _event = new StoreSubscriber(this, () =>
+    this.gatherStore.events.get(this.eventHash)
   );
 
-  _fetchAttendees = new TaskSubscriber(
-    this,
-    ([store, eventHash]) => store.fetchAttendeesForEvent(eventHash),
-    () => [this.gatherStore, this.eventHash] as [GatherStore, ActionHash]
+  /**
+   * @internal
+   */
+  _attendees = new StoreSubscriber(this, () =>
+    this.gatherStore.attendeesForEvent.get(this.eventHash)
   );
 
+  /**
+   * @internal
+   */
   @state()
   _editing = false;
 
   async deleteEvent() {
     try {
-      await this.gatherStore.deleteEvent(this.eventHash);
+      await this.gatherStore.client.deleteEvent(this.eventHash);
 
       this.dispatchEvent(
-        new CustomEvent('event-deleted', {
+        new CustomEvent("event-deleted", {
           bubbles: true,
           composed: true,
           detail: {
@@ -75,7 +81,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       );
     } catch (e: any) {
       const errorSnackbar = this.shadowRoot?.getElementById(
-        'error'
+        "error"
       ) as Snackbar;
       errorSnackbar.labelText = `Error deleting the event: ${e.data.data}`;
       errorSnackbar.show();
@@ -90,7 +96,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       );
 
       this.dispatchEvent(
-        new CustomEvent('attendee-added', {
+        new CustomEvent("attendee-added", {
           bubbles: true,
           composed: true,
           detail: {
@@ -100,7 +106,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       );
     } catch (e: any) {
       const errorSnackbar = this.shadowRoot?.getElementById(
-        'error'
+        "error"
       ) as Snackbar;
       errorSnackbar.labelText = `Error adding attendee: ${e.data.data}`;
       errorSnackbar.show();
@@ -215,7 +221,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
           style="margin-top: 16px;"
           effect="pulse"
         ></sl-skeleton>`,
-      complete: attendees => {
+      complete: (attendees) => {
         if (
           event.action.author.toString() ===
           this.gatherStore.myAgentPubKey.toString()
@@ -223,7 +229,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
           return html``;
         if (
           attendees
-            .map(a => a.toString())
+            .map((a) => a.toString())
             .includes(this.gatherStore.myAgentPubKey.toString())
         )
           return html``;
@@ -271,7 +277,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       >
         <mwc-circular-progress indeterminate></mwc-circular-progress>
       </div>`,
-      complete: entry => this.renderEvent(entry),
+      complete: (entry) => this.renderEvent(entry),
       error: (e: any) =>
         html`<span>Error fetching the event: ${e.data.data}</span>`,
     });
@@ -279,16 +285,16 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
 
   static get scopedElements() {
     return {
-      'edit-event': EditEvent,
-      'mwc-icon': Icon,
-      'mwc-snackbar': Snackbar,
-      'mwc-card': Card,
-      'mwc-icon-button': IconButton,
-      'agent-avatar': AgentAvatar,
-      'mwc-button': Button,
-      'sl-skeleton': SlSkeleton,
-      'show-image': ShowImage,
-      'attendees-for-event': AttendeesForEvent,
+      "edit-event": EditEvent,
+      "mwc-icon": Icon,
+      "mwc-snackbar": Snackbar,
+      "mwc-card": Card,
+      "mwc-icon-button": IconButton,
+      "agent-avatar": AgentAvatar,
+      "mwc-button": Button,
+      "sl-skeleton": SlSkeleton,
+      "show-image": ShowImage,
+      "attendees-for-event": AttendeesForEvent,
     };
   }
 

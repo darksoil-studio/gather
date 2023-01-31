@@ -1,46 +1,53 @@
-import { hashProperty } from '@holochain-open-dev/elements';
+import {
+  DisplayError,
+  hashProperty,
+  sharedStyles,
+} from "@holochain-open-dev/elements";
 import {
   ActionHash,
   AgentPubKey,
   AppWebsocket,
   EntryHash,
-  InstalledAppInfo,
-  InstalledCell,
   Record,
-} from '@holochain/client';
-import { contextProvided } from '@lit-labs/context';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { CircularProgress } from '@scoped-elements/material-web';
-import { LitElement, html } from 'lit';
-import { TaskSubscriber } from 'lit-svelte-stores';
-import { customElement, property, state } from 'lit/decorators.js';
+} from "@holochain/client";
+import { consume } from "@lit-labs/context";
+import { localized, msg } from "@lit/localize";
+import { ScopedElementsMixin } from "@open-wc/scoped-elements";
+import { CircularProgress } from "@scoped-elements/material-web";
+import { LitElement, html } from "lit";
+import { StoreSubscriber } from "@holochain-open-dev/stores";
+import { customElement, property, state } from "lit/decorators.js";
 
-import { sharedStyles } from '../../../shared-styles';
-import { gatherStoreContext } from '../context';
-import { GatherStore } from '../gather-store';
-import { EventSummary } from './event-summary';
+import { gatherStoreContext } from "../context";
+import { GatherStore } from "../gather-store";
+import { EventSummary } from "./event-summary";
 
+@localized()
 export class EventsForAttendee extends ScopedElementsMixin(LitElement) {
-  @property(hashProperty('attendee'))
+  @property(hashProperty("attendee"))
   attendee!: AgentPubKey;
 
-  @contextProvided({ context: gatherStoreContext, subscribe: true })
+  /**
+   * @internal
+   */
+  @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  _fetchEvents = new TaskSubscriber(
-    this,
-    ([store, attendee]) => store.fetchEventsForAttendee(attendee),
-    () => [this.gatherStore, this.attendee] as [GatherStore, AgentPubKey]
+  /**
+   * @internal
+   */
+  _events = new StoreSubscriber(this, () =>
+    this.gatherStore.eventsForAttendee.get(this.attendee)
   );
 
   renderList(hashes: Array<ActionHash>) {
     if (hashes.length === 0)
-      return html`<span>No events found for this attendee</span>`;
+      return html`<span>${msg("No events found for this attendee")}</span>`;
 
     return html`
       <div style="display: flex; flex-direction: column">
         ${hashes.map(
-          hash =>
+          (hash) =>
             html`<event-summary
               .eventHash=${hash}
               style="margin-bottom: 16px;"
@@ -51,22 +58,27 @@ export class EventsForAttendee extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
-    return this._fetchEvents.render({
-      pending: () => html`<div
-        style="display: flex; flex: 1; align-items: center; justify-content: center"
-      >
-        <mwc-circular-progress indeterminate></mwc-circular-progress>
-      </div>`,
-      complete: hashes => this.renderList(hashes),
-      error: (e: any) =>
-        html`<span>Error fetching the events: ${e.data.data}.</span>`,
-    });
+    switch (this._events.value.status) {
+      case "pending":
+        return html`<div
+          style="display: flex; flex: 1; align-items: center; justify-content: center"
+        >
+          <mwc-circular-progress indeterminate></mwc-circular-progress>
+        </div>`;
+      case "complete":
+        return this.renderList(this._events.value.value);
+      case "error":
+        return html`<display-error
+          .error=${this._events.value.error.data.data}
+        ></display-error>`;
+    }
   }
 
   static get scopedElements() {
     return {
-      'mwc-circular-progress': CircularProgress,
-      'event-summary': EventSummary,
+      "mwc-circular-progress": CircularProgress,
+      "event-summary": EventSummary,
+      "display-error": DisplayError,
     };
   }
 

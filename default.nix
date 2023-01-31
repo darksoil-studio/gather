@@ -1,12 +1,7 @@
 let
   holonixPath = (import ./nix/sources.nix).holonix; # points to the current state of the Holochain repository
   holonix = import (holonixPath) {
-    rustVersion = {
-      track = "stable";
-      version = "1.64.0";
-    };
-
-    holochainVersionId = "v0_0_169"; # specifies the Holochain version
+    holochainVersionId = "v0_1_0"; # specifies the Holochain version
   };
   nixpkgs = holonix.pkgs;
 in nixpkgs.mkShell {
@@ -14,7 +9,6 @@ in nixpkgs.mkShell {
   packages = with nixpkgs; [
     niv
     nodejs-18_x
-    wasm-bindgen-cli
     # any additional packages needed for this project, e. g. Nodejs
   ];
 }

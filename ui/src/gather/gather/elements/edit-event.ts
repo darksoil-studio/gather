@@ -1,43 +1,36 @@
-import { hashProperty, hashState } from '@holochain-open-dev/elements';
-import { ShowImage, UploadFiles } from '@holochain-open-dev/file-storage';
-import { EntryRecord, RecordBag } from '@holochain-open-dev/utils';
-import {
-  ActionHash,
-  AppWebsocket,
-  EntryHash,
-  InstalledAppInfo,
-  InstalledCell,
-  Record,
-} from '@holochain/client';
-import { contextProvided } from '@lit-labs/context';
-import { decode } from '@msgpack/msgpack';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+import { hashProperty, sharedStyles } from "@holochain-open-dev/elements";
+import { ShowImage, UploadFiles } from "@holochain-open-dev/file-storage";
+import { EntryRecord } from "@holochain-open-dev/utils";
+import { ActionHash, EntryHash } from "@holochain/client";
+import { consume } from "@lit-labs/context";
+import { localized, msg } from "@lit/localize";
+import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
   Button,
   Card,
   Formfield,
   Snackbar,
   TextField,
-} from '@scoped-elements/material-web';
-import { TextArea } from '@scoped-elements/material-web';
-import { Checkbox } from '@scoped-elements/material-web';
-import '@vaadin/date-time-picker/theme/material/vaadin-date-time-picker.js';
-import { LitElement, html } from 'lit';
-import { property, state } from 'lit/decorators.js';
+} from "@scoped-elements/material-web";
+import { TextArea } from "@scoped-elements/material-web";
+import { Checkbox } from "@scoped-elements/material-web";
+import "@vaadin/date-time-picker/theme/material/vaadin-date-time-picker.js";
+import { LitElement, html } from "lit";
+import { property, state } from "lit/decorators.js";
 
-import { sharedStyles } from '../../../shared-styles';
-import { gatherStoreContext } from '../context';
-import { GatherStore } from '../gather-store';
-import { Event } from '../types';
+import { gatherStoreContext } from "../context";
+import { GatherStore } from "../gather-store";
+import { Event } from "../types";
 
+@localized()
 export class EditEvent extends ScopedElementsMixin(LitElement) {
-  @property(hashProperty('original-event-hash'))
+  @property(hashProperty("original-event-hash"))
   originalEventHash!: ActionHash;
 
   @property()
   currentRecord!: EntryRecord<Event>;
 
-  @contextProvided({ context: gatherStoreContext })
+  @consume({ context: gatherStoreContext })
   gatherStore!: GatherStore;
 
   @state()
@@ -78,7 +71,6 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
 
   isEventValid() {
     return (
-      true &&
       this._title &&
       this._description &&
       this._image &&
@@ -102,28 +94,30 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
     };
 
     try {
-      const updateRecord = await this.gatherStore.updateEvent(
+      const updateRecord = await this.gatherStore.client.updateEvent(
         this.originalEventHash,
         this.currentRecord.actionHash,
         event
       );
 
       this.dispatchEvent(
-        new CustomEvent('event-updated', {
+        new CustomEvent("event-updated", {
           composed: true,
           bubbles: true,
           detail: {
             originalEventHash: this.originalEventHash,
             previousEventHash: this.currentRecord.actionHash,
-            updatedEventHash: updateRecord.actionHash,
+            updatedEventHash: updateRecord.signed_action.hashed.hash,
           },
         })
       );
     } catch (e: any) {
       const errorSnackbar = this.shadowRoot?.getElementById(
-        'update-error'
+        "update-error"
       ) as Snackbar;
-      errorSnackbar.labelText = `Error updating the event: ${e.data.data}`;
+      errorSnackbar.labelText = `${msg("Error updating the event")}: ${
+        e.data.data
+      }`;
       errorSnackbar.show();
     }
   }
@@ -133,7 +127,9 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
 
       <mwc-card style="display: flex; flex: 1">
         <div style="display: flex; flex-direction: column; margin: 16px;">
-          <span style="font-size: 18px; margin-bottom: 16px">Edit Event</span>
+          <span style="font-size: 18px; margin-bottom: 16px"
+            >${msg("Edit Event")}</span
+          >
 
           <div class="row" style="margin-bottom: 16px">
             <show-image
@@ -151,7 +147,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
 
           <mwc-textfield
             outlined
-            label="Title"
+            .label=${msg("Title")}
             style="margin-bottom: 16px"
             .value=${this._title}
             @input=${(e: CustomEvent) => {
@@ -160,7 +156,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
           ></mwc-textfield>
           <mwc-textarea
             outlined
-            label="Description"
+            .label=${msg("Description")}
             style="margin-bottom: 16px"
             .value=${this._description}
             @input=${(e: CustomEvent) => {
@@ -174,7 +170,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
             >
               <mwc-textfield
                 outlined
-                label="Location"
+                .label=${msg("Location")}
                 style="margin-bottom: 16px"
                 .value=${this._location}
                 @input=${(e: CustomEvent) => {
@@ -182,7 +178,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
                 }}
               ></mwc-textfield>
               <vaadin-date-time-picker
-                label="Start Time"
+                .label=${msg("Start Time")}
                 style="margin-bottom: 16px"
                 .value=${new Date(this._startTime / 1000).toISOString()}
                 @change=${(e: CustomEvent) => {
@@ -191,7 +187,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
                 }}
               ></vaadin-date-time-picker>
               <vaadin-date-time-picker
-                label="End Time"
+                .label=${msg("End Time")}
                 .value=${new Date(this._endTime / 1000).toISOString()}
                 @change=${(e: CustomEvent) => {
                   this._endTime =
@@ -203,13 +199,13 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
             <div class="column" style="flex: 1">
               <mwc-textfield
                 outlined
-                label="Cost"
-                .value=${this._cost || ''}
+                .label=${msg("Cost")}
+                .value=${this._cost || ""}
                 @input=${(e: CustomEvent) => {
                   this._cost = (e.target as any).value;
                 }}
               ></mwc-textfield>
-              <mwc-formfield label="Private Event">
+              <mwc-formfield .label=${msg("Private Event")}>
                 <mwc-checkbox
                   .checked=${this._private}
                   @input=${(e: CustomEvent) => {
@@ -223,10 +219,10 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
           <div style="display: flex; flex-direction: row">
             <mwc-button
               outlined
-              label="Cancel"
+              .label=${msg("Cancel")}
               @click=${() =>
                 this.dispatchEvent(
-                  new CustomEvent('edit-canceled', {
+                  new CustomEvent("edit-canceled", {
                     bubbles: true,
                     composed: true,
                   })
@@ -235,7 +231,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
             ></mwc-button>
             <mwc-button
               raised
-              label="Save"
+              .label=${msg("Save")}
               .disabled=${!this.isEventValid()}
               @click=${() => this.updateEvent()}
               style="flex: 1;"
@@ -246,16 +242,16 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
 
   static get scopedElements() {
     return {
-      'mwc-snackbar': Snackbar,
-      'mwc-formfield': Formfield,
-      'mwc-card': Card,
-      'mwc-textfield': TextField,
-      'mwc-button': Button,
-      'vaadin-date-time-picker': customElements.get('vaadin-date-time-picker'),
-      'mwc-textarea': TextArea,
-      'upload-files': UploadFiles,
-      'show-image': ShowImage,
-      'mwc-checkbox': Checkbox,
+      "mwc-snackbar": Snackbar,
+      "mwc-formfield": Formfield,
+      "mwc-card": Card,
+      "mwc-textfield": TextField,
+      "mwc-button": Button,
+      "vaadin-date-time-picker": customElements.get("vaadin-date-time-picker"),
+      "mwc-textarea": TextArea,
+      "upload-files": UploadFiles,
+      "show-image": ShowImage,
+      "mwc-checkbox": Checkbox,
     };
   }
 

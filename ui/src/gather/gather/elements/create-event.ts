@@ -1,35 +1,37 @@
-import { hashProperty, hashState } from '@holochain-open-dev/elements';
-import { ShowImage, UploadFiles } from '@holochain-open-dev/file-storage';
-import { EntryRecord, RecordBag } from '@holochain-open-dev/utils';
+import {
+  hashProperty,
+  hashState,
+  sharedStyles,
+} from "@holochain-open-dev/elements";
+import { ShowImage, UploadFiles } from "@holochain-open-dev/file-storage";
 import {
   ActionHash,
   AgentPubKey,
-  AppWebsocket,
   EntryHash,
-  InstalledAppInfo,
   InstalledCell,
   Record,
-} from '@holochain/client';
-import { contextProvided } from '@lit-labs/context';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+} from "@holochain/client";
+import { consume } from "@lit-labs/context";
+import { localized, msg } from "@lit/localize";
+import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
   Button,
   Card,
   Formfield,
   Snackbar,
-} from '@scoped-elements/material-web';
-import { TextArea } from '@scoped-elements/material-web';
-import { Checkbox } from '@scoped-elements/material-web';
-import { TextField } from '@scoped-elements/material-web';
-import '@vaadin/date-time-picker/theme/material/vaadin-date-time-picker.js';
-import { LitElement, html } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+} from "@scoped-elements/material-web";
+import { TextArea } from "@scoped-elements/material-web";
+import { Checkbox } from "@scoped-elements/material-web";
+import { TextField } from "@scoped-elements/material-web";
+import "@vaadin/date-time-picker/theme/material/vaadin-date-time-picker.js";
+import { LitElement, html } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 
-import { sharedStyles } from '../../../shared-styles';
-import { gatherStoreContext } from '../context';
-import { GatherStore } from '../gather-store';
-import { Event } from '../types';
+import { gatherStoreContext } from "../context";
+import { GatherStore } from "../gather-store";
+import { Event } from "../types";
 
+@localized()
 export class CreateEvent extends ScopedElementsMixin(LitElement) {
   @state()
   _title: string | undefined;
@@ -67,7 +69,7 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
     );
   }
 
-  @contextProvided({ context: gatherStoreContext, subscribe: true })
+  @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
   async createEvent() {
@@ -83,10 +85,10 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
     };
 
     try {
-      const record: Record = await this.gatherStore.createEvent(event);
+      const record: Record = await this.gatherStore.client.createEvent(event);
 
       this.dispatchEvent(
-        new CustomEvent('event-created', {
+        new CustomEvent("event-created", {
           composed: true,
           bubbles: true,
           detail: {
@@ -96,9 +98,11 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
       );
     } catch (e: any) {
       const errorSnackbar = this.shadowRoot?.getElementById(
-        'create-error'
+        "create-error"
       ) as Snackbar;
-      errorSnackbar.labelText = `Error creating the event: ${e.data.data}`;
+      errorSnackbar.labelText = `${msg("Error creating the event")}: ${
+        e.data.data
+      }`;
       errorSnackbar.show();
     }
   }
@@ -111,33 +115,33 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
         <div
           style="display: flex; flex: 1; flex-direction: column; margin: 16px"
         >
-          <span style="font-size: 18px">Create Event</span>
+          <span style="font-size: 18px">${msg("Create Event")}</span>
 
-          <span style="margin: 8px 0 ">Event Image</span>
+          <span style="margin: 8px 0 ">${msg("Event Image")}</span>
           <upload-files
             style="margin-bottom: 16px; display: flex"
             one-file
             accepted-files="image/jpeg,image/png,image/gif"
             @file-uploaded=${(e: CustomEvent) => {
-        this._image = e.detail.hash;
-      }}
+              this._image = e.detail.hash;
+            }}
           ></upload-files>
 
           <mwc-textfield
             outlined
-            label="Title"
+            .label=${msg("Title")}
             style="margin-bottom: 16px"
             @input=${(e: CustomEvent) => {
-        this._title = (e.target as any).value;
-      }}
+              this._title = (e.target as any).value;
+            }}
           ></mwc-textfield>
           <mwc-textarea
             outlined
-            label="Description"
+            .label=${msg("Description")}
             style="margin-bottom: 16px"
             @input=${(e: CustomEvent) => {
-        this._description = (e.target as any).value;
-      }}
+              this._description = (e.target as any).value;
+            }}
           ></mwc-textarea>
 
           <div style="display: flex; flex: 1; flex-direction: row">
@@ -146,42 +150,42 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
             >
               <mwc-textfield
                 outlined
-                label="Location"
+                .label=${msg("Location")}
                 style="margin-bottom: 16px"
                 @input=${(e: CustomEvent) => {
-        this._location = (e.target as any).value;
-      }}
+                  this._location = (e.target as any).value;
+                }}
               ></mwc-textfield>
               <vaadin-date-time-picker
-                label="Start Time"
+                .label=${msg("Start Time")}
                 style="margin-bottom: 16px"
                 @change=${(e: CustomEvent) => {
-        this._startTime =
-          new Date((e.target as any).value).valueOf() * 1000;
-      }}
+                  this._startTime =
+                    new Date((e.target as any).value).valueOf() * 1000;
+                }}
               ></vaadin-date-time-picker>
               <vaadin-date-time-picker
-                label="End Time"
+                .label=${msg("End Time")}
                 @change=${(e: CustomEvent) => {
-        this._endTime =
-          new Date((e.target as any).value).valueOf() * 1000;
-      }}
+                  this._endTime =
+                    new Date((e.target as any).value).valueOf() * 1000;
+                }}
               ></vaadin-date-time-picker>
             </div>
 
             <div class="column" style="flex: 1">
               <mwc-textfield
                 outlined
-                label="Cost"
+                .label=${msg("Cost")}
                 @input=${(e: CustomEvent) => {
-        this._cost = (e.target as any).value;
-      }}
+                  this._cost = (e.target as any).value;
+                }}
               ></mwc-textfield>
-              <mwc-formfield label="Private Event">
+              <mwc-formfield .label=${msg("Private Event")}>
                 <mwc-checkbox
                   @input=${(e: CustomEvent) => {
-        this._private = (e.target as any).checked;
-      }}
+                    this._private = (e.target as any).checked;
+                  }}
                 ></mwc-checkbox>
               </mwc-formfield>
             </div>
@@ -190,7 +194,7 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
           <mwc-button
             raised
             style="margin-top: 16px;"
-            label="Create Event"
+            .label=${msg("Create Event")}
             .disabled=${!this.isEventValid()}
             @click=${() => this.createEvent()}
           ></mwc-button>
@@ -201,16 +205,16 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
 
   static get scopedElements() {
     return {
-      'mwc-snackbar': Snackbar,
-      'mwc-button': Button,
-      'mwc-card': Card,
-      'mwc-textfield': TextField,
-      'mwc-textarea': TextArea,
-      'upload-files': UploadFiles,
-      'mwc-formfield': Formfield,
-      'show-image': ShowImage,
-      'vaadin-date-time-picker': customElements.get('vaadin-date-time-picker'),
-      'mwc-checkbox': Checkbox,
+      "mwc-snackbar": Snackbar,
+      "mwc-button": Button,
+      "mwc-card": Card,
+      "mwc-textfield": TextField,
+      "mwc-textarea": TextArea,
+      "upload-files": UploadFiles,
+      "mwc-formfield": Formfield,
+      "show-image": ShowImage,
+      "vaadin-date-time-picker": customElements.get("vaadin-date-time-picker"),
+      "mwc-checkbox": Checkbox,
     };
   }
 

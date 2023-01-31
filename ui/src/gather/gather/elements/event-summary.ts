@@ -1,60 +1,64 @@
-import { hashProperty } from '@holochain-open-dev/elements';
-import { ShowImage } from '@holochain-open-dev/file-storage';
+import {
+  DisplayError,
+  hashProperty,
+  sharedStyles,
+} from "@holochain-open-dev/elements";
+import { ShowImage } from "@holochain-open-dev/file-storage";
 import {
   AgentAvatar,
   ProfilesStore,
   profilesStoreContext,
-} from '@holochain-open-dev/profiles';
-import { EntryRecord, RecordBag } from '@holochain-open-dev/utils';
-import { EntryState } from '@holochain-open-dev/utils';
-import {
-  ActionHash,
-  AppWebsocket,
-  EntryHash,
-  InstalledAppInfo,
-  InstalledCell,
-  Record,
-} from '@holochain/client';
-import { contextProvided } from '@lit-labs/context';
-import { TaskStatus } from '@lit-labs/task';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
+} from "@holochain-open-dev/profiles";
+import { EntryRecord } from "@holochain-open-dev/utils";
+import { AsyncStatus, StoreSubscriber } from "@holochain-open-dev/stores";
+import { ActionHash, EntryHash, Record } from "@holochain/client";
+import { consume } from "@lit-labs/context";
+import { TaskStatus } from "@lit-labs/task";
+import { localized, msg } from "@lit/localize";
+import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
   Button,
   Card,
   CircularProgress,
   Icon,
   Snackbar,
-} from '@scoped-elements/material-web';
-import { LitElement, css, html } from 'lit';
-import { TaskSubscriber } from 'lit-svelte-stores';
-import { property } from 'lit/decorators.js';
-import { readable } from 'svelte/store';
+} from "@scoped-elements/material-web";
+import { LitElement, css, html } from "lit";
+import { property } from "lit/decorators.js";
 
-import { sharedStyles } from '../../../shared-styles';
-import { gatherStoreContext } from '../context';
-import { GatherStore } from '../gather-store';
-import { Event } from '../types';
+import { gatherStoreContext } from "../context";
+import { GatherStore } from "../gather-store";
+import { Event } from "../types";
 
+@localized()
 export class EventSummary extends ScopedElementsMixin(LitElement) {
-  @property(hashProperty('event-hash'))
+  @property(hashProperty("event-hash"))
   eventHash!: ActionHash;
 
-  @contextProvided({ context: gatherStoreContext, subscribe: true })
+  /**
+   * @internal
+   */
+  @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  @contextProvided({ context: profilesStoreContext, subscribe: true })
+  /**
+   * @internal
+   */
+  @consume({ context: profilesStoreContext, subscribe: true })
   profilesStore!: ProfilesStore;
 
-  _fetchEvent = new TaskSubscriber(
-    this,
-    ([store, eventHash]) => store.fetchEvent(eventHash),
-    () => [this.gatherStore, this.eventHash] as [GatherStore, ActionHash]
+  /**
+   * @internal
+   */
+  _event = new StoreSubscriber(this, () =>
+    this.gatherStore.events.get(this.eventHash)
   );
 
-  _fetchAttendees = new TaskSubscriber(
-    this,
-    ([store, eventHash]) => store.fetchAttendeesForEvent(eventHash),
-    () => [this.gatherStore, this.eventHash] as [GatherStore, ActionHash]
+  /**
+   * @internal
+   */
+  _attendees = new StoreSubscriber(this, () =>
+    this.gatherStore.attendeesForEvent.get(this.eventHash)
   );
 
   renderSummary(entryRecord: EntryRecord<Event>) {
@@ -98,18 +102,18 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
 
             <div class="column">
               <div class="row" style="align-items: center; margin-bottom: 8px;">
-                <span style="margin-right: 8px">Hosted by</span>
+                <span style="margin-right: 8px">${msg("Hosted by")}</span>
                 <agent-avatar
                   .agentPubKey=${entryRecord.action.author}
                 ></agent-avatar>
               </div>
 
-              ${this._fetchAttendees.status === TaskStatus.COMPLETE
+              ${this._attendees.value.status === "complete"
                 ? html`<div class="row" style="align-items: center;">
-                    <span style="margin-right: 8px;">Attendees</span>
+                    <span style="margin-right: 8px;">${msg("Attendees")}</span>
                     <div class="avatar-group">
-                      ${this._fetchAttendees.value?.map(
-                        a =>
+                      ${this._attendees.value.value.map(
+                        (a) =>
                           html`<agent-avatar .agentPubKey=${a}></agent-avatar>`
                       )}
                     </div>
@@ -127,11 +131,24 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
     `;
   }
 
-  renderEvent(maybeEntryState: EntryState<Event> | undefined) {
-    if (!maybeEntryState)
-      return html`<span>The requested event doesn't exist</span>`;
+  renderEvent(event: AsyncStatus<EntryRecord<Event> | undefined>) {
+    switch (event.status) {
+      case "pending":
+        return html`<div
+          style="display: flex; flex: 1; align-items: center; justify-content: center"
+        >
+          <mwc-circular-progress indeterminate></mwc-circular-progress>
+        </div>`;
+      case "complete":
+        if (!event.value)
+          return html`<span>${msg("The requested event doesn't exist")}</span>`;
 
-    return this.renderSummary(maybeEntryState.lastUpdate);
+        return this.renderSummary(event.value);
+      case "error":
+        return html`<display-error
+          .error=${event.error.data.data}
+        ></display-error>`;
+    }
   }
 
   render() {
@@ -139,7 +156,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
       style="display: flex; flex: 1;"
       @click=${() =>
         this.dispatchEvent(
-          new CustomEvent('event-selected', {
+          new CustomEvent("event-selected", {
             bubbles: true,
             composed: true,
             detail: {
@@ -148,26 +165,19 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
           })
         )}
     >
-      ${this._fetchEvent.render({
-        pending: () => html`<div
-          style="display: flex; flex: 1; align-items: center; justify-content: center"
-        >
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
-        </div>`,
-        complete: entry => this.renderEvent(entry),
-        error: (e: any) =>
-          html`<span>Error fetching the event: ${e.data.data}</span>`,
-      })}
+      ${this.renderEvent(this._event.value)}
     </mwc-card>`;
   }
 
   static get scopedElements() {
     return {
-      'mwc-snackbar': Snackbar,
-      'mwc-card': Card,
-      'mwc-icon': Icon,
-      'show-image': ShowImage,
-      'agent-avatar': AgentAvatar,
+      "mwc-snackbar": Snackbar,
+      "mwc-card": Card,
+      "mwc-icon": Icon,
+      "mwc-circular-progress": CircularProgress,
+      "display-error": DisplayError,
+      "show-image": ShowImage,
+      "agent-avatar": AgentAvatar,
     };
   }
 
