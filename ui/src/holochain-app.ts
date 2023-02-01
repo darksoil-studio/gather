@@ -37,7 +37,6 @@ import { customElement, property, state } from "lit/decorators.js";
 
 import { gatherStoreContext } from "./gather/gather/context";
 import { AllEvents } from "./gather/gather/elements/all-events";
-import { AttendeesForEvent } from "./gather/gather/elements/attendees-for-event";
 import { CreateEvent } from "./gather/gather/elements/create-event";
 import { EventDetail } from "./gather/gather/elements/event-detail";
 import { GatherClient } from "./gather/gather/gather-client";
@@ -83,6 +82,10 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
   async initStores(appAgentClient: AppAgentClient) {
     this._profilesStore = new ProfilesStore(
       new ProfilesClient(appAgentClient, "gather")
+    );
+    this._myProfile = new StoreSubscriber(
+      this,
+      () => this._profilesStore.myProfile
     );
     this._gatherStore = new GatherStore(
       new GatherClient(appAgentClient, "gather")

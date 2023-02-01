@@ -1,13 +1,6 @@
 import { DisplayError, sharedStyles } from "@holochain-open-dev/elements";
 import { StoreSubscriber } from "@holochain-open-dev/stores";
-import {
-  ActionHash,
-  AgentPubKey,
-  AppWebsocket,
-  EntryHash,
-  InstalledCell,
-  Record,
-} from "@holochain/client";
+import { ActionHash } from "@holochain/client";
 import { consume } from "@lit-labs/context";
 import { localized, msg } from "@lit/localize";
 import { ScopedElementsMixin } from "@open-wc/scoped-elements";
@@ -27,7 +20,7 @@ export class AllEvents extends ScopedElementsMixin(LitElement) {
 
   renderList(hashes: Array<ActionHash>) {
     if (hashes.length === 0)
-      return html`<span>${msg("No events found.")}"</span>`;
+      return html`<span>${msg("No events found.")}</span>`;
 
     return html`
       <div style="display: flex; flex-direction: column; flex: 1">

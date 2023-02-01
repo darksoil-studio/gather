@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@holochain-open-dev/elements": "^0.2.3",
-    "@holochain-open-dev/file-storage": "^0.1.0",
+    "@holochain-open-dev/file-storage": "^0.1.1",
     "@holochain-open-dev/profiles": "^0.10.1",
     "@holochain-open-dev/stores": "^0.2.0",
     "@holochain-open-dev/utils": "^0.10.1",
@@ -51,13 +51,8 @@
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
-    "extends": [
-      "@open-wc",
-      "prettier"
-    ],
-    "plugins": [
-      "@typescript-eslint"
-    ],
+    "extends": ["@open-wc", "prettier"],
+    "plugins": ["@typescript-eslint"],
     "rules": {
       "prefer-destructuring": "off",
       "no-useless-constructor": "off",
@@ -82,9 +77,6 @@
     ],
     "importOrderSeparation": true,
     "importOrderSortSpecifiers": true,
-    "importOrderParserPlugins": [
-      "typescript",
-      "decorators-legacy"
-    ]
+    "importOrderParserPlugins": ["typescript", "decorators-legacy"]
   }
 }

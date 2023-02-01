@@ -1,4 +1,8 @@
-import { hashProperty } from "@holochain-open-dev/elements";
+import {
+  DisplayError,
+  hashProperty,
+  sharedStyles,
+} from "@holochain-open-dev/elements";
 import { ShowImage } from "@holochain-open-dev/file-storage";
 import { AgentAvatar } from "@holochain-open-dev/profiles";
 import { EntryRecord, RecordBag } from "@holochain-open-dev/utils";
@@ -11,7 +15,7 @@ import {
   Record,
 } from "@holochain/client";
 import { consume, contextProvided } from "@lit-labs/context";
-import { localized } from "@lit/localize";
+import { localized, msg } from "@lit/localize";
 import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
   Button,
@@ -90,9 +94,9 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
 
   async attendEvent() {
     try {
-      await this.gatherStore.addAttendeeForEvent(
+      await this.gatherStore.client.addAttendeeForEvent(
         this.eventHash,
-        this.gatherStore.myAgentPubKey
+        this.gatherStore.client.client.myPubKey
       );
 
       this.dispatchEvent(
@@ -108,7 +112,9 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       const errorSnackbar = this.shadowRoot?.getElementById(
         "error"
       ) as Snackbar;
-      errorSnackbar.labelText = `Error adding attendee: ${e.data.data}`;
+      errorSnackbar.labelText = `${msg("Error adding attendee")}: ${
+        e.data.data
+      }`;
       errorSnackbar.show();
     }
   }
@@ -116,7 +122,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
   renderDetail(entryRecord: EntryRecord<Event>) {
     const amIAuthor =
       entryRecord.action.author.toString() ===
-      this.gatherStore.myAgentPubKey.toString();
+      this.gatherStore.client.client.myPubKey.toString();
     return html`
       <mwc-snackbar id="error" leading> </mwc-snackbar>
 
@@ -199,7 +205,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
                   class="row"
                   style="align-items: center; margin-bottom: 8px;"
                 >
-                  <span style="margin-right: 8px">Hosted by</span>
+                  <span style="margin-right: 8px">${msg("Hosted by")}</span>
                   <agent-avatar
                     .agentPubKey=${entryRecord.action.author}
                   ></agent-avatar>
@@ -215,22 +221,22 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
   }
 
   renderAttendButton(event: EntryRecord<Event>) {
-    return this._fetchAttendees.render({
-      pending: () =>
-        html`<sl-skeleton
+    switch (this._attendees.value.status) {
+      case "pending":
+        return html`<sl-skeleton
           style="margin-top: 16px;"
           effect="pulse"
-        ></sl-skeleton>`,
-      complete: (attendees) => {
+        ></sl-skeleton>`;
+      case "complete":
         if (
           event.action.author.toString() ===
-          this.gatherStore.myAgentPubKey.toString()
+          this.gatherStore.client.client.myPubKey.toString()
         )
           return html``;
         if (
-          attendees
+          this._attendees.value.value
             .map((a) => a.toString())
-            .includes(this.gatherStore.myAgentPubKey.toString())
+            .includes(this.gatherStore.client.client.myPubKey.toString())
         )
           return html``;
         return html`<mwc-button
@@ -239,18 +245,22 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
           label="I'll attend!"
           @click=${() => this.attendEvent()}
         ></mwc-button>`;
-      },
-    });
+      case "error":
+        return html`<display-error
+          .error=${this._attendees.value.error.data.data}
+          tooltip
+        ></display-error>`;
+    }
   }
 
-  renderEvent(maybeEntryState: EntryState<Event> | undefined) {
-    if (!maybeEntryState)
-      return html`<span>The requested event doesn't exist</span>`;
+  renderEvent(maybeEntryRecord: EntryRecord<Event> | undefined) {
+    if (!maybeEntryRecord)
+      return html`<span>${msg("The requested event doesn't exist")}</span>`;
 
     if (this._editing) {
       return html`<edit-event
         .originalEventHash=${this.eventHash}
-        .currentRecord=${maybeEntryState.lastUpdate}
+        .currentRecord=${maybeEntryRecord}
         @event-updated=${async () => {
           this._editing = false;
         }}
@@ -262,7 +272,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
     }
 
     return html`<div class="row">
-      ${this.renderDetail(maybeEntryState.lastUpdate)}
+      ${this.renderDetail(maybeEntryRecord)}
       <attendees-for-event
         style="margin-left: 16px;"
         .eventHash=${this.eventHash}
@@ -271,20 +281,25 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
-    return this._fetchEvent.render({
-      pending: () => html`<div
-        style="display: flex; flex: 1; align-items: center; justify-content: center"
-      >
-        <mwc-circular-progress indeterminate></mwc-circular-progress>
-      </div>`,
-      complete: (entry) => this.renderEvent(entry),
-      error: (e: any) =>
-        html`<span>Error fetching the event: ${e.data.data}</span>`,
-    });
+    switch (this._event.value.status) {
+      case "pending":
+        return html`<div
+          style="display: flex; flex: 1; align-items: center; justify-content: center"
+        >
+          <mwc-circular-progress indeterminate></mwc-circular-progress>
+        </div>`;
+      case "complete":
+        return this.renderEvent(this._event.value.value);
+      case "error":
+        return html`<display-error
+          .error=${this._event.value.error.data.data}
+        ></display-error>`;
+    }
   }
 
   static get scopedElements() {
     return {
+      "display-error": DisplayError,
       "edit-event": EditEvent,
       "mwc-icon": Icon,
       "mwc-snackbar": Snackbar,
