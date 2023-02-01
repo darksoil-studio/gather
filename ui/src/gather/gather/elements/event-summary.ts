@@ -153,7 +153,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
 
   render() {
     return html`<mwc-card
-      style="display: flex; flex: 1;"
+      style="display: flex; flex: 1; cursor: grab;"
       @click=${() =>
         this.dispatchEvent(
           new CustomEvent("event-selected", {
