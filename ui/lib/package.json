@@ -3,6 +3,9 @@
   "description": "Webcomponent lit-element following open-wc recommendations",
   "author": "guillem@darksoil.studio",
   "version": "0.1.0",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w --preserveWatchOutput false",
