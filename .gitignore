@@ -9,4 +9,21 @@
 *.dna
 .hc*
 .hc
-.running
+## editors
+/.idea
+/.vscode
+
+## system files
+.DS_Store
+
+
+## temp folders
+/.tmp/
+
+# build
+/_site/
+/out-tsc/
+
+storybook-static
+.rollup.cache
+*.tsbuildinfo
