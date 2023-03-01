@@ -22,18 +22,14 @@ import { provide } from "@lit-labs/context";
 import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
   CircularProgress,
-  Fab,
-  Icon,
-  IconButton,
+  MdFabExtended,
+  MdIcon,
+  MdStandardIconButton,
   TopAppBar,
 } from "@scoped-elements/material-web";
 import { LitElement, css, html } from "lit";
-import {
-  AsyncStatus,
-  StoreSubscriber,
-  TaskSubscriber,
-} from "@holochain-open-dev/stores";
-import { customElement, property, state } from "lit/decorators.js";
+import { AsyncStatus, StoreSubscriber } from "@holochain-open-dev/stores";
+import { property, state } from "lit/decorators.js";
 
 import { gatherStoreContext } from "./gather/gather/context";
 import { AllEvents } from "./gather/gather/elements/all-events";
@@ -111,6 +107,7 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
         </div>`;
       case "error":
         return html`<display-error
+          .headline=${msg("Error fetching your profile")}
           .error=${this._myProfile.value.error.data.data}
           tooltip
         ></display-error>`;
@@ -179,28 +176,28 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
         </div>
       </div>
 
-      <mwc-fab
-        extended
+      <md-fab-extended
         icon="add"
         .label=${msg("Create Event")}
         @click=${() => {
           this._view = { view: "create_event" };
         }}
         style="position: absolute; right: 16px; bottom: 16px;"
-      ></mwc-fab>`;
+      ></md-fab-extended>`;
   }
 
   renderBackButton() {
     if (this._view.view === "all_events") return html``;
 
     return html`
-      <mwc-icon-button
-        icon="arrow_back"
+      <md-standard-icon-button
         slot="navigationIcon"
+        style="--md-icon-color: white"
         @click=${() => {
           this._view = { view: "all_events" };
         }}
-      ></mwc-icon-button>
+        >arrow_back</md-standard-icon-button
+      >
     `;
   }
 
@@ -231,14 +228,14 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
     return {
       "agent-avatar": AgentAvatar,
       "profile-prompt": ProfilePrompt,
-      "mwc-icon-button": IconButton,
+      "md-standard-icon-button": MdStandardIconButton,
       "mwc-top-app-bar": TopAppBar,
       "mwc-circular-progress": CircularProgress,
       "all-events": AllEvents,
       "create-event": CreateEvent,
-      "mwc-icon": Icon,
+      "md-icon": MdIcon,
       "event-detail": EventDetail,
-      "mwc-fab": Fab,
+      "md-fab-extended": MdFabExtended,
       "display-error": DisplayError,
       "profile-list-item-skeleton": ProfileListItemSkeleton,
     };

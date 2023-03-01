@@ -6,32 +6,22 @@ import {
 import { ShowImage } from "@holochain-open-dev/file-storage";
 import { AgentAvatar } from "@holochain-open-dev/profiles";
 import { EntryRecord, RecordBag } from "@holochain-open-dev/utils";
-import { EntryState } from "@holochain-open-dev/utils";
-import {
-  ActionHash,
-  AppWebsocket,
-  EntryHash,
-  InstalledCell,
-  Record,
-} from "@holochain/client";
+import { ActionHash } from "@holochain/client";
 import { consume, contextProvided } from "@lit-labs/context";
 import { localized, msg } from "@lit/localize";
 import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
-  Button,
   Card,
   CircularProgress,
-  Formfield,
-  Icon,
-  IconButton,
-  List,
-  ListItem,
+  MdFilledButton,
+  MdIcon,
+  MdStandardIconButton,
   Snackbar,
 } from "@scoped-elements/material-web";
 import { SlSkeleton } from "@scoped-elements/shoelace";
 import { LitElement, html } from "lit";
-import { StoreSubscriber, TaskSubscriber } from "lit-svelte-stores";
-import { customElement, property, state } from "lit/decorators.js";
+import { StoreSubscriber } from "@holochain-open-dev/stores";
+import { property, state } from "lit/decorators.js";
 
 import { gatherStoreContext } from "../context";
 import { GatherStore } from "../gather-store";
@@ -141,18 +131,18 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
 
             ${amIAuthor
               ? html`
-                  <mwc-icon-button
+                  <md-standard-icon-button
                     style="margin-left: 8px"
                     icon="edit"
                     @click=${() => {
                       this._editing = true;
                     }}
-                  ></mwc-icon-button>
-                  <mwc-icon-button
+                  ></md-standard-icon-button>
+                  <md-standard-icon-button
                     style="margin-left: 8px"
                     icon="delete"
                     @click=${() => this.deleteEvent()}
-                  ></mwc-icon-button>
+                  ></md-standard-icon-button>
                 `
               : html``}
           </div>
@@ -169,7 +159,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
                 <div
                   style="display: flex; flex-direction: row; align-items: center;"
                 >
-                  <mwc-icon>location_on</mwc-icon>
+                  <md-icon>location_on</md-icon>
                   <span style="white-space: pre-line"
                     >${entryRecord.entry.location}</span
                   >
@@ -178,7 +168,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
                 <div
                   style="display: flex; flex-direction: row; align-items: center"
                 >
-                  <mwc-icon>schedule</mwc-icon>
+                  <md-icon>schedule</md-icon>
                   <span style="white-space: pre-line"
                     >${new Date(
                       entryRecord.entry.start_time / 1000
@@ -190,7 +180,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
                   ? html` <div
                       style="display: flex; flex-direction: row; align-items: center"
                     >
-                      <mwc-icon>payments</mwc-icon>
+                      <md-icon>payments</md-icon>
                       <span style="white-space: pre-line"
                         >${entryRecord.entry.cost}</span
                       >
@@ -239,14 +229,14 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
             .includes(this.gatherStore.client.client.myPubKey.toString())
         )
           return html``;
-        return html`<mwc-button
+        return html`<md-filled-button
           style="margin-top: 16px;"
-          raised
-          label="I'll attend!"
+          .label=${msg("I'll attend!")}
           @click=${() => this.attendEvent()}
-        ></mwc-button>`;
+        ></md-filled-button>`;
       case "error":
         return html`<display-error
+          .headline=${msg("Error fetching the attendees")}
           .error=${this._attendees.value.error.data.data}
           tooltip
         ></display-error>`;
@@ -301,12 +291,13 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
     return {
       "display-error": DisplayError,
       "edit-event": EditEvent,
-      "mwc-icon": Icon,
+      "md-icon": MdIcon,
+      "mwc-circular-progress": CircularProgress,
       "mwc-snackbar": Snackbar,
       "mwc-card": Card,
-      "mwc-icon-button": IconButton,
+      "md-standard-icon-button": MdStandardIconButton,
       "agent-avatar": AgentAvatar,
-      "mwc-button": Button,
+      "md-filled-button": MdFilledButton,
       "sl-skeleton": SlSkeleton,
       "show-image": ShowImage,
       "attendees-for-event": AttendeesForEvent,

@@ -6,14 +6,13 @@ import { consume } from "@lit-labs/context";
 import { localized, msg } from "@lit/localize";
 import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
-  Button,
+  MdOutlinedButton,
+  MdFilledButton,
   Card,
-  Formfield,
   Snackbar,
-  TextField,
 } from "@scoped-elements/material-web";
-import { TextArea } from "@scoped-elements/material-web";
-import { Checkbox } from "@scoped-elements/material-web";
+import { MdOutlinedTextField } from "@scoped-elements/material-web";
+import { MdCheckbox } from "@scoped-elements/material-web";
 import "@vaadin/date-time-picker/theme/material/vaadin-date-time-picker.js";
 import { LitElement, html } from "lit";
 import { property, state } from "lit/decorators.js";
@@ -145,38 +144,35 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
             ></upload-files>
           </div>
 
-          <mwc-textfield
-            outlined
+          <md-outlined-text-field
             .label=${msg("Title")}
             style="margin-bottom: 16px"
             .value=${this._title}
             @input=${(e: CustomEvent) => {
               this._title = (e.target as any).value;
             }}
-          ></mwc-textfield>
-          <mwc-textarea
-            outlined
+          ></md-outlined-text-field>
+          <md-outlined-text-field
             .label=${msg("Description")}
             style="margin-bottom: 16px"
             .value=${this._description}
             @input=${(e: CustomEvent) => {
               this._description = (e.target as any).value;
             }}
-          ></mwc-textarea>
+          ></md-outlined-text-field>
 
           <div style="display: flex; flex: 1; flex-direction: row">
             <div
               style="display: flex; flex: 1; flex-direction: column; margin-right: 16px;"
             >
-              <mwc-textfield
-                outlined
+              <md-outlined-textfield
                 .label=${msg("Location")}
                 style="margin-bottom: 16px"
                 .value=${this._location}
                 @input=${(e: CustomEvent) => {
                   this._location = (e.target as any).value;
                 }}
-              ></mwc-textfield>
+              ></md-outlined-textfield>
               <vaadin-date-time-picker
                 .label=${msg("Start Time")}
                 style="margin-bottom: 16px"
@@ -197,28 +193,27 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
             </div>
 
             <div class="column" style="flex: 1">
-              <mwc-textfield
-                outlined
+              <md-outlined-text-field
                 .label=${msg("Cost")}
                 .value=${this._cost || ""}
                 @input=${(e: CustomEvent) => {
                   this._cost = (e.target as any).value;
                 }}
-              ></mwc-textfield>
-              <mwc-formfield .label=${msg("Private Event")}>
-                <mwc-checkbox
+              ></md-outlined-text-field>
+              <label>
+                <md-checkbox
                   .checked=${this._private}
                   @input=${(e: CustomEvent) => {
                     this._private = (e.target as any).checked;
                   }}
-                ></mwc-checkbox>
-              </mwc-formfield>
+                ></md-checkbox>
+                ${msg("Private Event")}</label
+              >
             </div>
           </div>
 
           <div style="display: flex; flex-direction: row">
-            <mwc-button
-              outlined
+            <md-outlined-button
               .label=${msg("Cancel")}
               @click=${() =>
                 this.dispatchEvent(
@@ -228,14 +223,13 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
                   })
                 )}
               style="flex: 1; margin-right: 16px"
-            ></mwc-button>
-            <mwc-button
-              raised
+            ></md-outlined-button>
+            <md-filled-button
               .label=${msg("Save")}
               .disabled=${!this.isEventValid()}
               @click=${() => this.updateEvent()}
               style="flex: 1;"
-            ></mwc-button>
+            ></md-filled-button>
           </div></div
       ></mwc-card>`;
   }
@@ -243,15 +237,14 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
   static get scopedElements() {
     return {
       "mwc-snackbar": Snackbar,
-      "mwc-formfield": Formfield,
       "mwc-card": Card,
-      "mwc-textfield": TextField,
-      "mwc-button": Button,
+      "md-outlined-text-field": MdOutlinedTextField,
+      "md-outlined-button": MdOutlinedButton,
+      "md-filled-button": MdFilledButton,
       "vaadin-date-time-picker": customElements.get("vaadin-date-time-picker"),
-      "mwc-textarea": TextArea,
       "upload-files": UploadFiles,
       "show-image": ShowImage,
-      "mwc-checkbox": Checkbox,
+      "md-checkbox": MdCheckbox,
     };
   }
 

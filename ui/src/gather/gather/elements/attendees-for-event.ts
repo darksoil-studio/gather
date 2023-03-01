@@ -10,7 +10,7 @@ import {
 } from "@holochain-open-dev/profiles";
 import {
   asyncDeriveStore,
-  joinMap,
+  joinAsyncMap,
   StoreSubscriber,
 } from "@holochain-open-dev/stores";
 import { slice } from "@holochain-open-dev/utils";
@@ -21,8 +21,8 @@ import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
   Card,
   CircularProgress,
-  List,
-  ListItem,
+  MdList,
+  MdListItem,
 } from "@scoped-elements/material-web";
 import { LitElement, html } from "lit";
 import { property } from "lit/decorators.js";
@@ -58,8 +58,8 @@ export class AttendeesForEvent extends ScopedElementsMixin(LitElement) {
    * @internal
    */
   _profiles = new StoreSubscriber(this, () =>
-    asyncDeriveStore([this._attendees.store()!], ([agentPubKeys]) =>
-      joinMap(slice(this.profilesStore.agentsProfiles, agentPubKeys))
+    asyncDeriveStore(this._attendees.store()!, (agentPubKeys) =>
+      joinAsyncMap(slice(this.profilesStore.profiles, agentPubKeys))
     )
   );
 
@@ -79,18 +79,18 @@ export class AttendeesForEvent extends ScopedElementsMixin(LitElement) {
       case "complete":
         const profiles = this._profiles.value.value;
         return html`
-          <mwc-list style="display: flex; flex-direction: column">
+          <md-list style="display: flex; flex-direction: column">
             ${hashes.map(
-              (pubkey) => html`<mwc-list-item graphic="avatar" noninteractive>
+              (pubkey) => html`<md-list-item>
                 <agent-avatar
                   size="40"
-                  slot="graphic"
+                  slot="start"
                   .agentPubKey=${pubkey}
                 ></agent-avatar>
-                <span>${profiles.get(pubkey)?.nickname}</span>
-              </mwc-list-item>`
+                <span slot="headline">${profiles.get(pubkey)?.nickname}</span>
+              </md-list-item>`
             )}
-          </mwc-list>
+          </md-list>
         `;
       case "error":
         return html`<display-error
@@ -131,8 +131,8 @@ export class AttendeesForEvent extends ScopedElementsMixin(LitElement) {
     return {
       "mwc-circular-progress": CircularProgress,
       "agent-avatar": AgentAvatar,
-      "mwc-list": List,
-      "mwc-list-item": ListItem,
+      "md-list": MdList,
+      "md-list-item": MdListItem,
       "display-error": DisplayError,
       "mwc-card": Card,
     };

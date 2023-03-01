@@ -13,14 +13,12 @@ import { EntryRecord } from "@holochain-open-dev/utils";
 import { AsyncStatus, StoreSubscriber } from "@holochain-open-dev/stores";
 import { ActionHash, EntryHash, Record } from "@holochain/client";
 import { consume } from "@lit-labs/context";
-import { TaskStatus } from "@lit-labs/task";
 import { localized, msg } from "@lit/localize";
 import { ScopedElementsMixin } from "@open-wc/scoped-elements";
 import {
-  Button,
   Card,
   CircularProgress,
-  Icon,
+  MdIcon,
   Snackbar,
 } from "@scoped-elements/material-web";
 import { LitElement, css, html } from "lit";
@@ -80,7 +78,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
               <div
                 style="display: flex; flex-direction: row; align-items: center;"
               >
-                <mwc-icon>location_on</mwc-icon>
+                <md-icon>location_on</md-icon>
                 <span style="white-space: pre-line"
                   >${entryRecord.entry.location}</span
                 >
@@ -89,7 +87,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
               <div
                 style="display: flex; flex-direction: row; align-items: center"
               >
-                <mwc-icon>schedule</mwc-icon>
+                <md-icon>schedule</md-icon>
                 <span style="white-space: pre-line"
                   >${new Date(
                     entryRecord.entry.start_time / 1000
@@ -146,6 +144,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
         return this.renderSummary(event.value);
       case "error":
         return html`<display-error
+          .headline=${msg("Error fetching the event")}
           .error=${event.error.data.data}
         ></display-error>`;
     }
@@ -173,7 +172,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
     return {
       "mwc-snackbar": Snackbar,
       "mwc-card": Card,
-      "mwc-icon": Icon,
+      "md-icon": MdIcon,
       "mwc-circular-progress": CircularProgress,
       "display-error": DisplayError,
       "show-image": ShowImage,
