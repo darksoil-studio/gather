@@ -7,7 +7,7 @@ export default defineConfig({
     checker({
       typescript: true,
       eslint: {
-        lintCommand: 'eslint --ext .ts,.html . --ignore-path .gitignore',
+        lintCommand: 'eslint --ext .ts,.html src --ignore-path .gitignore',
       },
     }),
   ],

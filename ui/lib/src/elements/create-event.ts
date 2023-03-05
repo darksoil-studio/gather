@@ -1,23 +1,23 @@
-import { sharedStyles } from "@holochain-open-dev/elements";
-import { ShowImage, UploadFiles } from "@holochain-open-dev/file-storage";
-import { EntryHash, Record } from "@holochain/client";
-import { consume } from "@lit-labs/context";
-import { localized, msg } from "@lit/localize";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
+import { sharedStyles } from '@holochain-open-dev/elements';
+import { ShowImage, UploadFiles } from '@holochain-open-dev/file-storage';
+import { EntryHash, Record } from '@holochain/client';
+import { consume } from '@lit-labs/context';
+import { localized, msg } from '@lit/localize';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import {
   Card,
   Snackbar,
   MdFilledButton,
   MdOutlinedTextField,
   MdCheckbox,
-} from "@scoped-elements/material-web";
-import "@vaadin/date-time-picker/theme/material/vaadin-date-time-picker.js";
-import { LitElement, html } from "lit";
-import { state } from "lit/decorators.js";
+} from '@scoped-elements/material-web';
+import { LitElement, html } from 'lit';
+import { state } from 'lit/decorators.js';
+import 'lit-flatpickr';
 
-import { gatherStoreContext } from "../context.js";
-import { GatherStore } from "../gather-store.js";
-import { Event } from "../types.js";
+import { gatherStoreContext } from '../context.js';
+import { GatherStore } from '../gather-store.js';
+import { Event } from '../types.js';
 
 @localized()
 export class CreateEvent extends ScopedElementsMixin(LitElement) {
@@ -47,8 +47,8 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
 
   isEventValid() {
     return (
-      this._title !== "" &&
-      this._description !== "" &&
+      this._title !== '' &&
+      this._description !== '' &&
       this._image &&
       this._location &&
       this._startTime &&
@@ -76,7 +76,7 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
       const record: Record = await this.gatherStore.client.createEvent(event);
 
       this.dispatchEvent(
-        new CustomEvent("event-created", {
+        new CustomEvent('event-created', {
           composed: true,
           bubbles: true,
           detail: {
@@ -86,9 +86,9 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
       );
     } catch (e: any) {
       const errorSnackbar = this.shadowRoot?.getElementById(
-        "create-error"
+        'create-error'
       ) as Snackbar;
-      errorSnackbar.labelText = `${msg("Error creating the event")}: ${
+      errorSnackbar.labelText = `${msg('Error creating the event')}: ${
         e.data.data
       }`;
       errorSnackbar.show();
@@ -103,9 +103,9 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
         <div
           style="display: flex; flex: 1; flex-direction: column; margin: 16px"
         >
-          <span style="font-size: 18px">${msg("Create Event")}</span>
+          <span style="font-size: 18px">${msg('Create Event')}</span>
 
-          <span style="margin: 8px 0 ">${msg("Event Image")}</span>
+          <span style="margin: 8px 0 ">${msg('Event Image')}</span>
           <upload-files
             style="margin-bottom: 16px; display: flex"
             one-file
@@ -116,7 +116,7 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
           ></upload-files>
 
           <md-outlined-text-field
-            .label=${msg("Title")}
+            .label=${msg('Title')}
             style="margin-bottom: 16px"
             @input=${(e: CustomEvent) => {
               this._title = (e.target as any).value;
@@ -124,7 +124,7 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
           ></md-outlined-text-field>
           <md-outlined-text-field
             outlined
-            .label=${msg("Description")}
+            .label=${msg('Description')}
             style="margin-bottom: 16px"
             @input=${(e: CustomEvent) => {
               this._description = (e.target as any).value;
@@ -136,32 +136,40 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
               style="display: flex; flex: 1; flex-direction: column; margin-right: 16px;"
             >
               <md-outlined-text-field
-                .label=${msg("Location")}
+                .label=${msg('Location')}
                 style="margin-bottom: 16px"
                 @input=${(e: CustomEvent) => {
                   this._location = (e.target as any).value;
                 }}
               ></md-outlined-text-field>
-              <vaadin-date-time-picker
-                .label=${msg("Start Time")}
-                style="margin-bottom: 16px"
-                @change=${(e: CustomEvent) => {
-                  this._startTime =
-                    new Date((e.target as any).value).valueOf() * 1000;
+              <lit-flatpickr
+                .dateFormat=${'Y-m-d H:i'}
+                .enableTime=${true}
+                .onClose=${(e: any) => {
+                  this._startTime = new Date(e[0]).valueOf() * 1000;
                 }}
-              ></vaadin-date-time-picker>
-              <vaadin-date-time-picker
-                .label=${msg("End Time")}
-                @change=${(e: CustomEvent) => {
-                  this._endTime =
-                    new Date((e.target as any).value).valueOf() * 1000;
+              >
+                <md-outlined-text-field
+                  .label=${msg('Start Time')}
+                  style="margin-bottom: 16px"
+                ></md-outlined-text-field
+              ></lit-flatpickr>
+              <lit-flatpickr
+                .dateFormat=${'Y-m-d H:i'}
+                .enableTime=${true}
+                .onClose=${(e: any) => {
+                  this._endTime = new Date(e[0]).valueOf() * 1000;
                 }}
-              ></vaadin-date-time-picker>
+              >
+                <md-outlined-text-field
+                  .label=${msg('End Time')}
+                ></md-outlined-text-field
+              ></lit-flatpickr>
             </div>
 
             <div class="column" style="flex: 1">
               <md-outlined-text-field
-                .label=${msg("Cost")}
+                .label=${msg('Cost')}
                 @input=${(e: CustomEvent) => {
                   this._cost = (e.target as any).value;
                 }}
@@ -172,14 +180,14 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
                     this._private = (e.target as any).checked;
                   }}
                 ></md-checkbox>
-                ${msg("Private Event")}
+                ${msg('Private Event')}
               </label>
             </div>
           </div>
 
           <md-filled-button
             style="margin-top: 16px;"
-            .label=${msg("Create Event")}
+            .label=${msg('Create Event')}
             .disabled=${!this.isEventValid()}
             @click=${() => this.createEvent()}
           ></md-filled-button>
@@ -190,14 +198,14 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
 
   static get scopedElements() {
     return {
-      "mwc-snackbar": Snackbar,
-      "md-filled-button": MdFilledButton,
-      "mwc-card": Card,
-      "md-outlined-text-field": MdOutlinedTextField,
-      "upload-files": UploadFiles,
-      "show-image": ShowImage,
-      "vaadin-date-time-picker": customElements.get("vaadin-date-time-picker"),
-      "md-checkbox": MdCheckbox,
+      'mwc-snackbar': Snackbar,
+      'md-filled-button': MdFilledButton,
+      'mwc-card': Card,
+      'md-outlined-text-field': MdOutlinedTextField,
+      'upload-files': UploadFiles,
+      'show-image': ShowImage,
+      'lit-flatpickr': customElements.get('lit-flatpickr'),
+      'md-checkbox': MdCheckbox,
     };
   }
 

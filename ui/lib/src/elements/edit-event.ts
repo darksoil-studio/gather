@@ -1,29 +1,29 @@
-import { hashProperty, sharedStyles } from "@holochain-open-dev/elements";
-import { ShowImage, UploadFiles } from "@holochain-open-dev/file-storage";
-import { EntryRecord } from "@holochain-open-dev/utils";
-import { ActionHash, EntryHash } from "@holochain/client";
-import { consume } from "@lit-labs/context";
-import { localized, msg } from "@lit/localize";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
+import { hashProperty, sharedStyles } from '@holochain-open-dev/elements';
+import { ShowImage, UploadFiles } from '@holochain-open-dev/file-storage';
+import { EntryRecord } from '@holochain-open-dev/utils';
+import { ActionHash, EntryHash } from '@holochain/client';
+import { consume } from '@lit-labs/context';
+import { localized, msg } from '@lit/localize';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import {
   MdOutlinedButton,
   MdFilledButton,
   Card,
   Snackbar,
-} from "@scoped-elements/material-web";
-import { MdOutlinedTextField } from "@scoped-elements/material-web";
-import { MdCheckbox } from "@scoped-elements/material-web";
-import "@vaadin/date-time-picker/theme/material/vaadin-date-time-picker.js";
-import { LitElement, html } from "lit";
-import { property, state } from "lit/decorators.js";
+} from '@scoped-elements/material-web';
+import { MdOutlinedTextField } from '@scoped-elements/material-web';
+import { MdCheckbox } from '@scoped-elements/material-web';
+import 'lit-flatpickr';
+import { LitElement, html } from 'lit';
+import { property, state } from 'lit/decorators.js';
 
-import { gatherStoreContext } from "../context";
-import { GatherStore } from "../gather-store";
-import { Event } from "../types";
+import { gatherStoreContext } from '../context';
+import { GatherStore } from '../gather-store';
+import { Event } from '../types';
 
 @localized()
 export class EditEvent extends ScopedElementsMixin(LitElement) {
-  @property(hashProperty("original-event-hash"))
+  @property(hashProperty('original-event-hash'))
   originalEventHash!: ActionHash;
 
   @property()
@@ -68,6 +68,14 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
     this._cost = this.currentRecord.entry.cost;
   }
 
+  firstUpdated() {
+    (this.shadowRoot?.getElementById('start-time-field') as any).value =
+      new Date(this._startTime / 1000).toISOString();
+    (this.shadowRoot?.getElementById('end-time-field') as any).value = new Date(
+      this._endTime / 1000
+    ).toISOString();
+  }
+
   isEventValid() {
     return (
       this._title &&
@@ -100,7 +108,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
       );
 
       this.dispatchEvent(
-        new CustomEvent("event-updated", {
+        new CustomEvent('event-updated', {
           composed: true,
           bubbles: true,
           detail: {
@@ -112,9 +120,9 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
       );
     } catch (e: any) {
       const errorSnackbar = this.shadowRoot?.getElementById(
-        "update-error"
+        'update-error'
       ) as Snackbar;
-      errorSnackbar.labelText = `${msg("Error updating the event")}: ${
+      errorSnackbar.labelText = `${msg('Error updating the event')}: ${
         e.data.data
       }`;
       errorSnackbar.show();
@@ -127,7 +135,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
       <mwc-card style="display: flex; flex: 1">
         <div style="display: flex; flex-direction: column; margin: 16px;">
           <span style="font-size: 18px; margin-bottom: 16px"
-            >${msg("Edit Event")}</span
+            >${msg('Edit Event')}</span
           >
 
           <div class="row" style="margin-bottom: 16px">
@@ -145,7 +153,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
           </div>
 
           <md-outlined-text-field
-            .label=${msg("Title")}
+            .label=${msg('Title')}
             style="margin-bottom: 16px"
             .value=${this._title}
             @input=${(e: CustomEvent) => {
@@ -153,7 +161,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
             }}
           ></md-outlined-text-field>
           <md-outlined-text-field
-            .label=${msg("Description")}
+            .label=${msg('Description')}
             style="margin-bottom: 16px"
             .value=${this._description}
             @input=${(e: CustomEvent) => {
@@ -165,59 +173,72 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
             <div
               style="display: flex; flex: 1; flex-direction: column; margin-right: 16px;"
             >
-              <md-outlined-textfield
-                .label=${msg("Location")}
+              <md-outlined-text-field
+                .label=${msg('Location')}
                 style="margin-bottom: 16px"
                 .value=${this._location}
                 @input=${(e: CustomEvent) => {
                   this._location = (e.target as any).value;
                 }}
-              ></md-outlined-textfield>
-              <vaadin-date-time-picker
-                .label=${msg("Start Time")}
-                style="margin-bottom: 16px"
-                .value=${new Date(this._startTime / 1000).toISOString()}
-                @change=${(e: CustomEvent) => {
-                  this._startTime =
-                    new Date((e.target as any).value).valueOf() * 1000;
+              ></md-outlined-text-field>
+              <lit-flatpickr
+                .dateFormat=${'Y-m-d H:i'}
+                .enableTime=${true}
+                .onClose=${(e: any) => {
+                  this._startTime = new Date(e[0]).valueOf() * 1000;
                 }}
-              ></vaadin-date-time-picker>
-              <vaadin-date-time-picker
-                .label=${msg("End Time")}
-                .value=${new Date(this._endTime / 1000).toISOString()}
-                @change=${(e: CustomEvent) => {
-                  this._endTime =
-                    new Date((e.target as any).value).valueOf() * 1000;
+                class="column"
+                style="width: 100%"
+              >
+                <md-outlined-text-field
+                  id="start-time-field"
+                  .label=${msg('Start Time')}
+                  style="flex: 1; margin-bottom: 16px"
+                ></md-outlined-text-field
+              ></lit-flatpickr>
+              <lit-flatpickr
+                .dateFormat=${'Y-m-d H:i'}
+                .enableTime=${true}
+                .onClose=${(e: any) => {
+                  this._endTime = new Date(e[0]).valueOf() * 1000;
                 }}
-              ></vaadin-date-time-picker>
+                class="column"
+                style="width: 100%"
+              >
+                <md-outlined-text-field
+                  id="end-time-field"
+                  .label=${msg('End Time')}
+                  style="flex: 1; margin-bottom: 16px"
+                ></md-outlined-text-field
+              ></lit-flatpickr>
             </div>
 
             <div class="column" style="flex: 1">
               <md-outlined-text-field
-                .label=${msg("Cost")}
-                .value=${this._cost || ""}
+                .label=${msg('Cost')}
+                .value=${this._cost || ''}
                 @input=${(e: CustomEvent) => {
                   this._cost = (e.target as any).value;
                 }}
               ></md-outlined-text-field>
-              <label>
+              <label class="row" style="align-items:center">
                 <md-checkbox
                   .checked=${this._private}
                   @input=${(e: CustomEvent) => {
                     this._private = (e.target as any).checked;
                   }}
                 ></md-checkbox>
-                ${msg("Private Event")}</label
+                ${msg('Private Event')}</label
               >
             </div>
           </div>
 
           <div style="display: flex; flex-direction: row">
             <md-outlined-button
-              .label=${msg("Cancel")}
+              .label=${msg('Cancel')}
               @click=${() =>
                 this.dispatchEvent(
-                  new CustomEvent("edit-canceled", {
+                  new CustomEvent('edit-canceled', {
                     bubbles: true,
                     composed: true,
                   })
@@ -225,7 +246,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
               style="flex: 1; margin-right: 16px"
             ></md-outlined-button>
             <md-filled-button
-              .label=${msg("Save")}
+              .label=${msg('Save')}
               .disabled=${!this.isEventValid()}
               @click=${() => this.updateEvent()}
               style="flex: 1;"
@@ -236,15 +257,15 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
 
   static get scopedElements() {
     return {
-      "mwc-snackbar": Snackbar,
-      "mwc-card": Card,
-      "md-outlined-text-field": MdOutlinedTextField,
-      "md-outlined-button": MdOutlinedButton,
-      "md-filled-button": MdFilledButton,
-      "vaadin-date-time-picker": customElements.get("vaadin-date-time-picker"),
-      "upload-files": UploadFiles,
-      "show-image": ShowImage,
-      "md-checkbox": MdCheckbox,
+      'mwc-snackbar': Snackbar,
+      'mwc-card': Card,
+      'md-outlined-text-field': MdOutlinedTextField,
+      'md-outlined-button': MdOutlinedButton,
+      'md-filled-button': MdFilledButton,
+      'lit-flatpickr': customElements.get('lit-flatpickr'),
+      'upload-files': UploadFiles,
+      'show-image': ShowImage,
+      'md-checkbox': MdCheckbox,
     };
   }
 

@@ -2,35 +2,35 @@ import {
   DisplayError,
   hashProperty,
   sharedStyles,
-} from "@holochain-open-dev/elements";
-import { ShowImage } from "@holochain-open-dev/file-storage";
+} from '@holochain-open-dev/elements';
+import { ShowImage } from '@holochain-open-dev/file-storage';
 import {
   AgentAvatar,
   ProfilesStore,
   profilesStoreContext,
-} from "@holochain-open-dev/profiles";
-import { EntryRecord } from "@holochain-open-dev/utils";
-import { AsyncStatus, StoreSubscriber } from "@holochain-open-dev/stores";
-import { ActionHash, EntryHash, Record } from "@holochain/client";
-import { consume } from "@lit-labs/context";
-import { localized, msg } from "@lit/localize";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
+} from '@holochain-open-dev/profiles';
+import { EntryRecord } from '@holochain-open-dev/utils';
+import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
+import { ActionHash, EntryHash, Record } from '@holochain/client';
+import { consume } from '@lit-labs/context';
+import { localized, msg } from '@lit/localize';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import {
   Card,
   CircularProgress,
   MdIcon,
   Snackbar,
-} from "@scoped-elements/material-web";
-import { LitElement, css, html } from "lit";
-import { property } from "lit/decorators.js";
+} from '@scoped-elements/material-web';
+import { LitElement, css, html } from 'lit';
+import { property } from 'lit/decorators.js';
 
-import { gatherStoreContext } from "../context";
-import { GatherStore } from "../gather-store";
-import { Event } from "../types";
+import { gatherStoreContext } from '../context';
+import { GatherStore } from '../gather-store';
+import { Event } from '../types';
 
 @localized()
 export class EventSummary extends ScopedElementsMixin(LitElement) {
-  @property(hashProperty("event-hash"))
+  @property(hashProperty('event-hash'))
   eventHash!: ActionHash;
 
   /**
@@ -78,7 +78,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
               <div
                 style="display: flex; flex-direction: row; align-items: center;"
               >
-                <md-icon>location_on</md-icon>
+                <md-icon style="margin-right: 4px">location_on</md-icon>
                 <span style="white-space: pre-line"
                   >${entryRecord.entry.location}</span
                 >
@@ -87,7 +87,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
               <div
                 style="display: flex; flex-direction: row; align-items: center"
               >
-                <md-icon>schedule</md-icon>
+                <md-icon style="margin-right: 4px">schedule</md-icon>
                 <span style="white-space: pre-line"
                   >${new Date(
                     entryRecord.entry.start_time / 1000
@@ -100,18 +100,18 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
 
             <div class="column">
               <div class="row" style="align-items: center; margin-bottom: 8px;">
-                <span style="margin-right: 8px">${msg("Hosted by")}</span>
+                <span style="margin-right: 8px">${msg('Hosted by')}</span>
                 <agent-avatar
                   .agentPubKey=${entryRecord.action.author}
                 ></agent-avatar>
               </div>
 
-              ${this._attendees.value.status === "complete"
+              ${this._attendees.value.status === 'complete'
                 ? html`<div class="row" style="align-items: center;">
-                    <span style="margin-right: 8px;">${msg("Attendees")}</span>
+                    <span style="margin-right: 8px;">${msg('Attendees')}</span>
                     <div class="avatar-group">
                       ${this._attendees.value.value.map(
-                        (a) =>
+                        a =>
                           html`<agent-avatar .agentPubKey=${a}></agent-avatar>`
                       )}
                     </div>
@@ -131,20 +131,20 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
 
   renderEvent(event: AsyncStatus<EntryRecord<Event> | undefined>) {
     switch (event.status) {
-      case "pending":
+      case 'pending':
         return html`<div
           style="display: flex; flex: 1; align-items: center; justify-content: center"
         >
           <mwc-circular-progress indeterminate></mwc-circular-progress>
         </div>`;
-      case "complete":
+      case 'complete':
         if (!event.value)
           return html`<span>${msg("The requested event doesn't exist")}</span>`;
 
         return this.renderSummary(event.value);
-      case "error":
+      case 'error':
         return html`<display-error
-          .headline=${msg("Error fetching the event")}
+          .headline=${msg('Error fetching the event')}
           .error=${event.error.data.data}
         ></display-error>`;
     }
@@ -155,7 +155,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
       style="display: flex; flex: 1; cursor: grab;"
       @click=${() =>
         this.dispatchEvent(
-          new CustomEvent("event-selected", {
+          new CustomEvent('event-selected', {
             bubbles: true,
             composed: true,
             detail: {
@@ -170,13 +170,13 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
 
   static get scopedElements() {
     return {
-      "mwc-snackbar": Snackbar,
-      "mwc-card": Card,
-      "md-icon": MdIcon,
-      "mwc-circular-progress": CircularProgress,
-      "display-error": DisplayError,
-      "show-image": ShowImage,
-      "agent-avatar": AgentAvatar,
+      'mwc-snackbar': Snackbar,
+      'mwc-card': Card,
+      'md-icon': MdIcon,
+      'mwc-circular-progress': CircularProgress,
+      'display-error': DisplayError,
+      'show-image': ShowImage,
+      'agent-avatar': AgentAvatar,
     };
   }
 
