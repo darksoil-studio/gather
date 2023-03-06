@@ -1,17 +1,17 @@
-import { ProfilesStore } from "@holochain-open-dev/profiles";
+import { ProfilesStore } from '@holochain-open-dev/profiles';
 import {
   AppAgentClient,
   ActionHash,
   EntryHash,
   DnaHash,
-} from "@holochain/client";
+} from '@holochain/client';
 
 export interface GroupInfo {
   logo_src: string;
   name: string;
 }
 
-export type ViewLocation = "NewTab" | "NewBlock";
+export type ViewLocation = 'NewTab' | 'NewBlock';
 
 export interface OpenViews {
   openMain(viewLocation: ViewLocation): void;
@@ -24,10 +24,10 @@ export type View = (rootElement: HTMLElement) => void;
 export type EntryTypeView = (
   hash: EntryHash | ActionHash,
   context: any
-) => Promise<{
-  name: string;
+) => {
+  name: () => Promise<string>;
   view: View;
-}>;
+};
 
 export interface CrossGroupViews {
   main: View;

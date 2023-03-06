@@ -4,6 +4,7 @@ export * from './gather-client.js';
 export * from './gather-store.js';
 
 export * from './elements/create-event.js';
+export * from './elements/gather-context.js';
 export * from './elements/edit-event.js';
 export * from './elements/event-detail.js';
 export * from './elements/event-summary.js';
