@@ -1,16 +1,18 @@
-use hdk::prelude::*;
 use gather_integrity::*;
+use hdk::prelude::*;
 #[hdk_extern]
 pub fn create_event(event: Event) -> ExternResult<Record> {
     let event_hash = create_entry(&EntryTypes::Event(event.clone()))?;
-    let record = get(event_hash.clone(), GetOptions::default())?
-        .ok_or(
-            wasm_error!(
-                WasmErrorInner::Guest(String::from("Could not find the newly created Event"))
-            ),
-        )?;
+    let record = get(event_hash.clone(), GetOptions::default())?.ok_or(wasm_error!(
+        WasmErrorInner::Guest(String::from("Could not find the newly created Event"))
+    ))?;
     let path = Path::from("all_events");
-    create_link(path.path_entry_hash()?, event_hash.clone(), LinkTypes::AllEvents, ())?;
+    create_link(
+        path.path_entry_hash()?,
+        event_hash.clone(),
+        LinkTypes::AllEvents,
+        (),
+    )?;
     Ok(record)
 }
 #[hdk_extern]
@@ -18,7 +20,7 @@ pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>
     let links = get_links(original_event_hash.clone(), LinkTypes::EventUpdates, None)?;
     let latest_link = links
         .into_iter()
-        .max_by(|link_a, link_b| link_b.timestamp.cmp(&link_a.timestamp));
+        .max_by(|link_a, link_b| link_a.timestamp.cmp(&link_b.timestamp));
     let latest_event_hash = match latest_link {
         Some(link) => ActionHash::from(link.target.clone()),
         None => original_event_hash.clone(),
@@ -33,22 +35,16 @@ pub struct UpdateEventInput {
 }
 #[hdk_extern]
 pub fn update_event(input: UpdateEventInput) -> ExternResult<Record> {
-    let updated_event_hash = update_entry(
-        input.previous_event_hash.clone(),
-        &input.updated_event,
-    )?;
+    let updated_event_hash = update_entry(input.previous_event_hash.clone(), &input.updated_event)?;
     create_link(
         input.original_event_hash.clone(),
         updated_event_hash.clone(),
         LinkTypes::EventUpdates,
         (),
     )?;
-    let record = get(updated_event_hash.clone(), GetOptions::default())?
-        .ok_or(
-            wasm_error!(
-                WasmErrorInner::Guest(String::from("Could not find the newly updated Event"))
-            ),
-        )?;
+    let record = get(updated_event_hash.clone(), GetOptions::default())?.ok_or(wasm_error!(
+        WasmErrorInner::Guest(String::from("Could not find the newly updated Event"))
+    ))?;
     Ok(record)
 }
 #[hdk_extern]

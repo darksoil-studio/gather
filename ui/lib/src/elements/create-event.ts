@@ -174,7 +174,7 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
                   this._cost = (e.target as any).value;
                 }}
               ></md-outlined-text-field>
-              <label class="row center-content">
+              <label class="row" style="align-items: center;">
                 <md-checkbox
                   @input=${(e: CustomEvent) => {
                     this._private = (e.target as any).checked;

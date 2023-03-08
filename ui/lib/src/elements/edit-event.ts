@@ -132,16 +132,16 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
   render() {
     return html` <mwc-snackbar id="update-error" leading> </mwc-snackbar>
 
-      <mwc-card style="display: flex; flex: 1">
+      <mwc-card style="display: flex; width: 700px">
         <div style="display: flex; flex-direction: column; margin: 16px;">
           <span style="font-size: 18px; margin-bottom: 16px"
             >${msg('Edit Event')}</span
           >
 
-          <div class="row" style="margin-bottom: 16px">
+          <div class="row" style="margin-bottom: 16px;">
             <show-image
               .imageHash=${this._image}
-              style="height: 200px"
+              style="height: 300px;width: 300px; margin-right: 16px"
             ></show-image>
             <upload-files
               one-file
@@ -149,6 +149,7 @@ export class EditEvent extends ScopedElementsMixin(LitElement) {
               @file-uploaded=${(e: CustomEvent) => {
                 this._image = e.detail.hash;
               }}
+              style="flex: 1"
             ></upload-files>
           </div>
 

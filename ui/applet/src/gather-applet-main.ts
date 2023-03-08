@@ -1,15 +1,9 @@
-import { provide } from '@lit-labs/context';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { MdFabExtended } from '@scoped-elements/material-web';
 import { LitElement, css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
 
-import {
-  GatherStore,
-  CreateEvent,
-  AllEvents,
-  gatherStoreContext,
-} from '@darksoil/gather';
+import { CreateEvent, AllEvents } from '@darksoil/gather';
 import { localized, msg } from '@lit/localize';
 import { sharedStyles } from '@holochain-open-dev/elements';
 
@@ -17,10 +11,6 @@ type View = { view: 'all_events' } | { view: 'create_event' };
 
 @localized()
 export class GatherAppletMain extends ScopedElementsMixin(LitElement) {
-  @provide({ context: gatherStoreContext })
-  @property()
-  _gatherStore!: GatherStore;
-
   @state() _loading = true;
 
   @state() _view: View = { view: 'all_events' };

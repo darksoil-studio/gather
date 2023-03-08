@@ -116,8 +116,11 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
     return html`
       <mwc-snackbar id="error" leading> </mwc-snackbar>
 
-      <mwc-card class="column">
-        <show-image .imageHash=${entryRecord.entry.image}></show-image>
+      <mwc-card class="column" style="width: 700px">
+        <show-image
+          .imageHash=${entryRecord.entry.image}
+          style="width: 700px; height: 300px; flex-basis: 0;"
+        ></show-image>
 
         <div
           style="display: flex; flex-direction: column; margin-left: 16px; margin-bottom: 16px;"

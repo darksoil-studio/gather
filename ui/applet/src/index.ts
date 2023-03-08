@@ -73,7 +73,7 @@ function groupViews(
       ),
     entries: {
       gather: {
-        gather: {
+        gather_integrity: {
           event: (hash: ActionHash, context) => ({
             name: async () => '',
             view: element =>
