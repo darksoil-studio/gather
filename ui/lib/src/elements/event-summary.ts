@@ -1,35 +1,36 @@
 import {
-  DisplayError,
   hashProperty,
   sharedStyles,
+  wrapPathInSvg,
 } from '@holochain-open-dev/elements';
-import { ShowImage } from '@holochain-open-dev/file-storage';
 import {
-  AgentAvatar,
   ProfilesStore,
   profilesStoreContext,
 } from '@holochain-open-dev/profiles';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
-import { ActionHash, EntryHash, Record } from '@holochain/client';
+import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import {
-  Card,
-  CircularProgress,
-  MdIcon,
-  Snackbar,
-} from '@scoped-elements/material-web';
 import { LitElement, css, html } from 'lit';
-import { property } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
+import { mdiCalendarClock, mdiMapMarker } from '@mdi/js';
 
-import { gatherStoreContext } from '../context';
-import { GatherStore } from '../gather-store';
-import { Event } from '../types';
+import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
+import '@shoelace-style/shoelace/dist/components/alert/alert.js';
+import '@shoelace-style/shoelace/dist/components/icon/icon.js';
+import '@holochain-open-dev/elements/elements/display-error.js';
+import '@holochain-open-dev/profiles/elements/agent-avatar.js';
+import '@holochain-open-dev/file-storage/elements/show-image.js';
+import '@shoelace-style/shoelace/dist/components/card/card.js';
+
+import { gatherStoreContext } from '../context.js';
+import { GatherStore } from '../gather-store.js';
+import { Event } from '../types.js';
 
 @localized()
-export class EventSummary extends ScopedElementsMixin(LitElement) {
+@customElement('event-summary')
+export class EventSummary extends LitElement {
   @property(hashProperty('event-hash'))
   eventHash!: ActionHash;
 
@@ -78,7 +79,10 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
               <div
                 style="display: flex; flex-direction: row; align-items: center;"
               >
-                <md-icon style="margin-right: 4px">location_on</md-icon>
+                <sl-icon
+                  style="margin-right: 4px"
+                  .src=${wrapPathInSvg(mdiMapMarker)}
+                ></sl-icon>
                 <span style="white-space: pre-line"
                   >${entryRecord.entry.location}</span
                 >
@@ -87,7 +91,10 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
               <div
                 style="display: flex; flex-direction: row; align-items: center"
               >
-                <md-icon style="margin-right: 4px">schedule</md-icon>
+                <sl-icon
+                  style="margin-right: 4px"
+                  .src=${wrapPathInSvg(mdiCalendarClock)}
+                ></sl-icon>
                 <span style="white-space: pre-line"
                   >${new Date(
                     entryRecord.entry.start_time / 1000
@@ -122,7 +129,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
         </div>
 
         <show-image
-          style="width: 200px; height: 200px; flex: 0"
+          style="width: 200px; height: 200px; flex: 0; margin-top: -20px; margin-bottom: -20px; margin-right: -20px"
           .imageHash=${entryRecord.entry.image}
         ></show-image>
       </div>
@@ -135,7 +142,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
         return html`<div
           style="display: flex; flex: 1; align-items: center; justify-content: center"
         >
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
+          <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
       case 'complete':
         if (!event.value)
@@ -151,8 +158,8 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
-    return html`<mwc-card
-      style="display: flex; flex: 1; cursor: grab;"
+    return html`<sl-card
+      style=" flex: 1; cursor: grab;"
       @click=${() =>
         this.dispatchEvent(
           new CustomEvent('event-selected', {
@@ -165,19 +172,7 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
         )}
     >
       ${this.renderEvent(this._event.value)}
-    </mwc-card>`;
-  }
-
-  static get scopedElements() {
-    return {
-      'mwc-snackbar': Snackbar,
-      'mwc-card': Card,
-      'md-icon': MdIcon,
-      'mwc-circular-progress': CircularProgress,
-      'display-error': DisplayError,
-      'show-image': ShowImage,
-      'agent-avatar': AgentAvatar,
-    };
+    </sl-card>`;
   }
 
   static styles = [
@@ -185,6 +180,9 @@ export class EventSummary extends ScopedElementsMixin(LitElement) {
     css`
       .avatar-group agent-avatar:not(:first-of-type) {
         margin-left: -1rem;
+      }
+      :host {
+        display: flex;
       }
     `,
   ];

@@ -26,107 +26,20 @@
       body {
         display: flex;
       }
-
+      body,
       :root {
-        --mdc-theme-secondary: #388e3c;
-        --mdc-theme-primary: #3f51b5;
-      }
-
-      :root {
-        --md-sys-color-primary-light: #4355b9;
-        --md-sys-color-on-primary-light: #ffffff;
-        --md-sys-color-primary-container-light: #dee0ff;
-        --md-sys-color-on-primary-container-light: #00105c;
-        --md-sys-color-secondary-light: #106d20;
-        --md-sys-color-on-secondary-light: #ffffff;
-        --md-sys-color-secondary-container-light: #9df898;
-        --md-sys-color-on-secondary-container-light: #002204;
-        --md-sys-color-tertiary-light: #77536d;
-        --md-sys-color-on-tertiary-light: #ffffff;
-        --md-sys-color-tertiary-container-light: #ffd7f1;
-        --md-sys-color-on-tertiary-container-light: #2d1228;
-        --md-sys-color-error-light: #ba1a1a;
-        --md-sys-color-error-container-light: #ffdad6;
-        --md-sys-color-on-error-light: #ffffff;
-        --md-sys-color-on-error-container-light: #410002;
-        --md-sys-color-background-light: #fefbff;
-        --md-sys-color-on-background-light: #1b1b1f;
-        --md-sys-color-surface-light: #fefbff;
-        --md-sys-color-on-surface-light: #1b1b1f;
-        --md-sys-color-surface-variant-light: #e3e1ec;
-        --md-sys-color-on-surface-variant-light: #46464f;
-        --md-sys-color-outline-light: #767680;
-        --md-sys-color-inverse-on-surface-light: #f3f0f4;
-        --md-sys-color-inverse-surface-light: #303034;
-        --md-sys-color-inverse-primary-light: #bac3ff;
-        --md-sys-color-shadow-light: #000000;
-        --md-sys-color-surface-tint-light: #4355b9;
-        --md-sys-color-outline-variant-light: #c7c5d0;
-        --md-sys-color-scrim-light: #000000;
-
-        --md-sys-color-primary: var(--md-sys-color-primary-light);
-        --md-sys-color-on-primary: var(--md-sys-color-on-primary-light);
-        --md-sys-color-primary-container: var(
-          --md-sys-color-primary-container-light
-        );
-        --md-sys-color-on-primary-container: var(
-          --md-sys-color-on-primary-container-light
-        );
-        --md-sys-color-secondary: var(--md-sys-color-secondary-light);
-        --md-sys-color-on-secondary: var(--md-sys-color-on-secondary-light);
-        --md-sys-color-secondary-container: var(
-          --md-sys-color-secondary-container-light
-        );
-        --md-sys-color-on-secondary-container: var(
-          --md-sys-color-on-secondary-container-light
-        );
-        --md-sys-color-tertiary: var(--md-sys-color-tertiary-light);
-        --md-sys-color-on-tertiary: var(--md-sys-color-on-tertiary-light);
-        --md-sys-color-tertiary-container: var(
-          --md-sys-color-tertiary-container-light
-        );
-        --md-sys-color-on-tertiary-container: var(
-          --md-sys-color-on-tertiary-container-light
-        );
-        --md-sys-color-error: var(--md-sys-color-error-light);
-        --md-sys-color-error-container: var(
-          --md-sys-color-error-container-light
-        );
-        --md-sys-color-on-error: var(--md-sys-color-on-error-light);
-        --md-sys-color-on-error-container: var(
-          --md-sys-color-on-error-container-light
-        );
-        --md-sys-color-background: var(--md-sys-color-background-light);
-        --md-sys-color-on-background: var(--md-sys-color-on-background-light);
-        --md-sys-color-surface: var(--md-sys-color-surface-light);
-        --md-sys-color-on-surface: var(--md-sys-color-on-surface-light);
-        --md-sys-color-surface-variant: var(
-          --md-sys-color-surface-variant-light
-        );
-        --md-sys-color-on-surface-variant: var(
-          --md-sys-color-on-surface-variant-light
-        );
-        --md-sys-color-outline: var(--md-sys-color-outline-light);
-        --md-sys-color-inverse-on-surface: var(
-          --md-sys-color-inverse-on-surface-light
-        );
-        --md-sys-color-inverse-surface: var(
-          --md-sys-color-inverse-surface-light
-        );
-        --md-sys-color-inverse-primary: var(
-          --md-sys-color-inverse-primary-light
-        );
-        --md-sys-color-shadow: var(--md-sys-color-shadow-light);
-        --md-sys-color-surface-tint: var(--md-sys-color-surface-tint-light);
-        --md-sys-color-outline-variant: var(
-          --md-sys-color-outline-variant-light
-        );
-        --md-sys-color-scrim: var(--md-sys-color-scrim-light);
-      }
-
-      :root {
-        --mdc-theme-primary: var(--md-sys-color-primary);
-        --mdc-theme-secondary: var(--md-sys-color-secondary);
+        /* Changes the primary theme color to purple using primitives */
+        --sl-color-primary-50: var(--sl-color-orange-50);
+        --sl-color-primary-100: var(--sl-color-orange-100);
+        --sl-color-primary-200: var(--sl-color-orange-200);
+        --sl-color-primary-300: var(--sl-color-orange-300);
+        --sl-color-primary-400: var(--sl-color-orange-400);
+        --sl-color-primary-500: var(--sl-color-orange-500);
+        --sl-color-primary-600: var(--sl-color-orange-600);
+        --sl-color-primary-700: var(--sl-color-orange-700);
+        --sl-color-primary-800: var(--sl-color-orange-800);
+        --sl-color-primary-900: var(--sl-color-orange-900);
+        --sl-color-primary-950: var(--sl-color-orange-950);
       }
     </style>
     <title>Gather</title>
@@ -136,9 +49,11 @@
     <holochain-app style="flex: 1"></holochain-app>
 
     <script type="module">
-      import { HolochainApp } from "./src/holochain-app.ts";
+      import '@shoelace-style/shoelace/dist/themes/light.css';
+      import './src/holochain-app.ts';
+      import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path';
 
-      customElements.define("holochain-app", HolochainApp);
+      setBasePath('shoelace');
     </script>
   </body>
 </html>

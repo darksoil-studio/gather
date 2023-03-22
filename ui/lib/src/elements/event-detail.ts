@@ -1,36 +1,45 @@
 import {
-  DisplayError,
   hashProperty,
+  notifyError,
   sharedStyles,
+  wrapPathInSvg,
 } from '@holochain-open-dev/elements';
-import { ShowImage } from '@holochain-open-dev/file-storage';
-import { AgentAvatar } from '@holochain-open-dev/profiles';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import {
-  Card,
-  CircularProgress,
-  MdFilledButton,
-  MdIcon,
-  MdStandardIconButton,
-  Snackbar,
-} from '@scoped-elements/material-web';
-import { SlSkeleton } from '@scoped-elements/shoelace';
 import { LitElement, html } from 'lit';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
-import { property, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
-import { gatherStoreContext } from '../context';
-import { GatherStore } from '../gather-store';
-import { Event } from '../types';
-import { AttendeesForEvent } from './attendees-for-event';
-import { EditEvent } from './edit-event';
+import '@holochain-open-dev/elements/elements/display-error.js';
+import '@holochain-open-dev/profiles/elements/agent-avatar.js';
+import '@holochain-open-dev/file-storage/elements/show-image.js';
+import '@shoelace-style/shoelace/dist/components/card/card.js';
+import '@shoelace-style/shoelace/dist/components/alert/alert.js';
+import '@shoelace-style/shoelace/dist/components/icon-button/icon-button.js';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/icon/icon.js';
+import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
+import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
+
+import './attendees-for-event.js';
+import './edit-event.js';
+
+import { gatherStoreContext } from '../context.js';
+import { GatherStore } from '../gather-store.js';
+import { Event } from '../types.js';
+import {
+  mdiCalendarClock,
+  mdiCash,
+  mdiDelete,
+  mdiMapMarker,
+  mdiPencil,
+} from '@mdi/js';
 
 @localized()
-export class EventDetail extends ScopedElementsMixin(LitElement) {
+@customElement('event-detail')
+export class EventDetail extends LitElement {
   @property(hashProperty('event-hash'))
   eventHash!: ActionHash;
 
@@ -74,11 +83,8 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
         })
       );
     } catch (e: any) {
-      const errorSnackbar = this.shadowRoot?.getElementById(
-        'error'
-      ) as Snackbar;
-      errorSnackbar.labelText = `Error deleting the event: ${e.data.data}`;
-      errorSnackbar.show();
+      notifyError(msg('Error deleting the event'));
+      console.error(e);
     }
   }
 
@@ -99,13 +105,8 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
         })
       );
     } catch (e: any) {
-      const errorSnackbar = this.shadowRoot?.getElementById(
-        'error'
-      ) as Snackbar;
-      errorSnackbar.labelText = `${msg('Error adding attendee')}: ${
-        e.data.data
-      }`;
-      errorSnackbar.show();
+      notifyError(msg('Error adding attendee'));
+      console.error(e);
     }
   }
 
@@ -114,17 +115,14 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
       entryRecord.action.author.toString() ===
       this.gatherStore.client.client.myPubKey.toString();
     return html`
-      <mwc-snackbar id="error" leading> </mwc-snackbar>
-
-      <mwc-card class="column" style="width: 700px">
+      <sl-card class="column" style="width: 700px">
         <show-image
+          slot="image"
           .imageHash=${entryRecord.entry.image}
           style="width: 700px; height: 300px; flex-basis: 0;"
         ></show-image>
 
-        <div
-          style="display: flex; flex-direction: column; margin-left: 16px; margin-bottom: 16px;"
-        >
+        <div style="display: flex; flex-direction: column; ">
           <div style="display: flex; flex-direction: row">
             <span
               class="title"
@@ -134,25 +132,23 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
 
             ${amIAuthor
               ? html`
-                  <md-standard-icon-button
+                  <sl-icon-button
                     style="margin-left: 8px"
                     @click=${() => {
                       this._editing = true;
                     }}
-                    >edit</md-standard-icon-button
-                  >
-                  <md-standard-icon-button
+                    .src=${wrapPathInSvg(mdiPencil)}
+                  ></sl-icon-button>
+                  <sl-icon-button
                     style="margin-left: 8px"
+                    .src=${wrapPathInSvg(mdiDelete)}
                     @click=${() => this.deleteEvent()}
-                    >delete</md-standard-icon-button
-                  >
+                  ></sl-icon-button>
                 `
               : html``}
           </div>
 
-          <div
-            style="display: flex; flex-direction: column; margin-right: 16px"
-          >
+          <div style="display: flex; flex-direction: column;">
             <span style="white-space: pre-line; margin-bottom: 16px;"
               >${entryRecord.entry.description}</span
             >
@@ -162,7 +158,10 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
                 <div
                   style="display: flex; flex-direction: row; align-items: center;"
                 >
-                  <md-icon style="margin-right: 4px">location_on</md-icon>
+                  <sl-icon
+                    style="margin-right: 4px"
+                    .src=${wrapPathInSvg(mdiMapMarker)}
+                  ></sl-icon>
                   <span style="white-space: pre-line"
                     >${entryRecord.entry.location}</span
                   >
@@ -171,7 +170,10 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
                 <div
                   style="display: flex; flex-direction: row; align-items: center"
                 >
-                  <md-icon style="margin-right: 4px">schedule</md-icon>
+                  <sl-icon
+                    style="margin-right: 4px"
+                    .src=${wrapPathInSvg(mdiCalendarClock)}
+                  ></sl-icon>
                   <span style="white-space: pre-line"
                     >${new Date(
                       entryRecord.entry.start_time / 1000
@@ -183,7 +185,10 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
                   ? html` <div
                       style="display: flex; flex-direction: row; align-items: center"
                     >
-                      <md-icon style="margin-right: 4px">payments</md-icon>
+                      <sl-icon
+                        style="margin-right: 4px"
+                        .src=${wrapPathInSvg(mdiCash)}
+                      ></sl-icon>
                       <span style="white-space: pre-line"
                         >${entryRecord.entry.cost}</span
                       >
@@ -209,7 +214,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
             ${this.renderAttendButton(entryRecord)}
           </div>
         </div>
-      </mwc-card>
+      </sl-card>
     `;
   }
 
@@ -232,11 +237,13 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
             .includes(this.gatherStore.client.client.myPubKey.toString())
         )
           return html``;
-        return html`<md-filled-button
+        return html`<sl-button
+          variant="primary"
           style="margin-top: 16px;"
-          .label=${msg("I'll attend!")}
           @click=${() => this.attendEvent()}
-        ></md-filled-button>`;
+        >
+          ${msg("I'll attend!")}
+        </sl-button>`;
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching the attendees')}
@@ -279,7 +286,7 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
         return html`<div
           style="display: flex; flex: 1; align-items: center; justify-content: center"
         >
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
+          <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
       case 'complete':
         return this.renderEvent(this._event.value.value);
@@ -288,23 +295,6 @@ export class EventDetail extends ScopedElementsMixin(LitElement) {
           .error=${this._event.value.error.data.data}
         ></display-error>`;
     }
-  }
-
-  static get scopedElements() {
-    return {
-      'display-error': DisplayError,
-      'edit-event': EditEvent,
-      'md-icon': MdIcon,
-      'mwc-circular-progress': CircularProgress,
-      'mwc-snackbar': Snackbar,
-      'mwc-card': Card,
-      'md-standard-icon-button': MdStandardIconButton,
-      'agent-avatar': AgentAvatar,
-      'md-filled-button': MdFilledButton,
-      'sl-skeleton': SlSkeleton,
-      'show-image': ShowImage,
-      'attendees-for-event': AttendeesForEvent,
-    };
   }
 
   static styles = [sharedStyles];

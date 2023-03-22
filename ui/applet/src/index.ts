@@ -1,14 +1,12 @@
 import { ActionHash, AppAgentClient, CellType } from '@holochain/client';
 import { html, render, TemplateResult } from 'lit';
-import {
-  GatherStore,
-  GatherClient,
-  GatherContext,
-  EventDetail,
-} from '@darksoil/gather';
-import { ProfilesContext } from '@holochain-open-dev/profiles';
+import { GatherStore, GatherClient } from '@darksoil/gather';
+import '@darksoil/gather/elements/gather-context.js';
+import '@darksoil/gather/elements/all-events.js';
+import '@darksoil/gather/elements/event-detail.js';
 import { FileStorageClient } from '@holochain-open-dev/file-storage';
-import '@holochain-open-dev/file-storage/file-storage-context';
+import '@holochain-open-dev/profiles/elements/profiles-context.js';
+import '@holochain-open-dev/file-storage/elements/file-storage-context.js';
 
 import {
   CrossGroupViews,
@@ -19,12 +17,7 @@ import {
   OpenViews,
   WeApplet,
 } from './we-applet';
-import { GatherAppletMain } from './gather-applet-main';
-
-customElements.define('gather-context', GatherContext);
-customElements.define('gather-applet-main', GatherAppletMain);
-customElements.define('event-detail', EventDetail);
-customElements.define('profiles-context', ProfilesContext);
+import './gather-applet-main';
 
 function wrapGroupView(
   client: AppAgentClient,
@@ -50,33 +43,34 @@ function groupViews(
   openViews: OpenViews
 ): GroupViews {
   return {
-    blocks: {},
-    main: element =>
-      render(
-        wrapGroupView(
-          client,
-          groupInfo,
-          groupServices,
-          html`
-            <gather-applet-main
-              @event-selected=${async (e: CustomEvent) => {
-                const appInfo = await client.appInfo();
-                const dnaHash = (appInfo.cell_info['gather'][0] as any)[
-                  CellType.Provisioned
-                ].cell_id[0];
-                openViews.openHrl([dnaHash, e.detail.eventHash], {}, 'NewTab');
-              }}
-            ></gather-applet-main>
-          `
+    blocks: {
+      main: element =>
+        render(
+          wrapGroupView(
+            client,
+            groupInfo,
+            groupServices,
+            html`
+              <gather-applet-main
+                @event-selected=${async (e: CustomEvent) => {
+                  const appInfo = await client.appInfo();
+                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                    CellType.Provisioned
+                  ].cell_id[0];
+                  openViews.openHrl([dnaHash, e.detail.eventHash], {});
+                }}
+              ></gather-applet-main>
+            `
+          ),
+          element
         ),
-        element
-      ),
+    },
     entries: {
       gather: {
         gather_integrity: {
-          event: (hash: ActionHash, context) => ({
-            name: async () => '',
-            view: element =>
+          event: {
+            name: async (hash: ActionHash) => '',
+            view: (hash: ActionHash, context) => element =>
               render(
                 wrapGroupView(
                   client,
@@ -86,7 +80,7 @@ function groupViews(
                 ),
                 element
               ),
-          }),
+          },
         },
       },
     },
@@ -97,8 +91,9 @@ function crossGroupViews(
   groupWithApplets: GroupWithApplets[]
 ): CrossGroupViews {
   return {
-    blocks: {},
-    main: element => {},
+    blocks: {
+      main: element => {},
+    },
   };
 }
 

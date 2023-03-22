@@ -1,47 +1,37 @@
-import '@webcomponents/scoped-custom-element-registry';
-
 import {
   FileStorageClient,
   fileStorageClientContext,
 } from '@holochain-open-dev/file-storage';
 import {
-  AgentAvatar,
   Profile,
-  ProfileListItemSkeleton,
-  ProfilePrompt,
   ProfilesClient,
   ProfilesStore,
   profilesStoreContext,
 } from '@holochain-open-dev/profiles';
+import '@holochain-open-dev/profiles/elements/agent-avatar.js';
+import '@holochain-open-dev/profiles/elements/profile-prompt.js';
+import '@holochain-open-dev/profiles/elements/profile-list-item-skeleton.js';
 import {
   ActionHash,
   AppAgentClient,
   AppAgentWebsocket,
 } from '@holochain/client';
 import { provide } from '@lit-labs/context';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import {
-  CircularProgress,
-  MdFabExtended,
-  MdIcon,
-  MdStandardIconButton,
-  MdTextButton,
-  TopAppBar,
-} from '@scoped-elements/material-web';
 import { LitElement, css, html } from 'lit';
 import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
-import { property, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 import {
   GatherStore,
   GatherClient,
-  EventDetail,
-  CreateEvent,
-  AllEvents,
   gatherStoreContext,
 } from '@darksoil/gather';
+import '@darksoil/gather/elements/event-detail.js';
+import '@darksoil/gather/elements/create-event.js';
+import '@darksoil/gather/elements/all-events.js';
 import { localized, msg } from '@lit/localize';
-import { DisplayError, sharedStyles } from '@holochain-open-dev/elements';
+import { sharedStyles } from '@holochain-open-dev/elements';
+import '@holochain-open-dev/elements/elements/display-error.js';
 
 type View =
   | { view: 'all_events' }
@@ -49,7 +39,8 @@ type View =
   | { view: 'create_event' };
 
 @localized()
-export class HolochainApp extends ScopedElementsMixin(LitElement) {
+@customElement('holochain-app')
+export class HolochainApp extends LitElement {
   @provide({ context: fileStorageClientContext })
   @property()
   _fileStorageClient!: FileStorageClient;
@@ -179,28 +170,27 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
         </div>
       </div>
 
-      <md-fab-extended
-        icon="add"
-        .label=${msg('Create Event')}
+      <sl-button
+        variant="primary"
         @click=${() => {
           this._view = { view: 'create_event' };
         }}
         style="position: absolute; right: 16px; bottom: 16px;"
-      ></md-fab-extended>`;
+      >
+        ${msg('Create Event')}
+      </sl-button>`;
   }
 
   renderBackButton() {
     if (this._view.view === 'all_events') return html``;
 
     return html`
-      <md-standard-icon-button
-        slot="navigationIcon"
-        style="--md-icon-color: white"
+      <sl-icon-button
+        name="arrow-left"
         @click=${() => {
           this._view = { view: 'all_events' };
         }}
-        >arrow_back</md-standard-icon-button
-      >
+      ></sl-icon-button>
     `;
   }
 
@@ -210,39 +200,26 @@ export class HolochainApp extends ScopedElementsMixin(LitElement) {
         class="row"
         style="flex: 1; height: 100%; align-items: center; justify-content: center;"
       >
-        <mwc-circular-progress indeterminate></mwc-circular-progress>
+        <sl-spinner style="font-size: 2rem"></sl-spinner>
       </div>`;
 
     return html`
-      <mwc-top-app-bar style="flex: 1; display: flex;">
-        ${this.renderBackButton()}
-        <div slot="title">Gather</div>
-        <div class="fill row" style="width: 100vw; height: 100%;">
-          <profile-prompt style="flex: 1;">
-            ${this.renderContent()}
-          </profile-prompt>
-        </div>
-        ${this.renderMyProfile()}
-      </mwc-top-app-bar>
-    `;
-  }
+      <div class="column fill">
+        <div
+          class="row"
+          style="align-items: center; color:white; background-color: var(--sl-color-primary-900); padding: 16px"
+        >
+          ${this.renderBackButton()}
+          <span class="title" style="flex: 1">${msg('Radiance')}</span>
 
-  static get scopedElements() {
-    return {
-      'agent-avatar': AgentAvatar,
-      'profile-prompt': ProfilePrompt,
-      'md-standard-icon-button': MdStandardIconButton,
-      'mwc-top-app-bar': TopAppBar,
-      'mwc-circular-progress': CircularProgress,
-      'all-events': AllEvents,
-      'md-text-button': MdTextButton,
-      'create-event': CreateEvent,
-      'md-icon': MdIcon,
-      'event-detail': EventDetail,
-      'md-fab-extended': MdFabExtended,
-      'display-error': DisplayError,
-      'profile-list-item-skeleton': ProfileListItemSkeleton,
-    };
+          ${this.renderMyProfile()}
+        </div>
+
+        <profile-prompt style="flex: 1;">
+          ${this.renderContent()}
+        </profile-prompt>
+      </div>
+    `;
   }
 
   static styles = [

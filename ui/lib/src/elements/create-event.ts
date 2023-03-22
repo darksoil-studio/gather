@@ -1,75 +1,38 @@
-import { sharedStyles } from '@holochain-open-dev/elements';
-import { ShowImage, UploadFiles } from '@holochain-open-dev/file-storage';
+import {
+  notifyError,
+  onSubmit,
+  sharedStyles,
+} from '@holochain-open-dev/elements';
 import { EntryHash, Record } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import {
-  Card,
-  Snackbar,
-  MdFilledButton,
-  MdOutlinedTextField,
-  MdCheckbox,
-} from '@scoped-elements/material-web';
 import { LitElement, html } from 'lit';
-import { state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
+
 import 'lit-flatpickr';
+import '@shoelace-style/shoelace/dist/components/checkbox/checkbox.js';
+import '@shoelace-style/shoelace/dist/components/alert/alert.js';
+import '@shoelace-style/shoelace/dist/components/input/input.js';
+import '@shoelace-style/shoelace/dist/components/card/card.js';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@holochain-open-dev/file-storage/elements/upload-files.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { Event } from '../types.js';
 
 @localized()
-export class CreateEvent extends ScopedElementsMixin(LitElement) {
-  @state()
-  _title: string | undefined;
-
-  @state()
-  _description: string | undefined;
-
-  @state()
-  _image: EntryHash | undefined;
-
-  @state()
-  _location: string | undefined;
-
-  @state()
-  _startTime: number | undefined;
-
-  @state()
-  _endTime: number | undefined;
-
-  @state()
-  _private = false;
-
-  @state()
-  _cost: string | undefined;
-
-  isEventValid() {
-    return (
-      this._title !== '' &&
-      this._description !== '' &&
-      this._image &&
-      this._location &&
-      this._startTime &&
-      this._endTime &&
-      this._private !== undefined
-    );
-  }
-
+@customElement('create-event')
+export class CreateEvent extends LitElement {
   @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  async createEvent() {
+  async createEvent(fields: any) {
     const event: Event = {
-      title: this._title!,
-      description: this._description!,
-      image: this._image!,
-      location: this._location!,
-      start_time: this._startTime!,
-      end_time: this._endTime!,
-      private: this._private!,
-      cost: this._cost,
+      ...fields,
+      private: fields.private === 'on',
+      start_time: new Date(fields.start_time).valueOf() * 1000,
+      end_time: new Date(fields.end_time).valueOf() * 1000,
     };
 
     try {
@@ -85,128 +48,84 @@ export class CreateEvent extends ScopedElementsMixin(LitElement) {
         })
       );
     } catch (e: any) {
-      const errorSnackbar = this.shadowRoot?.getElementById(
-        'create-error'
-      ) as Snackbar;
-      errorSnackbar.labelText = `${msg('Error creating the event')}: ${
-        e.data.data
-      }`;
-      errorSnackbar.show();
+      notifyError(msg('Error creating the event'));
+      console.error(e);
     }
   }
 
   render() {
     return html`
-      <mwc-snackbar id="create-error" leading> </mwc-snackbar>
-
-      <mwc-card style="display: flex; flex: 1;">
-        <div
-          style="display: flex; flex: 1; flex-direction: column; margin: 16px"
+      <sl-card style="display: flex; flex: 1;">
+        <span slot="header" style="font-size: 18px"
+          >${msg('Create Event')}</span
         >
-          <span style="font-size: 18px">${msg('Create Event')}</span>
-
+        <form
+          style="display: flex; flex: 1; flex-direction: column;"
+          ${onSubmit(f => this.createEvent(f))}
+        >
           <span style="margin: 8px 0 ">${msg('Event Image')}</span>
           <upload-files
+            name="image"
+            required
             style="margin-bottom: 16px; display: flex"
             one-file
             accepted-files="image/jpeg,image/png,image/gif"
-            @file-uploaded=${(e: CustomEvent) => {
-              this._image = e.detail.hash;
-            }}
           ></upload-files>
 
-          <md-outlined-text-field
+          <sl-input
+            name="title"
+            required
             .label=${msg('Title')}
             style="margin-bottom: 16px"
-            @input=${(e: CustomEvent) => {
-              this._title = (e.target as any).value;
-            }}
-          ></md-outlined-text-field>
-          <md-outlined-text-field
-            outlined
+          ></sl-input>
+          <sl-input
+            name="description"
+            required
             .label=${msg('Description')}
             style="margin-bottom: 16px"
-            @input=${(e: CustomEvent) => {
-              this._description = (e.target as any).value;
-            }}
-          ></md-outlined-text-field>
+          ></sl-input>
 
           <div style="display: flex; flex: 1; flex-direction: row">
             <div
               style="display: flex; flex: 1; flex-direction: column; margin-right: 16px;"
             >
-              <md-outlined-text-field
+              <sl-input
+                name="location"
+                required
                 .label=${msg('Location')}
                 style="margin-bottom: 16px"
-                @input=${(e: CustomEvent) => {
-                  this._location = (e.target as any).value;
-                }}
-              ></md-outlined-text-field>
-              <lit-flatpickr
-                .dateFormat=${'Y-m-d H:i'}
-                .enableTime=${true}
-                .onClose=${(e: any) => {
-                  this._startTime = new Date(e[0]).valueOf() * 1000;
-                }}
-              >
-                <md-outlined-text-field
+              ></sl-input>
+              <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
+                <sl-input
+                  name="start_time"
+                  required
                   .label=${msg('Start Time')}
                   style="margin-bottom: 16px"
-                ></md-outlined-text-field
+                ></sl-input
               ></lit-flatpickr>
-              <lit-flatpickr
-                .dateFormat=${'Y-m-d H:i'}
-                .enableTime=${true}
-                .onClose=${(e: any) => {
-                  this._endTime = new Date(e[0]).valueOf() * 1000;
-                }}
-              >
-                <md-outlined-text-field
+              <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
+                <sl-input
+                  required
+                  name="end_time"
                   .label=${msg('End Time')}
-                ></md-outlined-text-field
+                ></sl-input
               ></lit-flatpickr>
             </div>
 
             <div class="column" style="flex: 1">
-              <md-outlined-text-field
-                .label=${msg('Cost')}
-                @input=${(e: CustomEvent) => {
-                  this._cost = (e.target as any).value;
-                }}
-              ></md-outlined-text-field>
-              <label class="row" style="align-items: center;">
-                <md-checkbox
-                  @input=${(e: CustomEvent) => {
-                    this._private = (e.target as any).checked;
-                  }}
-                ></md-checkbox>
+              <sl-input name="cost" .label=${msg('Cost')}></sl-input>
+              <sl-checkbox name="private">
                 ${msg('Private Event')}
-              </label>
+              </sl-checkbox>
             </div>
           </div>
 
-          <md-filled-button
-            style="margin-top: 16px;"
-            .label=${msg('Create Event')}
-            .disabled=${!this.isEventValid()}
-            @click=${() => this.createEvent()}
-          ></md-filled-button>
-        </div>
-      </mwc-card>
+          <sl-button variant="primary" style="margin-top: 16px;" type="submit">
+            ${msg('Create Event')}
+          </sl-button>
+        </form>
+      </sl-card>
     `;
-  }
-
-  static get scopedElements() {
-    return {
-      'mwc-snackbar': Snackbar,
-      'md-filled-button': MdFilledButton,
-      'mwc-card': Card,
-      'md-outlined-text-field': MdOutlinedTextField,
-      'upload-files': UploadFiles,
-      'show-image': ShowImage,
-      'lit-flatpickr': customElements.get('lit-flatpickr'),
-      'md-checkbox': MdCheckbox,
-    };
   }
 
   static styles = [sharedStyles];

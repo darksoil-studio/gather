@@ -1,7 +1,6 @@
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { MdFabExtended } from '@scoped-elements/material-web';
 import { LitElement, css, html } from 'lit';
-import { property, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 
 import { CreateEvent, AllEvents } from '@darksoil/gather';
 import { localized, msg } from '@lit/localize';
@@ -10,7 +9,8 @@ import { sharedStyles } from '@holochain-open-dev/elements';
 type View = { view: 'all_events' } | { view: 'create_event' };
 
 @localized()
-export class GatherAppletMain extends ScopedElementsMixin(LitElement) {
+@customElement('gather-applet-main')
+export class GatherAppletMain extends LitElement {
   @state() _loading = true;
 
   @state() _view: View = { view: 'all_events' };
@@ -23,10 +23,9 @@ export class GatherAppletMain extends ScopedElementsMixin(LitElement) {
             <div class="column" style="flex: 1; align-items: center;">
               <create-event
                 @event-created=${(e: CustomEvent) => {
-                  // this._view = {
-                  //   view: "event_detail",
-                  //   selectedEventHash: e.detail.eventHash,
-                  // };
+                  this._view = {
+                    view: 'all_events',
+                  };
                 }}
                 style="margin-top: 16px"
               ></create-event>
@@ -43,16 +42,7 @@ export class GatherAppletMain extends ScopedElementsMixin(LitElement) {
                 <span class="title" style="margin: 16px 0;"
                   >${msg('All Events')}</span
                 >
-                <all-events
-                  @event-selected=${(e: CustomEvent) => {
-                    // this._view = {
-                    //   view: "event_detail",
-                    //   selectedEventHash: e.detail.eventHash,
-                    // };
-                  }}
-                  style="flex: 1"
-                >
-                </all-events>
+                <all-events style="flex: 1"> </all-events>
               </div>
             </div>
           </div>

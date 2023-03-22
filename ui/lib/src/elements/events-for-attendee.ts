@@ -1,30 +1,22 @@
-import {
-  DisplayError,
-  hashProperty,
-  sharedStyles,
-} from "@holochain-open-dev/elements";
-import {
-  ActionHash,
-  AgentPubKey,
-  AppWebsocket,
-  EntryHash,
-  Record,
-} from "@holochain/client";
-import { consume } from "@lit-labs/context";
-import { localized, msg } from "@lit/localize";
-import { ScopedElementsMixin } from "@open-wc/scoped-elements";
-import { CircularProgress } from "@scoped-elements/material-web";
-import { LitElement, html } from "lit";
-import { StoreSubscriber } from "@holochain-open-dev/stores";
-import { customElement, property, state } from "lit/decorators.js";
+import { hashProperty, sharedStyles } from '@holochain-open-dev/elements';
+import { ActionHash, AgentPubKey } from '@holochain/client';
+import { consume } from '@lit-labs/context';
+import { localized, msg } from '@lit/localize';
+import { LitElement, html } from 'lit';
+import { StoreSubscriber } from '@holochain-open-dev/stores';
+import { customElement, property } from 'lit/decorators.js';
 
-import { gatherStoreContext } from "../context";
-import { GatherStore } from "../gather-store";
-import { EventSummary } from "./event-summary";
+import '@holochain-open-dev/elements/elements/display-error.js';
+import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
+
+import { gatherStoreContext } from '../context.js';
+import { GatherStore } from '../gather-store.js';
+import './event-summary.js';
 
 @localized()
-export class EventsForAttendee extends ScopedElementsMixin(LitElement) {
-  @property(hashProperty("attendee"))
+@customElement('events-for-attendee')
+export class EventsForAttendee extends LitElement {
+  @property(hashProperty('attendee'))
   attendee!: AgentPubKey;
 
   /**
@@ -42,12 +34,12 @@ export class EventsForAttendee extends ScopedElementsMixin(LitElement) {
 
   renderList(hashes: Array<ActionHash>) {
     if (hashes.length === 0)
-      return html`<span>${msg("No events found for this attendee")}</span>`;
+      return html`<span>${msg('No events found for this attendee')}</span>`;
 
     return html`
       <div style="display: flex; flex-direction: column">
         ${hashes.map(
-          (hash) =>
+          hash =>
             html`<event-summary
               .eventHash=${hash}
               style="margin-bottom: 16px;"
@@ -59,27 +51,20 @@ export class EventsForAttendee extends ScopedElementsMixin(LitElement) {
 
   render() {
     switch (this._events.value.status) {
-      case "pending":
+      case 'pending':
         return html`<div
           style="display: flex; flex: 1; align-items: center; justify-content: center"
         >
-          <mwc-circular-progress indeterminate></mwc-circular-progress>
+          <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
-      case "complete":
+      case 'complete':
         return this.renderList(this._events.value.value);
-      case "error":
+      case 'error':
         return html`<display-error
+          .headline=${msg('Error fetching the events for this agent')}
           .error=${this._events.value.error.data.data}
         ></display-error>`;
     }
-  }
-
-  static get scopedElements() {
-    return {
-      "mwc-circular-progress": CircularProgress,
-      "event-summary": EventSummary,
-      "display-error": DisplayError,
-    };
   }
 
   static styles = [sharedStyles];
