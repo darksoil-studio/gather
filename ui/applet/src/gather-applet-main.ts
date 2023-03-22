@@ -1,8 +1,10 @@
-import { MdFabExtended } from '@scoped-elements/material-web';
 import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import { CreateEvent, AllEvents } from '@darksoil/gather';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+
+import '@darksoil/gather/elements/create-event.js';
+import '@darksoil/gather/elements/all-events.js';
 import { localized, msg } from '@lit/localize';
 import { sharedStyles } from '@holochain-open-dev/elements';
 
@@ -49,22 +51,15 @@ export class GatherAppletMain extends LitElement {
         </div>
       </div>
 
-      <md-fab-extended
-        icon="add"
-        .label=${msg('Create Event')}
+      <sl-button
+        variant="primary"
         @click=${() => {
           this._view = { view: 'create_event' };
         }}
         style="position: absolute; right: 16px; bottom: 16px;"
-      ></md-fab-extended>`;
-  }
-
-  static get scopedElements() {
-    return {
-      'all-events': AllEvents,
-      'create-event': CreateEvent,
-      'md-fab-extended': MdFabExtended,
-    };
+      >
+        ${msg('Create Event')}
+      </sl-button>`;
   }
 
   static styles = [
