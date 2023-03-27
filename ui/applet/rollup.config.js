@@ -30,7 +30,14 @@ export default {
       'process.env.NODE_ENV': '"production"',
     }),
     copy({
-      targets: [{ src: 'icon.png', dest: 'dist' }],
+      targets: [
+        { src: 'icon.png', dest: 'dist' },
+        {
+          src: '../../node_modules/@shoelace-style/shoelace/dist/themes/light.css',
+          dest: 'dist',
+          rename: 'styles.css',
+        },
+      ],
     }),
     typescript(),
     commonjs({}),

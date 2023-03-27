@@ -16,6 +16,7 @@ import {
   GroupWithApplets,
   OpenViews,
   WeApplet,
+  WeServices,
 } from './we-applet';
 import './gather-applet-main';
 
@@ -40,7 +41,7 @@ function groupViews(
   client: AppAgentClient,
   groupInfo: GroupInfo,
   groupServices: GroupServices,
-  openViews: OpenViews
+  weServices: WeServices
 ): GroupViews {
   return {
     blocks: {
@@ -57,7 +58,10 @@ function groupViews(
                   const dnaHash = (appInfo.cell_info['gather'][0] as any)[
                     CellType.Provisioned
                   ].cell_id[0];
-                  openViews.openHrl([dnaHash, e.detail.eventHash], {});
+                  weServices.openViews.openHrl(
+                    [dnaHash, e.detail.eventHash],
+                    {}
+                  );
                 }}
               ></gather-applet-main>
             `
@@ -70,7 +74,7 @@ function groupViews(
         gather_integrity: {
           event: {
             name: async (hash: ActionHash) => '',
-            view: (hash: ActionHash, context) => element =>
+            view: (element, hash: ActionHash, context) =>
               render(
                 wrapGroupView(
                   client,

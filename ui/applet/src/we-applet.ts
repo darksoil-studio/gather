@@ -12,30 +12,30 @@ export interface GroupInfo {
 }
 
 export interface OpenViews {
-  openGroupBlock(block: string): void;
-  openCrossGroupBlock(block: string): void;
+  openGroupBlock(block: string, context: any): void;
+  openCrossGroupBlock(block: string, context: any): void;
   openHrl(hrl: Hrl, context: any): void;
 }
 
-export type View = (rootElement: HTMLElement) => void;
-
+export type BlockView = (rootElement: HTMLElement, context: any) => void;
 export type EntryTypeView = (
+  rootElement: HTMLElement,
   hash: EntryHash | ActionHash,
   context: any
-) => View;
+) => void;
 
 export interface CrossGroupViews {
-  blocks: { main: View } & Record<string, View>;
+  blocks: { main: BlockView } & Record<string, BlockView>;
 }
 
-export interface EntryTypeHandlers {
+export interface EntryTypeDescriptors {
   name: (hash: EntryHash | ActionHash) => Promise<string>;
   view: EntryTypeView;
 }
 
 export interface GroupViews {
-  blocks: { main: View } & Record<string, View>; // all events -> schedule
-  entries: Record<string, Record<string, Record<string, EntryTypeHandlers>>>; // Segmented by RoleName, integrity ZomeName and EntryType
+  blocks: { main: BlockView } & Record<string, BlockView>; // all events -> schedule
+  entries: Record<string, Record<string, Record<string, EntryTypeDescriptors>>>; // Segmented by RoleName, integrity ZomeName and EntryType
 }
 
 export interface GroupServices {
@@ -46,7 +46,7 @@ export type Hrl = [DnaHash, ActionHash | EntryHash];
 
 // Contextual reference to a Hrl
 // Useful use case: image we want to point to a specific section of a document
-// The document action hash would be the Hrl, and the context could be { secion: "Second Paragraph" }
+// The document action hash would be the Hrl, and the context could be { section: "Second Paragraph" }
 export interface HrlWithContext {
   hrl: Hrl;
   context: any;
@@ -66,12 +66,16 @@ export interface GroupWithApplets {
   appletsClients: AppAgentClient[]; // These will be the same kind of applet
 }
 
+export interface WeServices {
+  openViews: OpenViews;
+}
+
 export interface WeApplet {
   groupViews: (
     appletClient: AppAgentClient,
     groupInfo: GroupInfo,
     groupServices: GroupServices,
-    openViews: OpenViews
+    weServices: WeServices
   ) => GroupViews;
 
   attachableTypes: Array<AttachableType>;
@@ -82,6 +86,6 @@ export interface WeApplet {
 
   crossGroupViews: (
     applets: GroupWithApplets[],
-    openViews: OpenViews
+    weServices: WeServices
   ) => CrossGroupViews;
 }
