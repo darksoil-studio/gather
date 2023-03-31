@@ -7,19 +7,29 @@
     "start:applet": "AGENTS=2 npm run network:applet",
     "network:app": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently -k \"npm run build:watch -w @darksoil/gather\" \"npm start -w app\" \"npm run launch\" \"holochain-playground\"",
     "network:applet": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently -k \"npm run build:watch -w @darksoil/gather\" \"npm start -w applet\" \"npm run launch\" \"holochain-playground\"",
-    "test": "npm run build:zomes && hc app pack workdir --recursive && npm t -w tests",
-    "launch": "echo \"pass\" | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/gather.happ --ui-port $UI_PORT network mdns",
     "package:app": "npm run build:happ && npm run build -w @darksoil/gather && npm run package -w app",
     "package:applet": "npm run build:happ && npm run build -w @darksoil/gather && npm run package -w applet",
+    "test": "npm run build:zomes && hc app pack workdir --recursive && npm t -w tests",
+    "launch": "echo \"pass\" | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/gather.happ --ui-port $UI_PORT network mdns",
     "build:happ": "npm run build:zomes && hc app pack workdir --recursive",
     "build:zomes": "RUSTFLAGS='' CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown",
-    "prepare": "npm run build -w @darksoil/gather"
+    "prepare": "npm run build -w @darksoil/gather",
+    "site:start": "NODE_DEBUG=engine:rendering rocket start --open",
+    "site:build": "rocket build"
   },
   "devDependencies": {
     "@holochain-playground/cli": "^0.1.1",
+    "@rocket/cli": "^0.20.4",
+    "@rocket/components": "^0.2.0",
+    "@rocket/engine": "^0.2.7",
+    "@rocket/spark": "^0.2.0",
     "concurrently": "^6.2.1"
   },
   "engines": {
     "npm": ">=7.0.0"
-  }
+  },
+  "imports": {
+    "#src/*": "./site/src/*"
+  },
+  "type": "module"
 }
