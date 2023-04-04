@@ -4,6 +4,7 @@ import { GatherStore, GatherClient } from '@darksoil/gather';
 import '@darksoil/gather/elements/gather-context.js';
 import '@darksoil/gather/elements/all-events.js';
 import '@darksoil/gather/elements/event-detail.js';
+import '@darksoil/gather/elements/events-calendar.js';
 import { FileStorageClient } from '@holochain-open-dev/file-storage';
 import '@holochain-open-dev/profiles/elements/profiles-context.js';
 import '@holochain-open-dev/file-storage/elements/file-storage-context.js';
@@ -68,6 +69,29 @@ function groupViews(
           ),
           element
         ),
+      calendar: element =>
+        render(
+          wrapGroupView(
+            client,
+            groupInfo,
+            groupServices,
+            html`
+              <gather-events-calendar
+                @event-selected=${async (e: CustomEvent) => {
+                  const appInfo = await client.appInfo();
+                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                    CellType.Provisioned
+                  ].cell_id[0];
+                  weServices.openViews.openHrl(
+                    [dnaHash, e.detail.eventHash],
+                    {}
+                  );
+                }}
+              ></gather-events-calendar>
+            `
+          ),
+          element
+        ),
     },
     entries: {
       gather: {
@@ -87,6 +111,7 @@ function groupViews(
           },
         },
       },
+      assemble_integrity: {},
     },
   };
 }
@@ -109,3 +134,22 @@ const applet: WeApplet = {
 };
 
 export default applet;
+
+// function wrapAssembleGroupView(
+//   client: AppAgentClient,
+//   groupInfo: GroupInfo,
+//   groupServices: GroupServices,
+//   innerTemplate: TemplateResult
+// ): TemplateResult {
+//   const assembleStore = new AssembleStore(
+//     new AssembleClient(client, 'assemble')
+//   );
+//   return wrapGroupView(
+//     client,
+//     groupInfo,
+//     groupServices,
+//     html`<assemble-context .store=${assembleStore}>
+//       ${innerTemplate}
+//     </assemble-context>`
+//   );
+// }

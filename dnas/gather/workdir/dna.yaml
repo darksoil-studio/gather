@@ -18,6 +18,10 @@ integrity:
       hash: ~
       bundled: "../../../target/wasm32-unknown-unknown/release/file_storage_integrity.wasm"
       dependencies: ~
+    - name: assemble_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/assemble_integrity.wasm"
+      dependencies: ~
 coordinator:
   zomes:
     - name: profiles
@@ -35,3 +39,8 @@ coordinator:
       bundled: "../../../target/wasm32-unknown-unknown/release/file_storage.wasm"
       dependencies:
         - name: file_storage_integrity
+    - name: assemble
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/assemble.wasm"
+      dependencies:
+        - name: assemble_integrity

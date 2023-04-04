@@ -3,26 +3,28 @@
   <head>
     <meta charset="utf-8" />
     <style>
+      html,
       body {
         background: #fafafa;
         font-family: Arial, Helvetica, sans-serif;
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        display: flex;
       }
     </style>
   </head>
   <body>
     <script type="module">
-      import { AppWebsocket, AdminWebsocket } from '@holochain/client';
-      import Applet from './src/index.ts';
+      import '@shoelace-style/shoelace/dist/themes/light.css';
+      import { AppAgentWebsocket, AdminWebsocket } from '@holochain/client';
+      import Applet from '../src/index.ts';
 
-      const element = document.getElementById('hi');
+      const element = document.body;
 
       async function setup() {
-        const appWs = await AppWebsocket.connect(
-          `ws://localhost:${process.env.HC_PORT}`
-        );
-        const adminWs = await AdminWebsocket.connect(
-          `ws://localhost:${process.env.ADMIN_PORT}`
-        );
+        const appWs = await AppAgentWebsocket.connect('');
+        const adminWs = await AdminWebsocket.connect('');
 
         const appInfo = await appWs.appInfo({
           installed_app_id: 'notebooks',
@@ -33,7 +35,7 @@
           adminWs,
           { profilesStore: null },
           appInfo
-        ).full(element, customElements);
+        ).blocks.calendar(element);
       }
       setup();
     </script>

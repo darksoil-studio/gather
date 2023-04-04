@@ -1,0 +1,15 @@
+[package]
+name = "assemble_integrity"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "assemble_integrity"
+
+[dependencies]
+hdi = { workspace = true }
+
+serde = { workspace = true }
+
+hc_zome_assemble_integrity = { git = "https://github.com/darksoil-studio/assemble", branch = "main" }

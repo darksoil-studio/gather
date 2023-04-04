@@ -1,3 +1,5 @@
+import { assembleStoreContext, AssembleStore, AssembleClient } from 'lib';
+
 import {
   FileStorageClient,
   fileStorageClientContext,
@@ -41,7 +43,11 @@ type View =
 @localized()
 @customElement('holochain-app')
 export class HolochainApp extends LitElement {
-  @provide({ context: fileStorageClientContext })
+  @provide({ context: assembleStoreContext })
+  @property()
+  _assembleStore!: AssembleStore;
+
+@provide({ context: fileStorageClientContext })
   @property()
   _fileStorageClient!: FileStorageClient;
 
@@ -81,7 +87,8 @@ export class HolochainApp extends LitElement {
       new GatherClient(appAgentClient, 'gather')
     );
     this._fileStorageClient = new FileStorageClient(appAgentClient, 'gather');
-  }
+    this._assembleStore = new AssembleStore(new AssembleClient(appAgentClient, 'gather'));
+}
 
   renderMyProfile() {
     switch (this._myProfile.value.status) {
@@ -230,5 +237,4 @@ export class HolochainApp extends LitElement {
       }
     `,
     sharedStyles,
-  ];
-}
+  ];}
