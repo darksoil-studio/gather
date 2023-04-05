@@ -1,4 +1,4 @@
-import { ZomeClient } from '@holochain-open-dev/utils';
+import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 import {
   ActionHash,
   AgentPubKey,
@@ -105,4 +105,12 @@ export class GatherClient extends ZomeClient<GatherSignal> {
   getAllEvents(): Promise<Array<ActionHash>> {
     return this.callZome('get_all_events', null);
   }
+
+  /** Events By Author */
+
+  async getEventsByAuthor(author: AgentPubKey): Promise<Array<EntryRecord<Event>>> {
+    const records: Record[] = await this.callZome('get_events_by_author', author);
+    return records.map(r => new EntryRecord(r));
+  }
+
 }

@@ -32,4 +32,13 @@ export class GatherStore {
 
   /** All events */
   allEvents = lazyLoadAndPoll(async () => this.client.getAllEvents(), 1000);
+  
+  /** Events By Author */
+
+  eventsByAuthor = new LazyHoloHashMap((author: AgentPubKey) => 
+    lazyLoadAndPoll(async () => {
+      const records = await this.client.getEventsByAuthor(author);
+      return records.map(r => r.actionHash);
+    }, 4000)
+  );
 }

@@ -17,7 +17,9 @@ pub fn add_attendee_for_event(input: AddAttendeeForEventInput) -> ExternResult<(
     Ok(())
 }
 #[hdk_extern]
-pub fn get_attendees_for_event(event_hash: ActionHash) -> ExternResult<Vec<AgentPubKey>> {
+pub fn get_attendees_for_event(
+    event_hash: ActionHash,
+) -> ExternResult<Vec<AgentPubKey>> {
     let links = get_links(event_hash, LinkTypes::EventToAttendees, None)?;
     let agents: Vec<AgentPubKey> = links
         .into_iter()
@@ -49,7 +51,9 @@ pub struct RemoveAttendeeForEventInput {
     attendee: AgentPubKey,
 }
 #[hdk_extern]
-pub fn remove_attendee_for_event(input: RemoveAttendeeForEventInput) -> ExternResult<()> {
+pub fn remove_attendee_for_event(
+    input: RemoveAttendeeForEventInput,
+) -> ExternResult<()> {
     let links = get_links(input.event_hash.clone(), LinkTypes::EventToAttendees, None)?;
     for link in links {
         if AgentPubKey::from(EntryHash::from(link.target.clone())).eq(&input.attendee) {
