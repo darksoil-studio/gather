@@ -9,7 +9,9 @@ import {
 import { AttendeesAttestation } from './types';
 import { Event } from './types';
 
-export class GatherClient extends ZomeClient<{}> {
+type GatherSignal = {};
+
+export class GatherClient extends ZomeClient<GatherSignal> {
   constructor(
     public client: AppAgentClient,
     public roleName: string,
