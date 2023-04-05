@@ -1,9 +1,9 @@
-import { lazyLoadAndPoll } from "@holochain-open-dev/stores";
-import { EntryRecord, LazyHoloHashMap } from "@holochain-open-dev/utils";
-import { ActionHash, AgentPubKey } from "@holochain/client";
+import { lazyLoadAndPoll } from '@holochain-open-dev/stores';
+import { EntryRecord, LazyHoloHashMap } from '@holochain-open-dev/utils';
+import { ActionHash, AgentPubKey } from '@holochain/client';
 
-import { GatherClient } from "./gather-client";
-import { Event } from "./types";
+import { GatherClient } from './gather-client';
+import { Event } from './types';
 
 export class GatherStore {
   constructor(public client: GatherClient) {}

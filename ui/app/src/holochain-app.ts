@@ -1,4 +1,8 @@
-import { assembleStoreContext, AssembleStore, AssembleClient } from 'lib';
+import {
+  assembleStoreContext,
+  AssembleStore,
+  AssembleClient,
+} from '@darksoil/assemble';
 
 import {
   FileStorageClient,
@@ -47,7 +51,7 @@ export class HolochainApp extends LitElement {
   @property()
   _assembleStore!: AssembleStore;
 
-@provide({ context: fileStorageClientContext })
+  @provide({ context: fileStorageClientContext })
   @property()
   _fileStorageClient!: FileStorageClient;
 
@@ -87,8 +91,10 @@ export class HolochainApp extends LitElement {
       new GatherClient(appAgentClient, 'gather')
     );
     this._fileStorageClient = new FileStorageClient(appAgentClient, 'gather');
-    this._assembleStore = new AssembleStore(new AssembleClient(appAgentClient, 'gather'));
-}
+    this._assembleStore = new AssembleStore(
+      new AssembleClient(appAgentClient, 'gather')
+    );
+  }
 
   renderMyProfile() {
     switch (this._myProfile.value.status) {
@@ -237,4 +243,5 @@ export class HolochainApp extends LitElement {
       }
     `,
     sharedStyles,
-  ];}
+  ];
+}

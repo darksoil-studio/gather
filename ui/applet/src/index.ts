@@ -5,6 +5,7 @@ import '@darksoil/gather/elements/gather-context.js';
 import '@darksoil/gather/elements/all-events.js';
 import '@darksoil/gather/elements/event-detail.js';
 import '@darksoil/gather/elements/events-calendar.js';
+import '@darksoil/assemble/elements/assemble-context.js';
 import { FileStorageClient } from '@holochain-open-dev/file-storage';
 import '@holochain-open-dev/profiles/elements/profiles-context.js';
 import '@holochain-open-dev/file-storage/elements/file-storage-context.js';
@@ -20,6 +21,7 @@ import {
   WeServices,
 } from './we-applet';
 import './gather-applet-main';
+import { AssembleClient, AssembleStore } from '@darksoil/assemble';
 
 function wrapGroupView(
   client: AppAgentClient,
@@ -32,7 +34,12 @@ function wrapGroupView(
   return html` <file-storage-context .client=${fileStorageClient}>
     <profiles-context .store=${groupServices.profilesStore}>
       <gather-context .store=${gatherStore}>
-        ${innerTemplate}</gather-context
+        ${wrapAssembleGroupView(
+          client,
+          groupInfo,
+          groupServices,
+          innerTemplate
+        )}</gather-context
       ></profiles-context
     ></file-storage-context
   >`;
@@ -135,21 +142,21 @@ const applet: WeApplet = {
 
 export default applet;
 
-// function wrapAssembleGroupView(
-//   client: AppAgentClient,
-//   groupInfo: GroupInfo,
-//   groupServices: GroupServices,
-//   innerTemplate: TemplateResult
-// ): TemplateResult {
-//   const assembleStore = new AssembleStore(
-//     new AssembleClient(client, 'assemble')
-//   );
-//   return wrapGroupView(
-//     client,
-//     groupInfo,
-//     groupServices,
-//     html`<assemble-context .store=${assembleStore}>
-//       ${innerTemplate}
-//     </assemble-context>`
-//   );
-// }
+function wrapAssembleGroupView(
+  client: AppAgentClient,
+  groupInfo: GroupInfo,
+  groupServices: GroupServices,
+  innerTemplate: TemplateResult
+): TemplateResult {
+  const assembleStore = new AssembleStore(
+    new AssembleClient(client, 'assemble')
+  );
+  return wrapGroupView(
+    client,
+    groupInfo,
+    groupServices,
+    html`<assemble-context .store=${assembleStore}>
+      ${innerTemplate}
+    </assemble-context>`
+  );
+}
