@@ -170,7 +170,12 @@ export class HolochainApp extends LitElement {
       </div>`;
     if (this._view.view === 'event_detail')
       return html`
-        <event-detail .eventHash=${this._view.selectedEventHash}></event-detail>
+        <div class="column" style="align-items: center; flex: 1;">
+          <event-detail
+            style="margin: 16px"
+            .eventHash=${this._view.selectedEventHash}
+          ></event-detail>
+        </div>
       `;
     if (this._view.view === 'event_proposal_detail')
       return html`

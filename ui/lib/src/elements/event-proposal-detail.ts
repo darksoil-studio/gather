@@ -64,7 +64,7 @@ export class EventProposalDetail extends CallToActionDetail {
         <show-image
           slot="image"
           .imageHash=${customContent.image}
-          style="width: 700px; height: 300px; flex-basis: 0;"
+          style="width: 700px; height: 300px; flex-basis: 0; margin: 16px;"
         ></show-image>
         <span style="white-space: pre-line; margin-bottom: 16px;"
           >${customContent.description}</span
