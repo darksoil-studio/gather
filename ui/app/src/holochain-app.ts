@@ -220,7 +220,7 @@ export class HolochainApp extends LitElement {
             </div>
           </div>
         </sl-tab-panel>
-        <sl-tab-panel name="all_events" style="flex: 1; display: flex;">
+        <sl-tab-panel name="all_events">
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
@@ -328,8 +328,15 @@ export class HolochainApp extends LitElement {
         flex: 1;
       }
       sl-tab-panel::part(base) {
-        display: flex;
-        flex: 1;
+        width: 100%;
+        height: 100%;
+      }
+      .flex-scrollable-parent {
+        width: 100%;
+        height: 100%;
+      }
+      sl-tab-panel {
+        width: 100%;
       }
     `,
     sharedStyles,
