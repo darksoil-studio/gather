@@ -27,9 +27,15 @@ export class CreateEvent extends LitElement {
   @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
+  @state()
+  committing = false;
+
   async createEvent(fields: any) {
+    if (this.committing) return;
+    this.committing = true;
     const event: Event = {
       ...fields,
+      private: fields.private === 'on',
       start_time: new Date(fields.start_time).valueOf() * 1000,
       end_time: new Date(fields.end_time).valueOf() * 1000,
     };
@@ -50,6 +56,7 @@ export class CreateEvent extends LitElement {
       notifyError(msg('Error creating the event'));
       console.error(e);
     }
+    this.committing = false;
   }
 
   render() {
@@ -84,54 +91,47 @@ export class CreateEvent extends LitElement {
             style="margin-bottom: 16px"
           ></sl-input>
 
-          <div
-            style="display: flex; flex: 1; flex-direction: row; margin-bottom: 16px"
-          >
-            <sl-input
-              name="location"
-              required
-              .label=${msg('Location')}
-              style="margin-right: 16px"
-            ></sl-input>
-            <sl-input name="cost" .label=${msg('Cost')}></sl-input>
-          </div>
-          <div
-            style="display: flex; flex: 1; flex-direction: row; margin-bottom: 16px"
-          >
-            <lit-flatpickr
-              .dateFormat=${'Y-m-d H:i'}
-              .enableTime=${true}
-              .minDate=${new Date().valueOf()}
+          <div style="display: flex; flex: 1; flex-direction: row">
+            <div
+              style="display: flex; flex: 1; flex-direction: column; margin-right: 16px;"
             >
               <sl-input
-                id="start-time"
-                name="start_time"
+                name="location"
                 required
-                .label=${msg('Start Time')}
-                style="margin-right: 16px"
-                @sl-input=${() => this.requestUpdate()}
-              ></sl-input
-            ></lit-flatpickr>
-            <lit-flatpickr
-              .dateFormat=${'Y-m-d H:i'}
-              .enableTime=${true}
-              .minDate=${new Date(
-                (this.shadowRoot?.getElementById('start-time') as any)?.value
-              ).valueOf()}
-            >
-              <sl-input
-                id="end-time"
-                required
-                .disabled=${!(
-                  this.shadowRoot?.getElementById('start-time') as any
-                )?.value}
-                name="end_time"
-                .label=${msg('End Time')}
-              ></sl-input
-            ></lit-flatpickr>
+                .label=${msg('Location')}
+                style="margin-bottom: 16px"
+              ></sl-input>
+              <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
+                <sl-input
+                  name="start_time"
+                  required
+                  .label=${msg('Start Time')}
+                  style="margin-bottom: 16px"
+                ></sl-input
+              ></lit-flatpickr>
+              <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
+                <sl-input
+                  required
+                  name="end_time"
+                  .label=${msg('End Time')}
+                ></sl-input
+              ></lit-flatpickr>
+            </div>
+
+            <div class="column" style="flex: 1">
+              <sl-input name="cost" .label=${msg('Cost')}></sl-input>
+              <sl-checkbox name="private">
+                ${msg('Private Event')}
+              </sl-checkbox>
+            </div>
           </div>
 
-          <sl-button variant="primary" style="margin-top: 16px;" type="submit">
+          <sl-button
+            variant="primary"
+            style="margin-top: 16px;"
+            type="submit"
+            .loading=${this.committing}
+          >
             ${msg('Create Event')}
           </sl-button>
         </form>

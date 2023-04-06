@@ -97,7 +97,7 @@ function groupViews(
     },
     entries: {
       gather: {
-        gather_integrity: {
+        gather: {
           event: {
             name: async (hash: ActionHash) => '',
             view: (element, hash: ActionHash, context) =>
@@ -112,7 +112,7 @@ function groupViews(
               ),
           },
         },
-        assemble_integrity: {
+        assemble: {
           call_to_action: {
             name: async (hash: ActionHash) => '',
             view: (element, hash: ActionHash, context) =>
