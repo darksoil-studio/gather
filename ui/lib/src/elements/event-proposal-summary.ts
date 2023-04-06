@@ -125,8 +125,20 @@ export class EventProposalSummary extends LitElement {
           >
           <call-to-action-progress
             .callToActionHash=${this.eventProposalHash}
-            style="margin-top: 8px;"
+            style="margin-top: 8px; margin-bottom: 15px;"
           ></call-to-action-progress>
+
+          ${customContent.expiry_date
+            ? html` <div
+                title=${msg("expiry")}
+                style="display: flex; flex-direction: row; align-items: center"
+              >
+                <span style="white-space: pre-line"
+                  ><b>${msg("Deadline:")}</b> ${new Date(customContent.expiry_date / 1000).toLocaleString()}</span
+                >
+              </div>`
+            : html``
+          }
         </div>
 
         <show-image
