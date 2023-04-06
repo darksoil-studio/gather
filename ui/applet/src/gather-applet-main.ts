@@ -7,9 +7,11 @@ import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 
 import '@darksoil/gather/elements/create-event.js';
-import '@darksoil/assemble/elements/create-call-to-action.js';
 import '@darksoil/gather/elements/create-event-proposal.js';
 import '@darksoil/gather/elements/all-events.js';
+import '@darksoil/gather/elements/all-events-proposals.js';
+import '@darksoil/gather/elements/events-calendar.js';
+import '@darksoil/gather/elements/events-for-agent.js';
 import { localized, msg } from '@lit/localize';
 import { sharedStyles } from '@holochain-open-dev/elements';
 import { GatherStore, gatherStoreContext } from '@darksoil/gather';
@@ -36,6 +38,11 @@ export class GatherAppletMain extends LitElement {
         <div class="flex-scrollable-container">
           <div class="flex-scrollable-y">
             <div class="column" style="flex: 1; align-items: center;">
+              <sl-button
+                @click=${() => (this._view = { view: 'main' })}
+                style="position: absolute; left: 16px; top: 16px;"
+                >${msg('Back')}</sl-button
+              >
               <create-event
                 @event-created=${(e: CustomEvent) => {
                   this._view = {
@@ -53,6 +60,11 @@ export class GatherAppletMain extends LitElement {
         <div class="flex-scrollable-container">
           <div class="flex-scrollable-y">
             <div class="column" style="flex: 1; align-items: center;">
+              <sl-button
+                @click=${() => (this._view = { view: 'main' })}
+                style="position: absolute; left: 16px; top: 16px;"
+                >${msg('Back')}</sl-button
+              >
               <create-event-proposal
                 @call-to-action-created=${(e: CustomEvent) => {
                   this._view = {
@@ -67,25 +79,26 @@ export class GatherAppletMain extends LitElement {
       </div>`;
 
     return html`
-      <sl-tab-group placement="start" style="display: flex; flex: 1;">
-        <sl-button
-          variant="primary"
-          @click=${() => {
-            this._view = { view: 'create_event' };
-          }}
-          slot="nav"
-          style="margin-bottom: 16px;"
-        >
-          ${msg('Create Event')}
-        </sl-button>
+      <sl-tab-group placement="start" style="display: flex; flex: 1; ">
         <sl-button
           variant="primary"
           slot="nav"
           @click=${() => {
             this._view = { view: 'create_event_proposal' };
           }}
+          style="margin: 8px"
         >
           ${msg('Create Event Proposal')}
+        </sl-button>
+        <sl-button
+          variant="primary"
+          @click=${() => {
+            this._view = { view: 'create_event' };
+          }}
+          slot="nav"
+          style="margin: 8px; margin-top: 0"
+        >
+          ${msg('Create Event')}
         </sl-button>
         <sl-tab slot="nav" panel="all_event_proposals"
           >${msg('All Event Proposals')}</sl-tab
@@ -98,39 +111,43 @@ export class GatherAppletMain extends LitElement {
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <span class="title" style="margin: 16px 0;"
-                  >${msg('All Events Proposals')}</span
-                >
-                <all-event-proposals style="flex: 1"> </all-event-proposals>
+                <div class="column" style="align-items: center">
+                  <all-events-proposals style="width: 700px; margin: 16px">
+                  </all-events-proposals>
+                </div>
               </div>
             </div>
           </div>
         </sl-tab-panel>
         <sl-tab-panel name="all_events">
-          <div class="column" style="flex: 1">
-            <span class="title" style="margin: 16px 0;"
-              >${msg('All Events')}</span
-            >
-            <all-event-proposals style="flex: 1"> </all-event-proposals>
+          <div class="flex-scrollable-parent">
+            <div class="flex-scrollable-container">
+              <div class="flex-scrollable-y">
+                <div class="column" style="align-items: center">
+                  <all-events style="width: 700px; margin: 16px"> </all-events>
+                </div>
+              </div>
+            </div>
           </div>
         </sl-tab-panel>
         <sl-tab-panel name="my_events">
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <div class="column" style="flex: 1; align-items: center;">
-                  <div class="column" style="width: 700px;">
-                    <span class="title" style="margin: 16px 0;"
-                      >${msg('My Events')}</span
-                    >
-                    <events-for-agent
-                      .agentPubKey=${this.gatherStore.client.client.myPubKey}
-                    ></events-for-agent>
-                  </div>
+                <div class="column" style="align-items: center">
+                  <events-for-agent
+                    style="width: 700px; margin: 16px"
+                    .agent=${this.gatherStore.client.client.myPubKey}
+                  ></events-for-agent>
                 </div>
               </div>
             </div>
           </div>
+        </sl-tab-panel>
+        <sl-tab-panel name="calendar">
+          <sl-card style="flex: 1" class="row">
+            <gather-events-calendar style="flex: 1"></gather-events-calendar
+          ></sl-card>
         </sl-tab-panel>
       </sl-tab-group>
     `;
@@ -141,6 +158,35 @@ export class GatherAppletMain extends LitElement {
       :host {
         display: flex;
         flex: 1;
+      }
+      :host {
+        display: flex;
+        flex: 1;
+      }
+      sl-tab-group::part(base) {
+        display: flex;
+        flex: 1;
+      }
+      sl-tab-group::part(active-tab-indicator) {
+        margin-top: 102px;
+      }
+      sl-tab-group::part(body) {
+        display: flex;
+        flex: 1;
+      }
+      sl-tab-panel::part(base) {
+        width: 100%;
+        height: 100%;
+      }
+      sl-card::part(base) {
+        flex: 1;
+      }
+      .flex-scrollable-parent {
+        width: 100%;
+        height: 100%;
+      }
+      sl-tab-panel {
+        width: 100%;
       }
     `,
     sharedStyles,
