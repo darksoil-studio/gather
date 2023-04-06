@@ -98,7 +98,11 @@ export class CreateEvent extends LitElement {
           <div
             style="display: flex; flex: 1; flex-direction: row; margin-bottom: 16px"
           >
-            <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
+            <lit-flatpickr
+              .dateFormat=${'Y-m-d H:i'}
+              .enableTime=${true}
+              .minDate=${new Date().valueOf()}
+            >
               <sl-input
                 id="start-time"
                 name="start_time"

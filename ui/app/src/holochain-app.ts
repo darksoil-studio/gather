@@ -48,6 +48,7 @@ import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
+import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 
 type View =
   | { view: 'main' }
@@ -185,13 +186,27 @@ export class HolochainApp extends LitElement {
             .callToActionHash=${this._view.selectedEventProposalHash}
             @collective-commitment-created=${() => {
               this._view = { view: 'main' };
+              const interval = setInterval(() => {
+                const tabs = this.shadowRoot?.getElementById(
+                  'tabs'
+                ) as SlTabGroup;
+                if (tabs) {
+                  clearInterval(interval);
+
+                  tabs.show('all_events');
+                }
+              }, 100);
             }}
           ></event-proposal-detail>
         </div>
       `;
 
     return html`
-      <sl-tab-group placement="start" style="display: flex; flex: 1; ">
+      <sl-tab-group
+        id="tabs"
+        placement="start"
+        style="display: flex; flex: 1; "
+      >
         <sl-button
           variant="primary"
           slot="nav"

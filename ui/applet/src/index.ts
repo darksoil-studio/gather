@@ -79,53 +79,17 @@ function groupViews(
                     {}
                   );
                 }}
+                @event-proposal-selected=${async (e: CustomEvent) => {
+                  const appInfo = await client.appInfo();
+                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                    CellType.Provisioned
+                  ].cell_id[0];
+                  weServices.openViews.openHrl(
+                    [dnaHash, e.detail.eventProposalHash],
+                    {}
+                  );
+                }}
               ></gather-applet-main>
-            `
-          ),
-          element
-        ),
-      calendar: element =>
-        render(
-          wrapGroupView(
-            client,
-            groupInfo,
-            groupServices,
-            html`
-              <gather-events-calendar
-                @event-selected=${async (e: CustomEvent) => {
-                  const appInfo = await client.appInfo();
-                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
-                    CellType.Provisioned
-                  ].cell_id[0];
-                  weServices.openViews.openHrl(
-                    [dnaHash, e.detail.eventHash],
-                    {}
-                  );
-                }}
-              ></gather-events-calendar>
-            `
-          ),
-          element
-        ),
-      event_proposals: element =>
-        render(
-          wrapGroupView(
-            client,
-            groupInfo,
-            groupServices,
-            html`
-              <all-events-proposals
-                @call-to-action-selected=${async (e: CustomEvent) => {
-                  const appInfo = await client.appInfo();
-                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
-                    CellType.Provisioned
-                  ].cell_id[0];
-                  weServices.openViews.openHrl(
-                    [dnaHash, e.detail.callToActionHash],
-                    {}
-                  );
-                }}
-              ></all-events-proposals>
             `
           ),
           element

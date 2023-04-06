@@ -71,6 +71,7 @@ export class CreateEventProposal extends CreateCallToAction {
             .dateFormat=${'Y-m-d H:i'}
             .enableTime=${true}
             style="flex: 1; margin-right: 16px"
+            .minDate=${new Date().valueOf()}
           >
             <sl-input
               name="start_time"
@@ -94,8 +95,10 @@ export class CreateEventProposal extends CreateCallToAction {
           >
             <sl-input
               required
-              .disabled=${!//@ts-ignore
-              (this.shadowRoot?.getElementById('start-time') as any)?.value}
+              .disabled=${!(
+                //@ts-ignore
+                (this.shadowRoot?.getElementById('start-time') as any)?.value
+              )}
               name="end_time"
               .label=${msg('End Time')}
             ></sl-input
