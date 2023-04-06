@@ -277,6 +277,7 @@ export class HolochainApp extends LitElement {
         }}
         class="back-button"
         style="margin-right: 10px;"
+        title=${msg('Back')}
       ></sl-icon-button>
     `;
   }
