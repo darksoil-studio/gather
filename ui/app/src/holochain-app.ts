@@ -238,15 +238,13 @@ export class HolochainApp extends LitElement {
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <div class="column" style="flex: 1; align-items: center;">
-                  <div class="column" style="width: 700px;">
-                    <span class="title" style="margin: 16px 0;"
-                      >${msg('My Events')}</span
-                    >
-                    <events-for-agent
-                      .agent=${this._gatherStore.client.client.myPubKey}
-                    ></events-for-agent>
-                  </div>
+                <div class="column">
+                  <span class="title" style="margin: 16px 0;"
+                    >${msg('My Events')}</span
+                  >
+                  <events-for-agent
+                    .agent=${this._gatherStore.client.client.myPubKey}
+                  ></events-for-agent>
                 </div>
               </div>
             </div>
@@ -256,14 +254,10 @@ export class HolochainApp extends LitElement {
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <div class="column" style="flex: 1; align-items: center;">
-                  <div class="column" style="width: 700px;">
-                    <span class="title" style="margin: 16px 0;"
-                      >${msg('Events')}</span
-                    >
-                    <gather-events-calendar></gather-events-calendar>
-                  </div>
-                </div>
+                <span class="title" style="margin: 16px 0;"
+                  >${msg('Events')}</span
+                >
+                <gather-events-calendar></gather-events-calendar>
               </div>
             </div>
           </div>

@@ -50,7 +50,7 @@ export class EventsForAgent extends LitElement {
       return html`<span>${msg('No events found for this attendee')}</span>`;
 
     return html`
-      <div style="display: flex; flex-direction: column">
+      <div style="display: flex; flex-direction: column; flex: 1;">
         ${hashes.map(
           hash =>
             html`<event-summary
