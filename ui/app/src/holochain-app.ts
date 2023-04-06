@@ -228,7 +228,7 @@ export class HolochainApp extends LitElement {
           ${msg('Create Event')}
         </sl-button>
         <sl-tab slot="nav" panel="all_event_proposals"
-          >${msg('All Event Proposals')}</sl-tab
+          >${msg('Event Proposals')}</sl-tab
         >
         <sl-tab slot="nav" panel="all_events">${msg('All Events')}</sl-tab>
         <sl-tab slot="nav" panel="my_events">${msg('My Events')}</sl-tab>
@@ -240,7 +240,7 @@ export class HolochainApp extends LitElement {
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
                   <all-events-proposals
-                    style="width: 700px; margin: 16px"
+                    style="width: 900px; margin: 16px"
                     @event-proposal-selected=${(e: CustomEvent) => {
                       this._view = {
                         view: 'event_proposal_detail',
@@ -260,7 +260,7 @@ export class HolochainApp extends LitElement {
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
                   <all-events
-                    style="width: 700px; margin: 16px"
+                    style="width: 900px; margin: 16px"
                     @event-selected=${(e: CustomEvent) => {
                       this._view = {
                         view: 'event_detail',
@@ -280,7 +280,7 @@ export class HolochainApp extends LitElement {
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
                   <events-for-agent
-                    style="width: 700px; margin: 16px"
+                    style="width: 900px; margin: 16px"
                     .agent=${this._gatherStore.client.client.myPubKey}
                   ></events-for-agent>
                 </div>
@@ -326,7 +326,7 @@ export class HolochainApp extends LitElement {
       <div class="column fill">
         <div
           class="row"
-          style="align-items: center; color:white; background-color: var(--sl-color-primary-900); padding: 16px"
+          style="align-items: center; color:white; background-color: var(--sl-color-primary-900); padding: 0 16px; height: 65px;"
         >
           ${this.renderBackButton()}
           <span class="title" style="flex: 1">${msg('Gather')}</span>

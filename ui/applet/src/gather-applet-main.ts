@@ -101,7 +101,7 @@ export class GatherAppletMain extends LitElement {
           ${msg('Create Event')}
         </sl-button>
         <sl-tab slot="nav" panel="all_event_proposals"
-          >${msg('All Event Proposals')}</sl-tab
+          >${msg('Event Proposals')}</sl-tab
         >
         <sl-tab slot="nav" panel="all_events">${msg('All Events')}</sl-tab>
         <sl-tab slot="nav" panel="my_events">${msg('My Events')}</sl-tab>
@@ -112,7 +112,7 @@ export class GatherAppletMain extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <all-events-proposals style="max-width: 700px; margin: 16px">
+                  <all-events-proposals style="max-width: 900px; margin: 16px">
                   </all-events-proposals>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export class GatherAppletMain extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <all-events style="max-width: 700px; margin: 16px">
+                  <all-events style="max-width: 900px; margin: 16px">
                   </all-events>
                 </div>
               </div>
@@ -137,7 +137,7 @@ export class GatherAppletMain extends LitElement {
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
                   <events-for-agent
-                    style="max-width: 700px; margin: 16px"
+                    style="max-width: 900px; margin: 16px"
                     .agent=${this.gatherStore.client.client.myPubKey}
                   ></events-for-agent>
                 </div>
