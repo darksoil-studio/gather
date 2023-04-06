@@ -47,7 +47,7 @@ export class EventsForAgent extends LitElement {
 
   renderList(hashes: Array<ActionHash>) {
     if (hashes.length === 0)
-      return html`<span>${msg('No events found for this attendee')}</span>`;
+      return html`<span>${msg('No events found.')}</span>`;
 
     return html`
       <div style="display: flex; flex-direction: column; flex: 1;">

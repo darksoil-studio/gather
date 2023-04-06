@@ -275,6 +275,8 @@ export class HolochainApp extends LitElement {
         @click=${() => {
           this._view = { view: 'main' };
         }}
+        class="back-button"
+        style="margin-right: 10px;"
       ></sl-icon-button>
     `;
   }
@@ -331,6 +333,14 @@ export class HolochainApp extends LitElement {
       }
       sl-tab-panel {
         width: 100%;
+      }
+      .back-button {
+        color: white;
+        font-size: 22px;
+      }
+      .back-button:hover {
+        background: #ffffff65;
+        border-radius: 50%;
       }
     `,
     sharedStyles,
