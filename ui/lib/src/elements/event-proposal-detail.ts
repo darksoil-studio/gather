@@ -19,7 +19,7 @@ import '@darksoil/assemble/elements/call-to-action-detail.js';
 import { CallToActionDetail } from '@darksoil/assemble/elements/call-to-action-detail.js';
 import { wrapPathInSvg } from '@holochain-open-dev/elements';
 import { toPromise } from '@holochain-open-dev/stores';
-import { mdiCalendarClock, mdiCash, mdiMapMarker } from '@mdi/js';
+import { mdiAlarm, mdiCalendarClock, mdiCash, mdiMapMarker } from '@mdi/js';
 import { CallToAction } from '@darksoil/assemble';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { decode } from '@msgpack/msgpack';
@@ -73,6 +73,7 @@ export class EventProposalDetail extends CallToActionDetail {
         <div style="display: flex; flex-direction: row;">
           <div class="column" style="justify-content: end">
             <div
+              title=${msg("location")}
               style="display: flex; flex-direction: row; align-items: center;"
             >
               <sl-icon
@@ -85,6 +86,7 @@ export class EventProposalDetail extends CallToActionDetail {
             </div>
 
             <div
+              title=${msg("time")}
               style="display: flex; flex-direction: row; align-items: center"
             >
               <sl-icon
@@ -94,12 +96,15 @@ export class EventProposalDetail extends CallToActionDetail {
               <span style="white-space: pre-line"
                 >${new Date(
                   customContent.start_time / 1000
+                ).toLocaleString()} - ${new Date(
+                  customContent.end_time / 1000
                 ).toLocaleString()}</span
               >
             </div>
 
             ${customContent.cost
               ? html` <div
+                  title=${msg("cost")}
                   style="display: flex; flex-direction: row; align-items: center"
                 >
                   <sl-icon
@@ -110,7 +115,20 @@ export class EventProposalDetail extends CallToActionDetail {
                     >${customContent.cost}</span
                   >
                 </div>`
-              : html``}
+              : html``
+            }
+
+            ${customContent.expiry_date
+              ? html` <div
+                  title=${msg("expiry")}
+                  style="display: flex; flex-direction: row; align-items: center"
+                >
+                  <span style="white-space: pre-line"
+                    ><b>${msg("Decision deadline:")}</b> ${new Date(customContent.expiry_date / 1000).toLocaleString()}</span
+                  >
+                </div>`
+              : html``
+            }
           </div>
         </div>
       </div>

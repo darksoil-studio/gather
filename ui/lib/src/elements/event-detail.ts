@@ -133,6 +133,7 @@ export class EventDetail extends LitElement {
             ${amIAuthor
               ? html`
                   <sl-icon-button
+                    title=${msg("edit")}
                     style="margin-left: 8px"
                     @click=${() => {
                       this._editing = true;
@@ -140,6 +141,7 @@ export class EventDetail extends LitElement {
                     .src=${wrapPathInSvg(mdiPencil)}
                   ></sl-icon-button>
                   <sl-icon-button
+                    title=${msg("delete event")}
                     style="margin-left: 8px"
                     .src=${wrapPathInSvg(mdiDelete)}
                     @click=${() => this.deleteEvent()}
@@ -156,6 +158,7 @@ export class EventDetail extends LitElement {
             <div style="display: flex; flex-direction: row;">
               <div class="column" style="justify-content: end">
                 <div
+                  title=${msg("location")}
                   style="display: flex; flex-direction: row; align-items: center;"
                 >
                   <sl-icon
@@ -168,6 +171,7 @@ export class EventDetail extends LitElement {
                 </div>
 
                 <div
+                  title=${msg("time")}
                   style="display: flex; flex-direction: row; align-items: center"
                 >
                   <sl-icon
@@ -177,12 +181,15 @@ export class EventDetail extends LitElement {
                   <span style="white-space: pre-line"
                     >${new Date(
                       entryRecord.entry.start_time / 1000
+                    ).toLocaleString()} - ${new Date(
+                      entryRecord.entry.end_time / 1000
                     ).toLocaleString()}</span
                   >
                 </div>
 
                 ${entryRecord.entry.cost
                   ? html` <div
+                      title=${msg("cost")}
                       style="display: flex; flex-direction: row; align-items: center"
                     >
                       <sl-icon

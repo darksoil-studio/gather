@@ -27,6 +27,7 @@ export class CreateEventProposal extends CreateCallToAction {
   async createCallToAction(fields: any) {
     fields.start_time = new Date(fields.start_time).valueOf() * 1000;
     fields.end_time = new Date(fields.end_time).valueOf() * 1000;
+    fields.expiry_date = new Date(fields.expiry_date).valueOf() * 1000;
 
     super.createCallToAction(fields);
   }
@@ -66,7 +67,7 @@ export class CreateEventProposal extends CreateCallToAction {
             style="flex: 1"
           ></sl-input>
         </div>
-        <div style="display: flex; flex: 1; flex-direction: row">
+        <div style="display: flex; flex: 1; flex-direction: row; margin-bottom: 16px;">
           <lit-flatpickr
             .dateFormat=${'Y-m-d H:i'}
             .enableTime=${true}
@@ -104,6 +105,17 @@ export class CreateEventProposal extends CreateCallToAction {
             ></sl-input
           ></lit-flatpickr>
         </div>
+        <lit-flatpickr
+          .dateFormat=${'Y-m-d H:i'}
+          .enableTime=${true}
+          style="flex: 1; margin-right: 16px"
+        >
+          <sl-input
+            name="expiry_date"
+            required
+            .label=${msg('Expiry Date')}
+          ></sl-input
+        ></lit-flatpickr>
       </div>
     `;
   }
