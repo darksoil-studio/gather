@@ -105,32 +105,23 @@ export class CreateEvent extends LitElement {
                 required
                 .label=${msg('Start Time')}
                 style="margin-right: 16px"
+                @sl-input=${() => this.requestUpdate()}
               ></sl-input
             ></lit-flatpickr>
-            <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
+            <lit-flatpickr
+              .dateFormat=${'Y-m-d H:i'}
+              .enableTime=${true}
+              .minDate=${new Date(
+                (this.shadowRoot?.getElementById('start-time') as any)?.value
+              ).valueOf()}
+            >
               <sl-input
                 id="end-time"
                 required
+                .disabled=${!(
+                  this.shadowRoot?.getElementById('start-time') as any
+                )?.value}
                 name="end_time"
-                @sl-change=${(e: Event) => {
-                  const startTime = (
-                    this.shadowRoot?.getElementById('start-time') as any
-                  ).value;
-                  const endInput = this.shadowRoot?.getElementById(
-                    'end-time'
-                  ) as HTMLInputElement;
-                  const endTime = endInput.value;
-                  const startTimestamp = new Date(startTime).valueOf() * 1000;
-                  const endTimestamp = new Date(endTime).valueOf() * 1000;
-
-                  if (endTimestamp <= startTimestamp) {
-                    endInput.setCustomValidity(
-                      msg('The end time must be after the start time')
-                    );
-                  } else {
-                    endInput.setCustomValidity('');
-                  }
-                }}
                 .label=${msg('End Time')}
               ></sl-input
             ></lit-flatpickr>

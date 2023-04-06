@@ -63,9 +63,7 @@ export class EventSummary extends LitElement {
   renderSummary(entryRecord: EntryRecord<Event>) {
     return html`
       <div style="display: flex; flex-direction: row;">
-        <div
-          style="display: flex; flex-direction: column; flex: 1; margin: 16px"
-        >
+        <div style="display: flex; flex-direction: column; flex: 1;">
           <span class="title">${entryRecord.entry.title}</span>
 
           <span style="white-space: pre-line"
