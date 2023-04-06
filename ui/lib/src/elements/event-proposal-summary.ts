@@ -24,15 +24,22 @@ import '@holochain-open-dev/profiles/elements/agent-avatar.js';
 import '@holochain-open-dev/file-storage/elements/show-image.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 
+import {
+  AssembleStore,
+  assembleStoreContext,
+  CallToAction,
+} from '@darksoil/assemble';
+import { decode } from '@msgpack/msgpack';
+import '@darksoil/assemble/elements/call-to-action-progress.js';
+
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event } from '../types.js';
 
 @localized()
-@customElement('event-summary')
-export class EventSummary extends LitElement {
+@customElement('event-proposal-summary')
+export class EventProposalSummary extends LitElement {
   @property(hashProperty('event-hash'))
-  eventHash!: ActionHash;
+  eventProposalHash!: ActionHash;
 
   /**
    * @internal
@@ -43,24 +50,24 @@ export class EventSummary extends LitElement {
   /**
    * @internal
    */
+  @consume({ context: assembleStoreContext, subscribe: true })
+  assembleStore!: AssembleStore;
+
+  /**
+   * @internal
+   */
   @consume({ context: profilesStoreContext, subscribe: true })
   profilesStore!: ProfilesStore;
 
   /**
    * @internal
    */
-  _event = new StoreSubscriber(this, () =>
-    this.gatherStore.events.get(this.eventHash)
-  );
+  _eventProposal = new StoreSubscriber<
+    AsyncStatus<EntryRecord<CallToAction> | undefined>
+  >(this, () => this.assembleStore.callToActions.get(this.eventProposalHash));
 
-  /**
-   * @internal
-   */
-  _attendees = new StoreSubscriber(this, () =>
-    this.gatherStore.attendeesForEvent.get(this.eventHash)
-  );
-
-  renderSummary(entryRecord: EntryRecord<Event>) {
+  renderSummary(entryRecord: EntryRecord<CallToAction>) {
+    const customContent = decode(entryRecord.entry.custom_content) as any;
     return html`
       <div style="display: flex; flex-direction: row;">
         <div
@@ -69,7 +76,7 @@ export class EventSummary extends LitElement {
           <span class="title">${entryRecord.entry.title}</span>
 
           <span style="white-space: pre-line"
-            >${entryRecord.entry.description}</span
+            >${customContent.description}</span
           >
 
           <span style="flex: 1"></span>
@@ -84,7 +91,7 @@ export class EventSummary extends LitElement {
                   .src=${wrapPathInSvg(mdiMapMarker)}
                 ></sl-icon>
                 <span style="white-space: pre-line"
-                  >${entryRecord.entry.location}</span
+                  >${customContent.location}</span
                 >
               </div>
 
@@ -97,7 +104,7 @@ export class EventSummary extends LitElement {
                 ></sl-icon>
                 <span style="white-space: pre-line"
                   >${new Date(
-                    entryRecord.entry.start_time / 1000
+                    customContent.start_time / 1000
                   ).toLocaleString()}</span
                 >
               </div>
@@ -112,31 +119,22 @@ export class EventSummary extends LitElement {
                   .agentPubKey=${entryRecord.action.author}
                 ></agent-avatar>
               </div>
-
-              ${this._attendees.value.status === 'complete'
-                ? html`<div class="row" style="align-items: center;">
-                    <span style="margin-right: 8px;">${msg('Attendees')}</span>
-                    <div class="avatar-group">
-                      ${this._attendees.value.value.map(
-                        a =>
-                          html`<agent-avatar .agentPubKey=${a}></agent-avatar>`
-                      )}
-                    </div>
-                  </div>`
-                : html``}
             </div>
           </div>
+          <call-to-action-progress
+            .callToActionHash=${this.eventProposalHash}
+          ></call-to-action-progress>
         </div>
 
         <show-image
           style="width: 200px; height: 200px; flex: 0; margin-top: -20px; margin-bottom: -20px; margin-right: -20px"
-          .imageHash=${entryRecord.entry.image}
+          .imageHash=${customContent.image}
         ></show-image>
       </div>
     `;
   }
 
-  renderEvent(event: AsyncStatus<EntryRecord<Event> | undefined>) {
+  renderEvent(event: AsyncStatus<EntryRecord<CallToAction> | undefined>) {
     switch (event.status) {
       case 'pending':
         return html`<div
@@ -162,16 +160,16 @@ export class EventSummary extends LitElement {
       style=" flex: 1; cursor: grab;"
       @click=${() =>
         this.dispatchEvent(
-          new CustomEvent('event-selected', {
+          new CustomEvent('event-proposal-selected', {
             bubbles: true,
             composed: true,
             detail: {
-              eventHash: this.eventHash,
+              eventProposalHash: this.eventProposalHash,
             },
           })
         )}
     >
-      ${this.renderEvent(this._event.value)}
+      ${this.renderEvent(this._eventProposal.value)}
     </sl-card>`;
   }
 

@@ -38,6 +38,7 @@ import '@darksoil/gather/elements/event-proposal-detail.js';
 import '@darksoil/gather/elements/create-event.js';
 import '@darksoil/gather/elements/create-event-proposal.js';
 import '@darksoil/gather/elements/all-events.js';
+import '@darksoil/gather/elements/all-events-proposals.js';
 import '@darksoil/gather/elements/events-calendar.js';
 import '@darksoil/gather/elements/events-for-agent.js';
 import { localized, msg } from '@lit/localize';
@@ -174,7 +175,7 @@ export class HolochainApp extends LitElement {
     if (this._view.view === 'event_proposal_detail')
       return html`
         <event-proposal-detail
-          .eventProposalHash=${this._view.selectedEventProposalHash}
+          .callToActionHash=${this._view.selectedEventProposalHash}
         ></event-proposal-detail>
       `;
 
@@ -212,9 +213,18 @@ export class HolochainApp extends LitElement {
               <div class="flex-scrollable-y">
                 <div class="column">
                   <span class="title" style="margin: 16px 0;"
-                    >${msg('All Events Proposals')}</span
+                    >${msg('All Event Proposals')}</span
                   >
-                  <all-event-proposals style="flex: 1"> </all-event-proposals>
+                  <all-events-proposals
+                    style="flex: 1"
+                    @event-proposal-selected=${(e: CustomEvent) => {
+                      this._view = {
+                        view: 'event_proposal_detail',
+                        selectedEventProposalHash: e.detail.eventProposalHash,
+                      };
+                    }}
+                  >
+                  </all-events-proposals>
                 </div>
               </div>
             </div>
@@ -228,7 +238,15 @@ export class HolochainApp extends LitElement {
                   <span class="title" style="margin: 16px 0;"
                     >${msg('All Events')}</span
                   >
-                  <all-events> </all-events>
+                  <all-events
+                    @event-selected=${(e: CustomEvent) => {
+                      this._view = {
+                        view: 'event_detail',
+                        selectedEventHash: e.detail.eventHash,
+                      };
+                    }}
+                  >
+                  </all-events>
                 </div>
               </div>
             </div>
