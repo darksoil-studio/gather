@@ -176,6 +176,9 @@ export class HolochainApp extends LitElement {
       return html`
         <event-proposal-detail
           .callToActionHash=${this._view.selectedEventProposalHash}
+          @collective-commitment-created=${() => {
+            this._view = { view: 'main' };
+          }}
         ></event-proposal-detail>
       `;
 
@@ -183,22 +186,23 @@ export class HolochainApp extends LitElement {
       <sl-tab-group placement="start" style="display: flex; flex: 1; ">
         <sl-button
           variant="primary"
-          @click=${() => {
-            this._view = { view: 'create_event' };
-          }}
-          slot="nav"
-          style="margin-bottom: 16px;"
-        >
-          ${msg('Create Event')}
-        </sl-button>
-        <sl-button
-          variant="primary"
           slot="nav"
           @click=${() => {
             this._view = { view: 'create_event_proposal' };
           }}
+          style="margin: 8px"
         >
           ${msg('Create Event Proposal')}
+        </sl-button>
+        <sl-button
+          variant="primary"
+          @click=${() => {
+            this._view = { view: 'create_event' };
+          }}
+          slot="nav"
+          style="margin: 8px; margin-top: 0"
+        >
+          ${msg('Create Event')}
         </sl-button>
         <sl-tab slot="nav" panel="all_event_proposals"
           >${msg('All Event Proposals')}</sl-tab
@@ -272,9 +276,6 @@ export class HolochainApp extends LitElement {
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <span class="title" style="margin: 16px 0;"
-                  >${msg('Events')}</span
-                >
                 <gather-events-calendar></gather-events-calendar>
               </div>
             </div>
@@ -316,7 +317,7 @@ export class HolochainApp extends LitElement {
           style="align-items: center; color:white; background-color: var(--sl-color-primary-900); padding: 16px"
         >
           ${this.renderBackButton()}
-          <span class="title" style="flex: 1">${msg('Radiance')}</span>
+          <span class="title" style="flex: 1">${msg('Gather')}</span>
 
           ${this.renderMyProfile()}
         </div>
@@ -337,6 +338,9 @@ export class HolochainApp extends LitElement {
       sl-tab-group::part(base) {
         display: flex;
         flex: 1;
+      }
+      sl-tab-group::part(active-tab-indicator) {
+        margin-top: 102px;
       }
       sl-tab-group::part(body) {
         display: flex;

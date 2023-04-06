@@ -30,7 +30,6 @@ export class CreateEvent extends LitElement {
   async createEvent(fields: any) {
     const event: Event = {
       ...fields,
-      private: fields.private === 'on',
       start_time: new Date(fields.start_time).valueOf() * 1000,
       end_time: new Date(fields.end_time).valueOf() * 1000,
     };
@@ -85,39 +84,35 @@ export class CreateEvent extends LitElement {
             style="margin-bottom: 16px"
           ></sl-input>
 
-          <div style="display: flex; flex: 1; flex-direction: row">
-            <div
-              style="display: flex; flex: 1; flex-direction: column; margin-right: 16px;"
-            >
+          <div
+            style="display: flex; flex: 1; flex-direction: row; margin-bottom: 16px"
+          >
+            <sl-input
+              name="location"
+              required
+              .label=${msg('Location')}
+              style="margin-right: 16px"
+            ></sl-input>
+            <sl-input name="cost" .label=${msg('Cost')}></sl-input>
+          </div>
+          <div
+            style="display: flex; flex: 1; flex-direction: row; margin-bottom: 16px"
+          >
+            <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
               <sl-input
-                name="location"
+                name="start_time"
                 required
-                .label=${msg('Location')}
-                style="margin-bottom: 16px"
-              ></sl-input>
-              <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
-                <sl-input
-                  name="start_time"
-                  required
-                  .label=${msg('Start Time')}
-                  style="margin-bottom: 16px"
-                ></sl-input
-              ></lit-flatpickr>
-              <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
-                <sl-input
-                  required
-                  name="end_time"
-                  .label=${msg('End Time')}
-                ></sl-input
-              ></lit-flatpickr>
-            </div>
-
-            <div class="column" style="flex: 1">
-              <sl-input name="cost" .label=${msg('Cost')}></sl-input>
-              <sl-checkbox name="private">
-                ${msg('Private Event')}
-              </sl-checkbox>
-            </div>
+                .label=${msg('Start Time')}
+                style="margin-right: 16px"
+              ></sl-input
+            ></lit-flatpickr>
+            <lit-flatpickr .dateFormat=${'Y-m-d H:i'} .enableTime=${true}>
+              <sl-input
+                required
+                name="end_time"
+                .label=${msg('End Time')}
+              ></sl-input
+            ></lit-flatpickr>
           </div>
 
           <sl-button variant="primary" style="margin-top: 16px;" type="submit">

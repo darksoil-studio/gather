@@ -24,6 +24,13 @@ export class CreateEventProposal extends CreateCallToAction {
     return msg('Event Proposal');
   }
 
+  async createCallToAction(fields: any) {
+    fields.start_time = new Date(fields.start_time).valueOf() * 1000;
+    fields.end_time = new Date(fields.end_time).valueOf() * 1000;
+
+    super.createCallToAction(fields);
+  }
+
   renderCustomContentFormFields() {
     return html`
       <div style="display: flex; flex: 1; flex-direction: column;">

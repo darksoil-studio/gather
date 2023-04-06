@@ -52,12 +52,15 @@ export class EventProposalDetail extends CallToActionDetail {
       title: callToAction.entry.title,
       ...customContent,
     });
+    //@ts-ignore
+    // TODO: improve this so that we don't need to delete the calltoaction
+    await this.assembleStore.client.deleteCallToAction(this.callToActionHash);
   }
 
   renderCustomContent(callToAction: EntryRecord<CallToAction>) {
     const customContent = decode(callToAction.entry.custom_content) as any;
     return html`
-      <div style="display: flex; flex-direction: column;">
+      <div style="display: flex; flex-direction: column; margin-bottom: 16px">
         <show-image
           slot="image"
           .imageHash=${customContent.image}
@@ -108,17 +111,6 @@ export class EventProposalDetail extends CallToActionDetail {
                   >
                 </div>`
               : html``}
-          </div>
-
-          <span style="flex: 1"></span>
-
-          <div class="column" style="justify-content: end">
-            <div class="row" style="align-items: center; margin-bottom: 8px;">
-              <span style="margin-right: 8px">${msg('Hosted by')}</span>
-              <agent-avatar
-                .agentPubKey=${callToAction.action.author}
-              ></agent-avatar>
-            </div>
           </div>
         </div>
       </div>

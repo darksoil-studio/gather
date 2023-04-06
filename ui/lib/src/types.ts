@@ -13,8 +13,6 @@ export interface Event {
 
   end_time: number;
 
-  private: boolean;
-
   cost: string | undefined;
 }
 

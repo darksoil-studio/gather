@@ -42,7 +42,6 @@ export class EditEvent extends LitElement {
   async updateEvent(fields: any) {
     const event: Event = {
       ...fields,
-      private: fields.private === 'on',
       start_time: new Date(fields.start_time).valueOf() * 1000,
       end_time: new Date(fields.end_time).valueOf() * 1000,
     };
@@ -152,12 +151,6 @@ export class EditEvent extends LitElement {
               .label=${msg('Cost')}
               .defaultValue=${this.currentRecord.entry.cost || ''}
             ></sl-input>
-            <sl-checkbox
-              name="private"
-              .defaultChecked=${this.currentRecord.entry.private}
-            >
-              ${msg('Private Event')}
-            </sl-checkbox>
           </div>
         </div>
 

@@ -121,8 +121,13 @@ export class EventProposalSummary extends LitElement {
               </div>
             </div>
           </div>
+
+          <span style="margin-top: 16px"
+            >${msg('Progress on the satisfaction of the needs:')}</span
+          >
           <call-to-action-progress
             .callToActionHash=${this.eventProposalHash}
+            style="margin-top: 8px;"
           ></call-to-action-progress>
         </div>
 
