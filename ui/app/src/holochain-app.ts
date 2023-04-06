@@ -220,7 +220,7 @@ export class HolochainApp extends LitElement {
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
                   <all-events-proposals
-                    style="width: 800px; margin: 16px"
+                    style="width: 700px; margin: 16px"
                     @event-proposal-selected=${(e: CustomEvent) => {
                       this._view = {
                         view: 'event_proposal_detail',
@@ -240,7 +240,7 @@ export class HolochainApp extends LitElement {
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
                   <all-events
-                    style="width: 800px; margin: 16px"
+                    style="width: 700px; margin: 16px"
                     @event-selected=${(e: CustomEvent) => {
                       this._view = {
                         view: 'event_detail',
@@ -260,7 +260,7 @@ export class HolochainApp extends LitElement {
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
                   <events-for-agent
-                    style="width: 800px; margin: 16px"
+                    style="width: 700px; margin: 16px"
                     .agent=${this._gatherStore.client.client.myPubKey}
                   ></events-for-agent>
                 </div>

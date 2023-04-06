@@ -108,9 +108,13 @@ export class GatherClient extends ZomeClient<GatherSignal> {
 
   /** Events By Author */
 
-  async getEventsByAuthor(author: AgentPubKey): Promise<Array<EntryRecord<Event>>> {
-    const records: Record[] = await this.callZome('get_events_by_author', author);
+  async getEventsByAuthor(
+    author: AgentPubKey
+  ): Promise<Array<EntryRecord<Event>>> {
+    const records: Record[] = await this.callZome(
+      'get_events_by_author',
+      author
+    );
     return records.map(r => new EntryRecord(r));
   }
-
 }

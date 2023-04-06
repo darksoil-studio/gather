@@ -32,17 +32,20 @@ export class EventsForAgent extends LitElement {
   /**
    * @internal
    */
-  _events = new StoreSubscriber(this, () =>
-    asyncDerived(
-      join([
-        this.gatherStore.eventsByAuthor.get(this.agent),
-        this.gatherStore.eventsForAttendee.get(this.agent),
-      ]),
-      ([eventsOfAgent, eventsForAttendee]) => [
-        ...eventsOfAgent,
-        ...eventsForAttendee,
-      ]
-    )
+  _events = new StoreSubscriber(
+    this,
+    () =>
+      asyncDerived(
+        join([
+          this.gatherStore.eventsByAuthor.get(this.agent),
+          this.gatherStore.eventsForAttendee.get(this.agent),
+        ]),
+        ([eventsOfAgent, eventsForAttendee]) => [
+          ...eventsOfAgent,
+          ...eventsForAttendee,
+        ]
+      ),
+    () => [this.agent]
   );
 
   renderList(hashes: Array<ActionHash>) {
