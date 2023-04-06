@@ -174,12 +174,15 @@ export class HolochainApp extends LitElement {
       `;
     if (this._view.view === 'event_proposal_detail')
       return html`
-        <event-proposal-detail
-          .callToActionHash=${this._view.selectedEventProposalHash}
-          @collective-commitment-created=${() => {
-            this._view = { view: 'main' };
-          }}
-        ></event-proposal-detail>
+        <div class="column" style="align-items: center; flex: 1;">
+          <event-proposal-detail
+            style="margin: 16px"
+            .callToActionHash=${this._view.selectedEventProposalHash}
+            @collective-commitment-created=${() => {
+              this._view = { view: 'main' };
+            }}
+          ></event-proposal-detail>
+        </div>
       `;
 
     return html`
@@ -215,12 +218,9 @@ export class HolochainApp extends LitElement {
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <div class="column">
-                  <span class="title" style="margin: 16px 0;"
-                    >${msg('All Event Proposals')}</span
-                  >
+                <div class="column" style="align-items: center">
                   <all-events-proposals
-                    style="flex: 1"
+                    style="width: 800px; margin: 16px"
                     @event-proposal-selected=${(e: CustomEvent) => {
                       this._view = {
                         view: 'event_proposal_detail',
@@ -238,11 +238,9 @@ export class HolochainApp extends LitElement {
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <div class="column">
-                  <span class="title" style="margin: 16px 0;"
-                    >${msg('All Events')}</span
-                  >
+                <div class="column" style="align-items: center">
                   <all-events
+                    style="width: 800px; margin: 16px"
                     @event-selected=${(e: CustomEvent) => {
                       this._view = {
                         view: 'event_detail',
@@ -260,11 +258,9 @@ export class HolochainApp extends LitElement {
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <div class="column">
-                  <span class="title" style="margin: 16px 0;"
-                    >${msg('My Events')}</span
-                  >
+                <div class="column" style="align-items: center">
                   <events-for-agent
+                    style="width: 800px; margin: 16px"
                     .agent=${this._gatherStore.client.client.myPubKey}
                   ></events-for-agent>
                 </div>
@@ -273,13 +269,9 @@ export class HolochainApp extends LitElement {
           </div>
         </sl-tab-panel>
         <sl-tab-panel name="calendar">
-          <div class="flex-scrollable-parent">
-            <div class="flex-scrollable-container">
-              <div class="flex-scrollable-y">
-                <gather-events-calendar></gather-events-calendar>
-              </div>
-            </div>
-          </div>
+          <sl-card style="flex: 1" class="row">
+            <gather-events-calendar style="flex: 1"></gather-events-calendar
+          ></sl-card>
         </sl-tab-panel>
       </sl-tab-group>
     `;
@@ -349,6 +341,9 @@ export class HolochainApp extends LitElement {
       sl-tab-panel::part(base) {
         width: 100%;
         height: 100%;
+      }
+      sl-card::part(base) {
+        flex: 1;
       }
       .flex-scrollable-parent {
         width: 100%;

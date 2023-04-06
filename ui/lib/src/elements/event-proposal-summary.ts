@@ -112,13 +112,11 @@ export class EventProposalSummary extends LitElement {
 
             <span style="flex: 1"></span>
 
-            <div class="column">
-              <div class="row" style="align-items: center; margin-bottom: 8px;">
-                <span style="margin-right: 8px">${msg('Hosted by')}</span>
-                <agent-avatar
-                  .agentPubKey=${entryRecord.action.author}
-                ></agent-avatar>
-              </div>
+            <div class="row" style="align-items: center;">
+              <span style="margin-right: 8px">${msg('Hosted by')}</span>
+              <agent-avatar
+                .agentPubKey=${entryRecord.action.author}
+              ></agent-avatar>
             </div>
           </div>
 

@@ -12,10 +12,7 @@ import { localized } from '@lit/localize';
 
 import '@holochain-open-dev/elements/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
-import {
-  EventCalendar,
-  Event as EventCalendarEvent,
-} from '@scoped-elements/event-calendar';
+import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar';
 import '@scoped-elements/event-calendar';
 
 import { Event } from '../types.js';
@@ -72,6 +69,7 @@ export class GatherEventsCalendar extends LitElement {
       <event-calendar
         style="flex: 1"
         .events=${this.events()}
+        .props=${{ view: 'dayGridMonth' }}
         @event-clicked=${(e: CustomEvent) =>
           this.dispatchEvent(
             new CustomEvent('event-selected', {
