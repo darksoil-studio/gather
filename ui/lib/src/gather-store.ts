@@ -14,7 +14,7 @@ export class GatherStore {
     lazyLoadAndPoll(async () => {
       const record = await this.client.getEvent(eventHash);
       return record ? new EntryRecord<Event>(record) : undefined;
-    }, 200)
+    }, 4000)
   );
 
   /** Attendees for Event */
@@ -22,20 +22,20 @@ export class GatherStore {
   attendeesForEvent = new LazyHoloHashMap((eventHash: ActionHash) =>
     lazyLoadAndPoll(
       async () => this.client.getAttendeesForEvent(eventHash),
-      1000
+      4000
     )
   );
 
   eventsForAttendee = new LazyHoloHashMap((agent: AgentPubKey) =>
-    lazyLoadAndPoll(async () => this.client.getEventsForAttendee(agent), 1000)
+    lazyLoadAndPoll(async () => this.client.getEventsForAttendee(agent), 4000)
   );
 
   /** All events */
-  allEvents = lazyLoadAndPoll(async () => this.client.getAllEvents(), 1000);
-  
+  allEvents = lazyLoadAndPoll(async () => this.client.getAllEvents(), 4000);
+
   /** Events By Author */
 
-  eventsByAuthor = new LazyHoloHashMap((author: AgentPubKey) => 
+  eventsByAuthor = new LazyHoloHashMap((author: AgentPubKey) =>
     lazyLoadAndPoll(async () => {
       const records = await this.client.getEventsByAuthor(author);
       return records.map(r => r.actionHash);

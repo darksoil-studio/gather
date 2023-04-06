@@ -17,7 +17,6 @@ import {
   GroupServices,
   GroupViews,
   GroupWithApplets,
-  OpenViews,
   WeApplet,
   WeServices,
 } from './we-applet';
@@ -104,6 +103,29 @@ function groupViews(
                   );
                 }}
               ></gather-events-calendar>
+            `
+          ),
+          element
+        ),
+      event_proposals: element =>
+        render(
+          wrapGroupView(
+            client,
+            groupInfo,
+            groupServices,
+            html`
+              <all-events-proposals
+                @call-to-action-selected=${async (e: CustomEvent) => {
+                  const appInfo = await client.appInfo();
+                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                    CellType.Provisioned
+                  ].cell_id[0];
+                  weServices.openViews.openHrl(
+                    [dnaHash, e.detail.callToActionHash],
+                    {}
+                  );
+                }}
+              ></all-events-proposals>
             `
           ),
           element

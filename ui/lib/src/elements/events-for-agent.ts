@@ -3,7 +3,11 @@ import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
-import { asyncDerived, join, StoreSubscriber } from '@holochain-open-dev/stores';
+import {
+  asyncDerived,
+  join,
+  StoreSubscriber,
+} from '@holochain-open-dev/stores';
 import { customElement, property } from 'lit/decorators.js';
 
 import '@holochain-open-dev/elements/elements/display-error.js';
@@ -29,10 +33,16 @@ export class EventsForAgent extends LitElement {
    * @internal
    */
   _events = new StoreSubscriber(this, () =>
-    asyncDerived(join([
-      this.gatherStore.eventsByAuthor.get(this.agent),
-      this.gatherStore.eventsForAttendee.get(this.agent)
-    ]), ([eventsOfAgent, eventsForAttendee]) => [...eventsOfAgent, ...eventsForAttendee])
+    asyncDerived(
+      join([
+        this.gatherStore.eventsByAuthor.get(this.agent),
+        this.gatherStore.eventsForAttendee.get(this.agent),
+      ]),
+      ([eventsOfAgent, eventsForAttendee]) => [
+        ...eventsOfAgent,
+        ...eventsForAttendee,
+      ]
+    )
   );
 
   renderList(hashes: Array<ActionHash>) {

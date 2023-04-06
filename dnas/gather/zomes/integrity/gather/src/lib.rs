@@ -22,4 +22,5 @@ pub enum LinkTypes {
     EventToAttendeesAttestations,
     AllEvents,
     EventsByAuthor,
+    EventProposalToEvent,
 }
