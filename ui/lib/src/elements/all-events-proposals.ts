@@ -11,7 +11,7 @@ import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import './event-summary';
+import './event-proposal-summary';
 import { AssembleStore, assembleStoreContext } from '@darksoil/assemble';
 
 @localized()
@@ -23,7 +23,7 @@ export class AllEventsProposals extends LitElement {
   @consume({ context: assembleStoreContext, subscribe: true })
   assembeStore!: AssembleStore;
 
-  _allEvents = new StoreSubscriber(
+  _allEventsProposals = new StoreSubscriber(
     this,
     () => this.assembeStore.allCallsToAction
   );
@@ -37,7 +37,7 @@ export class AllEventsProposals extends LitElement {
         ${hashes.map(
           hash =>
             html`<event-proposal-summary
-              .eventHash=${hash}
+              .eventProposalHash=${hash}
               style="margin-bottom: 16px;"
             ></event-proposal-summary>`
         )}
@@ -46,7 +46,7 @@ export class AllEventsProposals extends LitElement {
   }
 
   render() {
-    switch (this._allEvents.value.status) {
+    switch (this._allEventsProposals.value.status) {
       case 'pending':
         return html`<div
           style="display: flex; flex: 1; align-items: center; justify-content: center"
@@ -54,10 +54,10 @@ export class AllEventsProposals extends LitElement {
           <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
       case 'complete':
-        return this.renderList(this._allEvents.value.value);
+        return this.renderList(this._allEventsProposals.value.value);
       case 'error':
         return html`<display-error
-          .error=${this._allEvents.value.error.data.data}
+          .error=${this._allEventsProposals.value.error.data.data}
         ></display-error>`;
     }
   }
