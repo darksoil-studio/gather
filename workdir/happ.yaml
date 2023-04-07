@@ -1,7 +1,7 @@
 ---
 manifest_version: "1"
 name: gather
-description: ~
+description: "An app to get us out the door to bring us all together more."
 roles:
   - name: gather
     provisioning:
