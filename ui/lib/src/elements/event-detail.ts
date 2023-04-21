@@ -12,9 +12,9 @@ import { LitElement, html } from 'lit';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 
-import '@holochain-open-dev/elements/elements/display-error.js';
-import '@holochain-open-dev/profiles/elements/agent-avatar.js';
-import '@holochain-open-dev/file-storage/elements/show-image.js';
+import '@holochain-open-dev/elements/dist/elements/display-error.js';
+import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
+import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/icon-button/icon-button.js';

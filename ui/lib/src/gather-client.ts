@@ -25,8 +25,14 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('create_event', event);
   }
 
-  getEvent(eventHash: ActionHash): Promise<Record | undefined> {
-    return this.callZome('get_event', eventHash);
+  async getEvent(
+    eventHash: ActionHash
+  ): Promise<EntryRecord<Event> | undefined> {
+    const record: Record | undefined = await this.callZome(
+      'get_event',
+      eventHash
+    );
+    return record ? new EntryRecord(record) : undefined;
   }
 
   deleteEvent(originalEventHash: ActionHash): Promise<ActionHash> {

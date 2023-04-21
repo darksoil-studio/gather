@@ -10,7 +10,7 @@ import { customElement } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
 import { localized } from '@lit/localize';
 
-import '@holochain-open-dev/elements/elements/display-error.js';
+import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar';
 import '@scoped-elements/event-calendar';

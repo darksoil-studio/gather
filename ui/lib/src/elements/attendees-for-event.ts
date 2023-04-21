@@ -11,9 +11,9 @@ import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import '@holochain-open-dev/elements/elements/display-error.js';
-import '@holochain-open-dev/profiles/elements/agent-avatar.js';
-import '@holochain-open-dev/profiles/elements/profile-list-item-skeleton.js';
+import '@holochain-open-dev/elements/dist/elements/display-error.js';
+import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
+import '@holochain-open-dev/profiles/dist/elements/profile-list-item-skeleton.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 import { gatherStoreContext } from '../context.js';

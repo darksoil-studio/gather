@@ -14,9 +14,9 @@ import {
   ProfilesStore,
   profilesStoreContext,
 } from '@holochain-open-dev/profiles';
-import '@holochain-open-dev/profiles/elements/agent-avatar.js';
-import '@holochain-open-dev/profiles/elements/profile-prompt.js';
-import '@holochain-open-dev/profiles/elements/profile-list-item-skeleton.js';
+import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
+import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js';
+import '@holochain-open-dev/profiles/dist/elements/profile-list-item-skeleton.js';
 import {
   ActionHash,
   AppAgentClient,
@@ -33,17 +33,17 @@ import {
   GatherClient,
   gatherStoreContext,
 } from '@darksoil/gather';
-import '@darksoil/gather/elements/event-detail.js';
-import '@darksoil/gather/elements/event-proposal-detail.js';
-import '@darksoil/gather/elements/create-event.js';
-import '@darksoil/gather/elements/create-event-proposal.js';
-import '@darksoil/gather/elements/all-events.js';
-import '@darksoil/gather/elements/all-events-proposals.js';
-import '@darksoil/gather/elements/events-calendar.js';
-import '@darksoil/gather/elements/events-for-agent.js';
+import '@darksoil/gather/dist/elements/event-detail.js';
+import '@darksoil/gather/dist/elements/event-proposal-detail.js';
+import '@darksoil/gather/dist/elements/create-event.js';
+import '@darksoil/gather/dist/elements/create-event-proposal.js';
+import '@darksoil/gather/dist/elements/all-events.js';
+import '@darksoil/gather/dist/elements/all-events-proposals.js';
+import '@darksoil/gather/dist/elements/events-calendar.js';
+import '@darksoil/gather/dist/elements/events-for-agent.js';
 import { localized, msg } from '@lit/localize';
 import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
-import '@holochain-open-dev/elements/elements/display-error.js';
+import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';

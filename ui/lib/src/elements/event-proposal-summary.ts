@@ -19,9 +19,9 @@ import { mdiCalendarClock, mdiMapMarker } from '@mdi/js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/icon/icon.js';
-import '@holochain-open-dev/elements/elements/display-error.js';
-import '@holochain-open-dev/profiles/elements/agent-avatar.js';
-import '@holochain-open-dev/file-storage/elements/show-image.js';
+import '@holochain-open-dev/elements/dist/elements/display-error.js';
+import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
+import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 
 import {
@@ -30,7 +30,7 @@ import {
   CallToAction,
 } from '@darksoil/assemble';
 import { decode } from '@msgpack/msgpack';
-import '@darksoil/assemble/elements/call-to-action-progress.js';
+import '@darksoil/assemble/dist/elements/call-to-action-progress.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';

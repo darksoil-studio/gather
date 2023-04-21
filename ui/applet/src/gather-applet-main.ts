@@ -6,12 +6,12 @@ import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 
-import '@darksoil/gather/elements/create-event.js';
-import '@darksoil/gather/elements/create-event-proposal.js';
-import '@darksoil/gather/elements/all-events.js';
-import '@darksoil/gather/elements/all-events-proposals.js';
-import '@darksoil/gather/elements/events-calendar.js';
-import '@darksoil/gather/elements/events-for-agent.js';
+import '@darksoil/gather/dist/elements/create-event.js';
+import '@darksoil/gather/dist/elements/create-event-proposal.js';
+import '@darksoil/gather/dist/elements/all-events.js';
+import '@darksoil/gather/dist/elements/all-events-proposals.js';
+import '@darksoil/gather/dist/elements/events-calendar.js';
+import '@darksoil/gather/dist/elements/events-for-agent.js';
 import { localized, msg } from '@lit/localize';
 import { sharedStyles } from '@holochain-open-dev/elements';
 import { GatherStore, gatherStoreContext } from '@darksoil/gather';

@@ -10,10 +10,9 @@ import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/input/input.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
-import '@holochain-open-dev/file-storage/elements/upload-files.js';
-import '@darksoil/assemble/elements/create-call-to-action.js';
-//@ts-ignore
-import { CreateCallToAction } from '@darksoil/assemble/elements/create-call-to-action.js';
+import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
+import '@darksoil/assemble/dist/elements/create-call-to-action.js';
+import { CreateCallToAction } from '@darksoil/assemble/dist/elements/create-call-to-action.js';
 
 //@ts-ignore
 @localized()
@@ -67,7 +66,9 @@ export class CreateEventProposal extends CreateCallToAction {
             style="flex: 1"
           ></sl-input>
         </div>
-        <div style="display: flex; flex: 1; flex-direction: row; margin-bottom: 16px;">
+        <div
+          style="display: flex; flex: 1; flex-direction: row; margin-bottom: 16px;"
+        >
           <lit-flatpickr
             .dateFormat=${'Y-m-d H:i'}
             .enableTime=${true}

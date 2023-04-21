@@ -6,7 +6,7 @@ import { LitElement, html } from 'lit';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property } from 'lit/decorators.js';
 
-import '@holochain-open-dev/elements/elements/display-error.js';
+import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 import { gatherStoreContext } from '../context.js';

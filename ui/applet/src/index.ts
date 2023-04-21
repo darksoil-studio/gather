@@ -1,15 +1,15 @@
 import { ActionHash, AppAgentClient, CellType } from '@holochain/client';
 import { html, render, TemplateResult } from 'lit';
 import { GatherStore, GatherClient } from '@darksoil/gather';
-import '@darksoil/gather/elements/gather-context.js';
-import '@darksoil/gather/elements/all-events.js';
-import '@darksoil/gather/elements/event-detail.js';
-import '@darksoil/gather/elements/events-calendar.js';
-import '@darksoil/gather/elements/event-proposal-detail.js';
-import '@darksoil/assemble/elements/assemble-context.js';
+import '@darksoil/gather/dist/elements/gather-context.js';
+import '@darksoil/gather/dist/elements/all-events.js';
+import '@darksoil/gather/dist/elements/event-detail.js';
+import '@darksoil/gather/dist/elements/events-calendar.js';
+import '@darksoil/gather/dist/elements/event-proposal-detail.js';
+import '@darksoil/assemble/dist/elements/assemble-context.js';
 import { FileStorageClient } from '@holochain-open-dev/file-storage';
-import '@holochain-open-dev/profiles/elements/profiles-context.js';
-import '@holochain-open-dev/file-storage/elements/file-storage-context.js';
+import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
+import '@holochain-open-dev/file-storage/dist/elements/file-storage-context.js';
 
 import {
   CrossGroupViews,
@@ -22,6 +22,8 @@ import {
 } from './we-applet';
 import './gather-applet-main';
 import { AssembleClient, AssembleStore } from '@darksoil/assemble';
+import { mdiCalendar } from '@mdi/js';
+import { wrapPathInSvg } from '@holochain-open-dev/elements';
 
 function wrapGroupView(
   client: AppAgentClient,
@@ -50,56 +52,62 @@ function groupViews(
   weServices: WeServices
 ): GroupViews {
   return {
-    blocks: {
-      main: element =>
-        render(
-          wrapGroupView(
-            client,
-            groupInfo,
-            groupServices,
-            html`
-              <gather-applet-main
-                @event-selected=${async (e: CustomEvent) => {
-                  const appInfo = await client.appInfo();
-                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
-                    CellType.Provisioned
-                  ].cell_id[0];
-                  weServices.openViews.openHrl(
-                    [dnaHash, e.detail.eventHash],
-                    {}
-                  );
-                }}
-                @call-to-action-created=${async (e: CustomEvent) => {
-                  const appInfo = await client.appInfo();
-                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
-                    CellType.Provisioned
-                  ].cell_id[0];
-                  weServices.openViews.openHrl(
-                    [dnaHash, e.detail.callToActionHash],
-                    {}
-                  );
-                }}
-                @event-proposal-selected=${async (e: CustomEvent) => {
-                  const appInfo = await client.appInfo();
-                  const dnaHash = (appInfo.cell_info['gather'][0] as any)[
-                    CellType.Provisioned
-                  ].cell_id[0];
-                  weServices.openViews.openHrl(
-                    [dnaHash, e.detail.eventProposalHash],
-                    {}
-                  );
-                }}
-              ></gather-applet-main>
-            `
-          ),
-          element
+    main: element =>
+      render(
+        wrapGroupView(
+          client,
+          groupInfo,
+          groupServices,
+          html`
+            <gather-applet-main
+              @event-selected=${async (e: CustomEvent) => {
+                const appInfo = await client.appInfo();
+                const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                  CellType.Provisioned
+                ].cell_id[0];
+                weServices.openViews.openHrl([dnaHash, e.detail.eventHash], {});
+              }}
+              @call-to-action-created=${async (e: CustomEvent) => {
+                const appInfo = await client.appInfo();
+                const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                  CellType.Provisioned
+                ].cell_id[0];
+                weServices.openViews.openHrl(
+                  [dnaHash, e.detail.callToActionHash],
+                  {}
+                );
+              }}
+              @event-proposal-selected=${async (e: CustomEvent) => {
+                const appInfo = await client.appInfo();
+                const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                  CellType.Provisioned
+                ].cell_id[0];
+                weServices.openViews.openHrl(
+                  [dnaHash, e.detail.eventProposalHash],
+                  {}
+                );
+              }}
+            ></gather-applet-main>
+          `
         ),
-    },
+        element
+      ),
+    blocks: {},
     entries: {
       gather: {
         gather: {
           event: {
-            name: async (hash: ActionHash) => '',
+            info: async (hash: ActionHash) => {
+              const gatherClient = new GatherClient(client, 'gather');
+              const record = await gatherClient.getEvent(hash);
+
+              if (!record) return undefined;
+
+              return {
+                name: record.entry.title,
+                icon_src: wrapPathInSvg(mdiCalendar),
+              };
+            },
             view: (element, hash: ActionHash, context) =>
               render(
                 wrapGroupView(
@@ -114,7 +122,7 @@ function groupViews(
         },
         assemble: {
           call_to_action: {
-            name: async (hash: ActionHash) => '',
+            info: async (hash: ActionHash) => undefined,
             view: (element, hash: ActionHash, context) =>
               render(
                 wrapGroupView(
@@ -140,9 +148,8 @@ function crossGroupViews(
   groupWithApplets: GroupWithApplets[]
 ): CrossGroupViews {
   return {
-    blocks: {
-      main: element => {},
-    },
+    main: element => {},
+    blocks: {},
   };
 }
 

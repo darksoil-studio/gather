@@ -11,10 +11,7 @@ export class GatherStore {
   /** Event */
 
   events = new LazyHoloHashMap((eventHash: ActionHash) =>
-    lazyLoadAndPoll(async () => {
-      const record = await this.client.getEvent(eventHash);
-      return record ? new EntryRecord<Event>(record) : undefined;
-    }, 4000)
+    lazyLoadAndPoll(async () => this.client.getEvent(eventHash), 4000)
   );
 
   /** Attendees for Event */
