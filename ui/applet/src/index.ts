@@ -24,10 +24,10 @@ import './gather-applet-main';
 import { AssembleClient, AssembleStore } from '@darksoil/assemble';
 import { mdiCalendar } from '@mdi/js';
 import { wrapPathInSvg } from '@holochain-open-dev/elements';
+import { ProfilesStore } from '@holochain-open-dev/profiles';
 
 function wrapGroupView(
   client: AppAgentClient,
-  groupInfo: GroupInfo,
   groupServices: GroupServices,
   innerTemplate: TemplateResult
 ): TemplateResult {
@@ -35,7 +35,7 @@ function wrapGroupView(
   const fileStorageClient = new FileStorageClient(client, 'gather');
   const assembleStore = new AssembleStore(new AssembleClient(client, 'gather'));
   return html` <file-storage-context .client=${fileStorageClient}>
-    <profiles-context .store=${groupServices.profilesStore}>
+    <profiles-context .store=${new ProfilesStore(groupServices.profilesClient)}>
       <gather-context .store=${gatherStore}>
         <assemble-context .store=${assembleStore}>
           ${innerTemplate}
@@ -47,7 +47,6 @@ function wrapGroupView(
 
 function groupViews(
   client: AppAgentClient,
-  groupInfo: GroupInfo,
   groupServices: GroupServices,
   weServices: WeServices
 ): GroupViews {
@@ -56,7 +55,6 @@ function groupViews(
       render(
         wrapGroupView(
           client,
-          groupInfo,
           groupServices,
           html`
             <gather-applet-main
@@ -112,7 +110,6 @@ function groupViews(
               render(
                 wrapGroupView(
                   client,
-                  groupInfo,
                   groupServices,
                   html` <event-detail .eventHash=${hash}></event-detail> `
                 ),
@@ -127,7 +124,6 @@ function groupViews(
               render(
                 wrapGroupView(
                   client,
-                  groupInfo,
                   groupServices,
                   html`
                     <event-proposal-detail

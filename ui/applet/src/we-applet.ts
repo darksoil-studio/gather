@@ -1,4 +1,4 @@
-import { ProfilesStore } from '@holochain-open-dev/profiles';
+import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 import {
   AppAgentClient,
   ActionHash,
@@ -52,7 +52,7 @@ export interface GroupViews {
 }
 
 export interface GroupServices {
-  profilesStore: ProfilesStore;
+  profilesClient: ProfilesClient;
 }
 
 export interface AttachableType {
@@ -64,7 +64,6 @@ export interface AttachableType {
 }
 
 export interface GroupWithApplets {
-  groupInfo: GroupInfo;
   groupServices: GroupServices;
   appletsClients: AppAgentClient[]; // These will be the same kind of applet
 }
@@ -83,7 +82,6 @@ export interface WeServices {
 export interface WeApplet {
   groupViews: (
     appletClient: AppAgentClient,
-    groupInfo: GroupInfo,
     groupServices: GroupServices,
     weServices: WeServices
   ) => GroupViews;
