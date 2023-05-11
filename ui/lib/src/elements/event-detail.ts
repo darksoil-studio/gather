@@ -122,7 +122,7 @@ export class EventDetail extends LitElement {
           style="width: 700px; height: 300px; flex-basis: 0;"
         ></show-image>
 
-        <div style="display: flex; flex-direction: column; ">
+        <div style="display: flex; flex-direction: column; flex: 1;">
           <div style="display: flex; flex-direction: row">
             <span
               class="title"
@@ -133,7 +133,7 @@ export class EventDetail extends LitElement {
             ${amIAuthor
               ? html`
                   <sl-icon-button
-                    title=${msg("edit")}
+                    title=${msg('edit')}
                     style="margin-left: 8px"
                     @click=${() => {
                       this._editing = true;
@@ -141,13 +141,14 @@ export class EventDetail extends LitElement {
                     .src=${wrapPathInSvg(mdiPencil)}
                   ></sl-icon-button>
                   <sl-icon-button
-                    title=${msg("delete event")}
+                    title=${msg('delete event')}
                     style="margin-left: 8px"
                     .src=${wrapPathInSvg(mdiDelete)}
                     @click=${() => this.deleteEvent()}
                   ></sl-icon-button>
                 `
               : html``}
+            <slot name="action"></slot>
           </div>
 
           <div style="display: flex; flex-direction: column;">
@@ -158,7 +159,7 @@ export class EventDetail extends LitElement {
             <div style="display: flex; flex-direction: row;">
               <div class="column" style="justify-content: end">
                 <div
-                  title=${msg("location")}
+                  title=${msg('location')}
                   style="display: flex; flex-direction: row; align-items: center;"
                 >
                   <sl-icon
@@ -171,7 +172,7 @@ export class EventDetail extends LitElement {
                 </div>
 
                 <div
-                  title=${msg("time")}
+                  title=${msg('time')}
                   style="display: flex; flex-direction: row; align-items: center"
                 >
                   <sl-icon
@@ -181,7 +182,9 @@ export class EventDetail extends LitElement {
                   <span style="white-space: pre-line"
                     >${new Date(
                       entryRecord.entry.start_time / 1000
-                    ).toLocaleString()} - ${new Date(
+                    ).toLocaleString()}
+                    -
+                    ${new Date(
                       entryRecord.entry.end_time / 1000
                     ).toLocaleString()}</span
                   >
@@ -189,7 +192,7 @@ export class EventDetail extends LitElement {
 
                 ${entryRecord.entry.cost
                   ? html` <div
-                      title=${msg("cost")}
+                      title=${msg('cost')}
                       style="display: flex; flex-direction: row; align-items: center"
                     >
                       <sl-icon
@@ -278,12 +281,15 @@ export class EventDetail extends LitElement {
       ></edit-event>`;
     }
 
-    return html`<div class="row">
+    return html`<div class="row" style="justify-content: center">
       ${this.renderDetail(maybeEntryRecord)}
-      <attendees-for-event
-        style="margin-left: 16px;"
-        .eventHash=${this.eventHash}
-      ></attendees-for-event>
+      <div class="column" style="margin-left: 16px;">
+        <attendees-for-event
+          style="margin-bottom: 16px;"
+          .eventHash=${this.eventHash}
+        ></attendees-for-event>
+        <slot name="attachments"></slot>
+      </div>
     </div> `;
   }
 

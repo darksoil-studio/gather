@@ -312,6 +312,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "debc29dde2e69f9e47506b525f639ed42300fc014a3e007832592448fa8e4599"
 
 [[package]]
+name = "attachments"
+version = "0.0.1"
+dependencies = [
+ "hc_zome_attachments_coordinator",
+ "hdk 0.1.1",
+ "serde",
+]
+
+[[package]]
+name = "attachments_integrity"
+version = "0.0.1"
+dependencies = [
+ "hc_zome_attachments_integrity",
+ "hdi 0.2.1",
+ "serde",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1856,6 +1874,25 @@ dependencies = [
 name = "hc_zome_assemble_integrity"
 version = "0.0.1"
 source = "git+https://github.com/darksoil-studio/assemble?branch=main#ecf6fe812f6e1f9a953cde2cc3c5f8d4d51f48af"
+dependencies = [
+ "hdi 0.2.1",
+ "serde",
+]
+
+[[package]]
+name = "hc_zome_attachments_coordinator"
+version = "0.0.1"
+source = "git+https://github.com/lightningrodlabs/we?branch=main#8f91c1e38d3b1dbff8d7b2d9ce958c4261339bb0"
+dependencies = [
+ "hc_zome_attachments_integrity",
+ "hdk 0.1.1",
+ "serde",
+]
+
+[[package]]
+name = "hc_zome_attachments_integrity"
+version = "0.0.1"
+source = "git+https://github.com/lightningrodlabs/we?branch=main#8f91c1e38d3b1dbff8d7b2d9ce958c4261339bb0"
 dependencies = [
  "hdi 0.2.1",
  "serde",

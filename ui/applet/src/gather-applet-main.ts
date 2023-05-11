@@ -12,6 +12,9 @@ import '@darksoil/gather/dist/elements/all-events.js';
 import '@darksoil/gather/dist/elements/all-events-proposals.js';
 import '@darksoil/gather/dist/elements/events-calendar.js';
 import '@darksoil/gather/dist/elements/events-for-agent.js';
+
+import '@lightningrodlabs/we-applet/dist/elements/search-entry.js';
+
 import { localized, msg } from '@lit/localize';
 import { sharedStyles } from '@holochain-open-dev/elements';
 import { GatherStore, gatherStoreContext } from '@darksoil/gather';
@@ -39,7 +42,9 @@ export class GatherAppletMain extends LitElement {
           <div class="flex-scrollable-y">
             <div class="column" style="flex: 1; align-items: center;">
               <sl-button
-                @click=${() => (this._view = { view: 'main' })}
+                @click=${() => {
+                  this._view = { view: 'main' };
+                }}
                 style="position: absolute; left: 16px; top: 16px;"
                 >${msg('Back')}</sl-button
               >
@@ -59,9 +64,11 @@ export class GatherAppletMain extends LitElement {
       return html` <div class="flex-scrollable-parent">
         <div class="flex-scrollable-container">
           <div class="flex-scrollable-y">
-            <div class="column" style="flex: 1; align-items: center;">
+            <div class="column" style="flex: 1; align-items: centej;">
               <sl-button
-                @click=${() => (this._view = { view: 'main' })}
+                @click=${() => {
+                  this._view = { view: 'main' };
+                }}
                 style="position: absolute; left: 16px; top: 16px;"
                 >${msg('Back')}</sl-button
               >

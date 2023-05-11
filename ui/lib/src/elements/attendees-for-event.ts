@@ -49,8 +49,8 @@ export class AttendeesForEvent extends LitElement {
 
   renderList(attendees: ReadonlyMap<AgentPubKey, Profile | undefined>) {
     if (attendees.size === 0)
-      return html`<span style="margin: 16px"
-        >${msg('This event has no attendees yet')}</span
+      return html`<span class="placeholder"
+        >${msg('This event has no attendees yet.')}</span
       >`;
 
     return html`
@@ -83,12 +83,7 @@ export class AttendeesForEvent extends LitElement {
       case 'complete':
         return html`
           <sl-card style="flex: 1; display: flex;">
-            <span
-              slot="header"
-              class="title"
-              style="margin-left: 16px; margin-top: 16px; margin-bottom: 8px"
-              >${msg('Attendees')}</span
-            >
+            <span slot="header" class="title">${msg('Attendees')}</span>
             ${this.renderList(this._attendees.value.value)}
           </sl-card>
         `;

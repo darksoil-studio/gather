@@ -22,5 +22,9 @@ integrity:
       hash: ~
       bundled: "../../../target/wasm32-unknown-unknown/release/assemble.wasm"
       dependencies: ~
+    - name: attachments
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/attachments.wasm"
+      dependencies: ~
 coordinator:
   zomes: []

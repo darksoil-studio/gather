@@ -1,4 +1,9 @@
-import { ActionHash, AppAgentClient, CellType } from '@holochain/client';
+import {
+  EntryHash,
+  DnaHash,
+  AppAgentClient,
+  CellType,
+} from '@holochain/client';
 import { html, render, TemplateResult } from 'lit';
 import { GatherStore, GatherClient } from '@darksoil/gather';
 import '@darksoil/gather/dist/elements/gather-context.js';
@@ -11,63 +16,76 @@ import { FileStorageClient } from '@holochain-open-dev/file-storage';
 import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
 import '@holochain-open-dev/file-storage/dist/elements/file-storage-context.js';
 
-import {
-  CrossGroupViews,
-  GroupInfo,
-  GroupServices,
-  GroupViews,
-  GroupWithApplets,
-  WeApplet,
-  WeServices,
-} from './we-applet';
-import './gather-applet-main';
 import { AssembleClient, AssembleStore } from '@darksoil/assemble';
 import { mdiCalendar } from '@mdi/js';
 import { wrapPathInSvg } from '@holochain-open-dev/elements';
-import { ProfilesStore } from '@holochain-open-dev/profiles';
+import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 
-function wrapGroupView(
+import {
+  AppletClients,
+  AppletViews,
+  AttachmentsClient,
+  AttachmentsStore,
+  CrossAppletViews,
+  Hrl,
+  WeApplet,
+  WeServices,
+} from '@lightningrodlabs/we-applet';
+
+import '@lightningrodlabs/we-applet/dist/elements/we-services-context.js';
+import '@lightningrodlabs/we-applet/dist/attachments/elements/attachments-context.js';
+import '@lightningrodlabs/we-applet/dist/attachments/elements/attachments-card.js';
+import '@lightningrodlabs/we-applet/dist/elements/share-hrl.js';
+
+import './gather-applet-main';
+
+function wrapAppletView(
   client: AppAgentClient,
-  groupServices: GroupServices,
+  profilesClient: ProfilesClient,
+  weServices: WeServices,
   innerTemplate: TemplateResult
 ): TemplateResult {
   const gatherStore = new GatherStore(new GatherClient(client, 'gather'));
   const fileStorageClient = new FileStorageClient(client, 'gather');
   const assembleStore = new AssembleStore(new AssembleClient(client, 'gather'));
-  return html` <file-storage-context .client=${fileStorageClient}>
-    <profiles-context .store=${new ProfilesStore(groupServices.profilesClient)}>
-      <gather-context .store=${gatherStore}>
-        <assemble-context .store=${assembleStore}>
-          ${innerTemplate}
-        </assemble-context>
-      </gather-context></profiles-context
-    ></file-storage-context
+  return html` <we-services-context .services=${weServices}>
+    <file-storage-context .client=${fileStorageClient}>
+      <profiles-context .store=${new ProfilesStore(profilesClient)}>
+        <gather-context .store=${gatherStore}>
+          <assemble-context .store=${assembleStore}>
+            ${innerTemplate}
+          </assemble-context>
+        </gather-context></profiles-context
+      ></file-storage-context
+    ></we-services-context
   >`;
 }
 
-function groupViews(
+function appletViews(
   client: AppAgentClient,
-  groupServices: GroupServices,
+  _appletId: EntryHash,
+  profilesClient: ProfilesClient,
   weServices: WeServices
-): GroupViews {
+): AppletViews {
   return {
     main: element =>
       render(
-        wrapGroupView(
+        wrapAppletView(
           client,
-          groupServices,
+          profilesClient,
+          weServices,
           html`
             <gather-applet-main
               @event-selected=${async (e: CustomEvent) => {
                 const appInfo = await client.appInfo();
-                const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                const dnaHash = (appInfo.cell_info.gather[0] as any)[
                   CellType.Provisioned
                 ].cell_id[0];
                 weServices.openViews.openHrl([dnaHash, e.detail.eventHash], {});
               }}
               @call-to-action-created=${async (e: CustomEvent) => {
                 const appInfo = await client.appInfo();
-                const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                const dnaHash = (appInfo.cell_info.gather[0] as any)[
                   CellType.Provisioned
                 ].cell_id[0];
                 weServices.openViews.openHrl(
@@ -77,7 +95,7 @@ function groupViews(
               }}
               @event-proposal-selected=${async (e: CustomEvent) => {
                 const appInfo = await client.appInfo();
-                const dnaHash = (appInfo.cell_info['gather'][0] as any)[
+                const dnaHash = (appInfo.cell_info.gather[0] as any)[
                   CellType.Provisioned
                 ].cell_id[0];
                 weServices.openViews.openHrl(
@@ -95,9 +113,9 @@ function groupViews(
       gather: {
         gather: {
           event: {
-            info: async (hash: ActionHash) => {
+            info: async (hrl: Hrl) => {
               const gatherClient = new GatherClient(client, 'gather');
-              const record = await gatherClient.getEvent(hash);
+              const record = await gatherClient.getEvent(hrl[1]);
 
               if (!record) return undefined;
 
@@ -106,12 +124,34 @@ function groupViews(
                 icon_src: wrapPathInSvg(mdiCalendar),
               };
             },
-            view: (element, hash: ActionHash, context) =>
+            view: (element, hrl: Hrl, context) =>
               render(
-                wrapGroupView(
+                wrapAppletView(
                   client,
-                  groupServices,
-                  html` <event-detail .eventHash=${hash}></event-detail> `
+                  profilesClient,
+                  weServices,
+                  html`
+                    <attachments-context
+                      .store=${new AttachmentsStore(
+                        new AttachmentsClient(client, hrl[0])
+                      )}
+                    >
+                      <event-detail
+                        .eventHash=${hrl[1]}
+                        style="flex: 1; margin: 16px"
+                      >
+                        <share-hrl
+                          .hrl=${hrl}
+                          slot="action"
+                          style="margin-left: 8px"
+                        ></share-hrl>
+                        <attachments-card
+                          .hash=${hrl[1]}
+                          slot="attachments"
+                        ></attachments-card>
+                      </event-detail>
+                    </attachments-context>
+                  `
                 ),
                 element
               ),
@@ -119,15 +159,16 @@ function groupViews(
         },
         assemble: {
           call_to_action: {
-            info: async (hash: ActionHash) => undefined,
-            view: (element, hash: ActionHash, context) =>
+            info: async (hrl: Hrl) => undefined,
+            view: (element, hrl: Hrl, context) =>
               render(
-                wrapGroupView(
+                wrapAppletView(
                   client,
-                  groupServices,
+                  profilesClient,
+                  weServices,
                   html`
                     <event-proposal-detail
-                      .callToActionHash=${hash}
+                      .callToActionHash=${hrl[1]}
                     ></event-proposal-detail>
                   `
                 ),
@@ -140,9 +181,10 @@ function groupViews(
   };
 }
 
-function crossGroupViews(
-  groupWithApplets: GroupWithApplets[]
-): CrossGroupViews {
+function crossAppletViews(
+  applets: ReadonlyMap<EntryHash, AppletClients>,
+  weServices: WeServices
+): CrossAppletViews {
   return {
     main: element => {},
     blocks: {},
@@ -150,10 +192,27 @@ function crossGroupViews(
 }
 
 const applet: WeApplet = {
-  attachableTypes: [],
-  search: async () => [],
-  groupViews,
-  crossGroupViews,
+  appletViews,
+  crossAppletViews,
+  attachmentTypes: async client => ({}),
+  search: async (appletClient, searchFilter) => {
+    const client = new GatherClient(appletClient, 'gather');
+
+    const eventsHashes = await client.getAllEvents();
+    const events = await Promise.all(
+      eventsHashes.map(hash => client.getEvent(hash))
+    );
+
+    const filteredEvents = events
+      .filter(e => !!e && e.entry.title.includes(searchFilter))
+      .map(e => e!.actionHash);
+
+    const appInfo = await appletClient.appInfo();
+    const dnaHash = (appInfo.cell_info.gather[0] as any)[CellType.Provisioned]
+      .cell_id[0];
+
+    return filteredEvents.map(hash => ({ hrl: [dnaHash, hash], context: {} }));
+  },
 };
 
 export default applet;

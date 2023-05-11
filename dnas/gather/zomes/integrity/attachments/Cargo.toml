@@ -1,0 +1,15 @@
+[package]
+name = "attachments_integrity"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "attachments_integrity"
+
+[dependencies]
+hdi = { workspace = true }
+
+serde = { workspace = true }
+
+hc_zome_attachments_integrity = { git = "https://github.com/lightningrodlabs/we", branch = "main" }

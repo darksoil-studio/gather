@@ -3,7 +3,7 @@ import {
   onSubmit,
   sharedStyles,
 } from '@holochain-open-dev/elements';
-import { EntryHash, Record } from '@holochain/client';
+import { Record } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
