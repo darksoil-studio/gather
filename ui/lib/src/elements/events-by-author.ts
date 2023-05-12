@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
-import { state, customElement, property } from 'lit/decorators.js';
-import { AgentPubKey, EntryHash, ActionHash, Record } from '@holochain/client';
+import { customElement, property } from 'lit/decorators.js';
+import { AgentPubKey, ActionHash } from '@holochain/client';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';

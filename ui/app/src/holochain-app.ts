@@ -37,9 +37,7 @@ import { localized, msg } from '@lit/localize';
 import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
 
 import '@darksoil/gather/dist/elements/event-detail.js';
-import '@darksoil/gather/dist/elements/event-proposal-detail.js';
 import '@darksoil/gather/dist/elements/create-event.js';
-import '@darksoil/gather/dist/elements/create-event-proposal.js';
 import '@darksoil/gather/dist/elements/all-events.js';
 import '@darksoil/gather/dist/elements/all-events-proposals.js';
 import '@darksoil/gather/dist/elements/events-calendar.js';
@@ -58,10 +56,6 @@ type View =
 @localized()
 @customElement('holochain-app')
 export class HolochainApp extends LitElement {
-  @provide({ context: assembleStoreContext })
-  @property()
-  _assembleStore!: AssembleStore;
-
   @provide({ context: fileStorageClientContext })
   @property()
   _fileStorageClient!: FileStorageClient;
@@ -69,6 +63,10 @@ export class HolochainApp extends LitElement {
   @provide({ context: gatherStoreContext })
   @property()
   _gatherStore!: GatherStore;
+
+  @provide({ context: assembleStoreContext })
+  @property()
+  _assembleStore!: AssembleStore;
 
   @state() _loading = true;
 
@@ -98,13 +96,14 @@ export class HolochainApp extends LitElement {
       this,
       () => this._profilesStore.myProfile
     );
-    this._gatherStore = new GatherStore(
-      new GatherClient(appAgentClient, 'gather')
-    );
-    this._fileStorageClient = new FileStorageClient(appAgentClient, 'gather');
     this._assembleStore = new AssembleStore(
       new AssembleClient(appAgentClient, 'gather')
     );
+    this._gatherStore = new GatherStore(
+      new GatherClient(appAgentClient, 'gather'),
+      this._assembleStore
+    );
+    this._fileStorageClient = new FileStorageClient(appAgentClient, 'gather');
   }
 
   renderMyProfile() {
@@ -166,6 +165,12 @@ export class HolochainApp extends LitElement {
         id="tabs"
         placement="start"
         style="display: flex; flex: 1; "
+        @event-selected=${(e: CustomEvent) => {
+          this._view = {
+            view: 'event_detail',
+            selectedEventHash: e.detail.eventHash,
+          };
+        }}
       >
         <sl-button
           variant="primary"
@@ -173,7 +178,7 @@ export class HolochainApp extends LitElement {
             this._view = { view: 'create_event' };
           }}
           slot="nav"
-          style="margin: 8px; margin-top: 0"
+          style="margin: 8px; margin-top: 8px"
         >
           ${msg('Create Event')}
         </sl-button>
@@ -189,15 +194,7 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <all-events-proposals
-                    style="width: 900px; margin: 16px"
-                    @event-proposal-selected=${(e: CustomEvent) => {
-                      this._view = {
-                        view: 'event_detail',
-                        selectedEventHash: e.detail.eventProposalHash,
-                      };
-                    }}
-                  >
+                  <all-events-proposals style="width: 900px; margin: 16px">
                   </all-events-proposals>
                 </div>
               </div>
@@ -209,16 +206,7 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <all-events
-                    style="width: 900px; margin: 16px"
-                    @event-selected=${(e: CustomEvent) => {
-                      this._view = {
-                        view: 'event_detail',
-                        selectedEventHash: e.detail.eventHash,
-                      };
-                    }}
-                  >
-                  </all-events>
+                  <all-events style="width: 900px; margin: 16px"> </all-events>
                 </div>
               </div>
             </div>
@@ -229,10 +217,7 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <events-for-agent
-                    style="width: 900px; margin: 16px"
-                    .agent=${this._gatherStore.client.client.myPubKey}
-                  ></events-for-agent>
+                  <my-events style="width: 900px; margin: 16px"></my-events>
                 </div>
               </div>
             </div>
@@ -302,7 +287,7 @@ export class HolochainApp extends LitElement {
         flex: 1;
       }
       sl-tab-group::part(active-tab-indicator) {
-        margin-top: 102px;
+        margin-top: 52px;
       }
       sl-tab-group::part(body) {
         display: flex;

@@ -1,14 +1,10 @@
-import { hashProperty, sharedStyles } from '@holochain-open-dev/elements';
-import { ActionHash, AgentPubKey } from '@holochain/client';
+import { sharedStyles } from '@holochain-open-dev/elements';
+import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
-import {
-  asyncDerived,
-  join,
-  StoreSubscriber,
-} from '@holochain-open-dev/stores';
-import { customElement, property } from 'lit/decorators.js';
+import { StoreSubscriber } from '@holochain-open-dev/stores';
+import { customElement } from 'lit/decorators.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';

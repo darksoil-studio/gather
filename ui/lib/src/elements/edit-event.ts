@@ -11,7 +11,6 @@ import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import 'lit-flatpickr';
 import '@shoelace-style/shoelace/dist/components/checkbox/checkbox.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/input/input.js';
@@ -42,6 +41,7 @@ export class EditEvent extends LitElement {
   async updateEvent(fields: any) {
     const event: Event = {
       ...fields,
+      call_to_action_hash: this.currentRecord.entry.call_to_action_hash,
       start_time: new Date(fields.start_time).valueOf() * 1000,
       end_time: new Date(fields.end_time).valueOf() * 1000,
     };

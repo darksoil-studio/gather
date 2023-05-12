@@ -19,22 +19,17 @@ import {
   EntryRecord,
   HoloHashMap,
   LazyHoloHashMap,
-  pickBy,
 } from '@holochain-open-dev/utils';
 import { ActionHash, AgentPubKey } from '@holochain/client';
-import { decode } from '@msgpack/msgpack';
 
 import { Event } from './types.js';
 import { GatherClient } from './gather-client';
 
 export class GatherStore {
-  public assembleStore!: AssembleStore;
-
-  constructor(public client: GatherClient) {
-    this.assembleStore = new AssembleStore(
-      new AssembleClient(client.client, 'gather')
-    );
-  }
+  constructor(
+    public client: GatherClient,
+    public assembleStore: AssembleStore
+  ) {}
 
   /** Event */
 
@@ -103,7 +98,8 @@ export class GatherStore {
 
   allEventsProposals = pipe(
     this.assembleStore.openCallsToAction,
-    callsToAction => sliceAndJoin(this.eventsByCallToAction, callsToAction),
+    callsToAction =>
+      sliceAndJoin(this.eventsByCallToAction, Array.from(callsToAction.keys())),
     eventsHashes =>
       sliceAndJoin(this.events, Array.from(eventsHashes.values())),
     events => {
@@ -111,6 +107,7 @@ export class GatherStore {
         ActionHash,
         EntryRecord<Event>
       > = new HoloHashMap();
+
       for (const [eventHash, event] of Array.from(events.entries())) {
         if (event) {
           if (event.entry.start_time < Date.now() * 1000) {
@@ -134,7 +131,11 @@ export class GatherStore {
     }
   );
 
-  myEvents = this.assembleStore.myCallsToAction as AsyncReadable<ActionHash[]>;
+  myEvents = pipe(
+    this.assembleStore.myCallsToAction,
+    callsToActions => sliceAndJoin(this.eventsByCallToAction, callsToActions),
+    e => completed(Array.from(e.values()))
+  );
 
   eventsByAuthor = new LazyHoloHashMap((author: AgentPubKey) =>
     lazyLoadAndPoll(async () => {

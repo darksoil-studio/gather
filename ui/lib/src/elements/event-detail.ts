@@ -69,9 +69,12 @@ export class EventDetail extends LitElement {
   @state()
   _editing = false;
 
-  async deleteEvent() {
+  async deleteEvent(event: EntryRecord<Event>) {
     try {
       await this.gatherStore.client.deleteEvent(this.eventHash);
+      await this.gatherStore.assembleStore.client.closeCallToAction(
+        event.entry.call_to_action_hash
+      );
 
       this.dispatchEvent(
         new CustomEvent('event-deleted', {
@@ -144,7 +147,7 @@ export class EventDetail extends LitElement {
                     title=${msg('delete event')}
                     style="margin-left: 8px"
                     .src=${wrapPathInSvg(mdiDelete)}
-                    @click=${() => this.deleteEvent()}
+                    @click=${() => this.deleteEvent(entryRecord)}
                   ></sl-icon-button>
                 `
               : html``}
