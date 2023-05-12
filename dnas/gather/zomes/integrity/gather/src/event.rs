@@ -1,4 +1,5 @@
 use hdi::prelude::*;
+
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct Event {
@@ -9,7 +10,10 @@ pub struct Event {
     pub start_time: Timestamp,
     pub end_time: Timestamp,
     pub cost: Option<String>,
+
+    pub call_to_action_hash: ActionHash,
 }
+
 pub fn validate_create_link_events_by_author(
     _action: CreateLink,
     _base_address: AnyLinkableHash,

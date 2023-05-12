@@ -18,11 +18,8 @@ import { GatherStore } from '../gather-store.js';
 import './event-summary.js';
 
 @localized()
-@customElement('events-for-agent')
-export class EventsForAgent extends LitElement {
-  @property(hashProperty('agent'))
-  agent!: AgentPubKey;
-
+@customElement('my-events')
+export class MyEvents extends LitElement {
   /**
    * @internal
    */
@@ -34,18 +31,8 @@ export class EventsForAgent extends LitElement {
    */
   _events = new StoreSubscriber(
     this,
-    () =>
-      asyncDerived(
-        join([
-          this.gatherStore.eventsByAuthor.get(this.agent),
-          this.gatherStore.eventsForAttendee.get(this.agent),
-        ]),
-        ([eventsOfAgent, eventsForAttendee]) => [
-          ...eventsOfAgent,
-          ...eventsForAttendee,
-        ]
-      ),
-    () => [this.agent]
+    () => this.gatherStore.myEvents,
+    () => []
   );
 
   renderList(hashes: Array<ActionHash>) {

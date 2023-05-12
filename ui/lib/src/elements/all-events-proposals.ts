@@ -12,7 +12,6 @@ import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import './event-proposal-summary';
-import { AssembleStore, assembleStoreContext } from '@darksoil/assemble';
 
 @localized()
 @customElement('all-events-proposals')
@@ -20,12 +19,9 @@ export class AllEventsProposals extends LitElement {
   @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  @consume({ context: assembleStoreContext, subscribe: true })
-  assembeStore!: AssembleStore;
-
   _allEventsProposals = new StoreSubscriber(
     this,
-    () => this.assembeStore.allCallsToAction
+    () => this.gatherStore.allEventsProposals
   );
 
   renderList(hashes: Array<ActionHash>) {
@@ -36,10 +32,10 @@ export class AllEventsProposals extends LitElement {
       <div style="display: flex; flex-direction: column; flex: 1">
         ${hashes.map(
           hash =>
-            html`<event-proposal-summary
-              .eventProposalHash=${hash}
+            html`<event-summary
+              .eventHash=${hash}
               style="margin-bottom: 16px;"
-            ></event-proposal-summary>`
+            ></event-summary>`
         )}
       </div>
     `;

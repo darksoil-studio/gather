@@ -14,6 +14,8 @@ export interface Event {
   end_time: number;
 
   cost: string | undefined;
+
+  call_to_action_hash: ActionHash;
 }
 
 export interface AttendeesAttestation {

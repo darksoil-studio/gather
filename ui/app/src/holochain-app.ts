@@ -33,6 +33,9 @@ import {
   GatherClient,
   gatherStoreContext,
 } from '@darksoil/gather';
+import { localized, msg } from '@lit/localize';
+import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
+
 import '@darksoil/gather/dist/elements/event-detail.js';
 import '@darksoil/gather/dist/elements/event-proposal-detail.js';
 import '@darksoil/gather/dist/elements/create-event.js';
@@ -41,21 +44,16 @@ import '@darksoil/gather/dist/elements/all-events.js';
 import '@darksoil/gather/dist/elements/all-events-proposals.js';
 import '@darksoil/gather/dist/elements/events-calendar.js';
 import '@darksoil/gather/dist/elements/events-for-agent.js';
-import { localized, msg } from '@lit/localize';
-import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
-import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 
 type View =
   | { view: 'main' }
   | { view: 'event_detail'; selectedEventHash: ActionHash }
-  | { view: 'event_proposal_detail'; selectedEventProposalHash: ActionHash }
-  | { view: 'create_event' }
-  | { view: 'create_event_proposal' };
+  | { view: 'create_event' };
 
 @localized()
 @customElement('holochain-app')
@@ -152,23 +150,7 @@ export class HolochainApp extends LitElement {
           </div>
         </div>
       </div>`;
-    if (this._view.view === 'create_event_proposal')
-      return html` <div class="flex-scrollable-parent">
-        <div class="flex-scrollable-container">
-          <div class="flex-scrollable-y">
-            <div class="column" style="flex: 1; align-items: center;">
-              <create-event-proposal
-                @call-to-action-created=${(e: CustomEvent) => {
-                  this._view = {
-                    view: 'main',
-                  };
-                }}
-                style="margin-top: 16px"
-              ></create-event-proposal>
-            </div>
-          </div>
-        </div>
-      </div>`;
+
     if (this._view.view === 'event_detail')
       return html`
         <div class="column" style="align-items: center; flex: 1;">
@@ -178,28 +160,6 @@ export class HolochainApp extends LitElement {
           ></event-detail>
         </div>
       `;
-    if (this._view.view === 'event_proposal_detail')
-      return html`
-        <div class="column" style="align-items: center; flex: 1;">
-          <event-proposal-detail
-            style="margin: 16px"
-            .callToActionHash=${this._view.selectedEventProposalHash}
-            @collective-commitment-created=${() => {
-              this._view = { view: 'main' };
-              const interval = setInterval(() => {
-                const tabs = this.shadowRoot?.getElementById(
-                  'tabs'
-                ) as SlTabGroup;
-                if (tabs) {
-                  clearInterval(interval);
-
-                  tabs.show('all_events');
-                }
-              }, 100);
-            }}
-          ></event-proposal-detail>
-        </div>
-      `;
 
     return html`
       <sl-tab-group
@@ -207,16 +167,6 @@ export class HolochainApp extends LitElement {
         placement="start"
         style="display: flex; flex: 1; "
       >
-        <sl-button
-          variant="primary"
-          slot="nav"
-          @click=${() => {
-            this._view = { view: 'create_event_proposal' };
-          }}
-          style="margin: 8px"
-        >
-          ${msg('Create Event Proposal')}
-        </sl-button>
         <sl-button
           variant="primary"
           @click=${() => {
@@ -243,8 +193,8 @@ export class HolochainApp extends LitElement {
                     style="width: 900px; margin: 16px"
                     @event-proposal-selected=${(e: CustomEvent) => {
                       this._view = {
-                        view: 'event_proposal_detail',
-                        selectedEventProposalHash: e.detail.eventProposalHash,
+                        view: 'event_detail',
+                        selectedEventHash: e.detail.eventProposalHash,
                       };
                     }}
                   >

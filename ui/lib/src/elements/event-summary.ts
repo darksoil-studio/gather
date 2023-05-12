@@ -16,6 +16,7 @@ import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { mdiCalendarClock, mdiMapMarker } from '@mdi/js';
 
+import '@darksoil/assemble/dist/elements/call-to-action-progress.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/icon/icon.js';
@@ -124,6 +125,11 @@ export class EventSummary extends LitElement {
                 : html``}
             </div>
           </div>
+
+          <call-to-action-progress
+            .callToActionHash=${entryRecord.entry.call_to_action_hash}
+            style="margin-top: 8px; margin-bottom: 15px;"
+          ></call-to-action-progress>
         </div>
 
         <show-image
