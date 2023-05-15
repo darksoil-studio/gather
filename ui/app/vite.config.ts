@@ -9,6 +9,7 @@ const components = [
   'menu',
   'textarea',
   'tab',
+  'tag',
   'tab-group',
   'tab-panel',
   'menu-item',

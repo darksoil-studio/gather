@@ -4,12 +4,17 @@ import {
   AgentPubKey,
   AppAgentClient,
   Record,
+  SignedActionHashed,
 } from '@holochain/client';
 
-import { AttendeesAttestation } from './types';
 import { Event } from './types';
 
 type GatherSignal = {};
+
+export interface GetEventOutput {
+  event: EntryRecord<Event>;
+  deletes: SignedActionHashed[];
+}
 
 export class GatherClient extends ZomeClient<GatherSignal> {
   constructor(
@@ -25,18 +30,20 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('create_event', event);
   }
 
-  async getEvent(
-    eventHash: ActionHash
-  ): Promise<EntryRecord<Event> | undefined> {
-    const record: Record | undefined = await this.callZome(
-      'get_event',
-      eventHash
-    );
-    return record ? new EntryRecord(record) : undefined;
+  async getEvent(eventHash: ActionHash): Promise<GetEventOutput | undefined> {
+    const output: any | undefined = await this.callZome('get_event', eventHash);
+    if (!output) return undefined;
+
+    return {
+      event: new EntryRecord(output.record),
+      deletes: output.deletes,
+    };
   }
 
-  async getEventForCallToAction(callToAction: ActionHash): Promise<ActionHash> {
-    return this.callZome('get_event_for_call_to_action', callToAction);
+  async getEventForCallToAction(
+    callToActionHash: ActionHash
+  ): Promise<ActionHash> {
+    return this.callZome('get_event_for_call_to_action', callToActionHash);
   }
 
   deleteEvent(originalEventHash: ActionHash): Promise<ActionHash> {
@@ -55,60 +62,7 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     });
   }
 
-  /** Attendees for Event */
-
-  getAttendeesForEvent(eventHash: ActionHash): Promise<Array<AgentPubKey>> {
-    return this.callZome('get_attendees_for_event', eventHash);
-  }
-
-  addAttendeeForEvent(
-    eventHash: ActionHash,
-    attendee: AgentPubKey
-  ): Promise<void> {
-    return this.callZome('add_attendee_for_event', {
-      event_hash: eventHash,
-      attendee,
-    });
-  }
-
-  getEventsForAttendee(attendee: AgentPubKey): Promise<Array<ActionHash>> {
-    return this.callZome('get_events_for_attendee', attendee);
-  }
-  /** Attendees Attestation */
-
-  createAttendeesAttestation(
-    attendeesAttestation: AttendeesAttestation
-  ): Promise<Record> {
-    return this.callZome('create_attendees_attestation', attendeesAttestation);
-  }
-
-  getAttendeesAttestation(
-    attendeesAttestationHash: ActionHash
-  ): Promise<Record | undefined> {
-    return this.callZome('get_attendees_attestation', attendeesAttestationHash);
-  }
-
-  updateAttendeesAttestation(
-    previousAttendeesAttestationHash: ActionHash,
-    updatedAttendeesAttestation: AttendeesAttestation
-  ): Promise<Record> {
-    return this.callZome('update_attendees_attestation', {
-      previous_attendees_attestation_hash: previousAttendeesAttestationHash,
-      updated_attendees_attestation: updatedAttendeesAttestation,
-    });
-  }
-
-  getAttendeesAttestationsForAteendee(
-    ateendee: AgentPubKey
-  ): Promise<Array<ActionHash>> {
-    return this.callZome('get_attendees_attestations_for_ateendee', ateendee);
-  }
-
-  getAttendeesAttestationsForEvent(
-    eventHash: ActionHash
-  ): Promise<Array<ActionHash>> {
-    return this.callZome('get_attendees_attestations_for_event', eventHash);
-  }
+  /** Participants for Event */
 
   /** All Events */
 

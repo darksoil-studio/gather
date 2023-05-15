@@ -21,6 +21,7 @@ import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { Event } from '../types.js';
+import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
 
 @localized()
 @customElement('edit-event')
@@ -71,7 +72,7 @@ export class EditEvent extends LitElement {
   }
 
   render() {
-    return html` <sl-card style="display: flex; width: 700px">
+    return html` <sl-card style="display: flex;">
       <span slot="header">${msg('Edit Event')}</span>
       <form
         style="display: flex; flex-direction: column;"
@@ -100,58 +101,47 @@ export class EditEvent extends LitElement {
           .defaultValue=${this.currentRecord.entry.description}
         ></sl-input>
 
-        <div style="display: flex; flex: 1; flex-direction: row">
-          <div
-            style="display: flex; flex: 1; flex-direction: column; margin-right: 16px;"
-          >
-            <sl-input
-              name="location"
-              required
-              .label=${msg('Location')}
-              style="margin-bottom: 16px"
-              .defaultValue=${this.currentRecord.entry.location}
-            ></sl-input>
-            <lit-flatpickr
-              .dateFormat=${'Y-m-d H:i'}
-              .enableTime=${true}
-              class="column"
-              style="width: 100%"
-            >
-              <sl-input
-                name="start_time"
-                required
-                .defaultValue=${new Date(
-                  this.currentRecord.entry.start_time / 1000
-                ).toISOString()}
-                .label=${msg('Start Time')}
-                style="flex: 1; margin-bottom: 16px"
-              ></sl-input
-            ></lit-flatpickr>
-            <lit-flatpickr
-              .dateFormat=${'Y-m-d H:i'}
-              .enableTime=${true}
-              class="column"
-              style="width: 100%"
-            >
-              <sl-input
-                required
-                name="end_time"
-                .defaultValue=${new Date(
-                  this.currentRecord.entry.end_time / 1000
-                ).toISOString()}
-                .label=${msg('End Time')}
-                style="flex: 1; margin-bottom: 16px"
-              ></sl-input
-            ></lit-flatpickr>
-          </div>
+        <div class="row" style="margin-bottom: 16px">
+          <sl-input
+            name="start_time"
+            required
+            id="start-time"
+            type="datetime-local"
+            .defaultValue=${new Date(this.currentRecord.entry.start_time / 1000)
+              .toISOString()
+              .slice(0, 16)}
+            .label=${msg('Start Time')}
+            style="flex: 1; margin-right: 16px"
+            @input=${() => this.requestUpdate()}
+          ></sl-input>
+          <sl-input
+            required
+            .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
+              ?.value}
+            name="end_time"
+            type="datetime-local"
+            .defaultValue=${new Date(this.currentRecord.entry.end_time / 1000)
+              .toISOString()
+              .slice(0, 16)}
+            .label=${msg('End Time')}
+            style="flex: 1;"
+          ></sl-input>
+        </div>
 
-          <div class="column" style="flex: 1">
-            <sl-input
-              name="cost"
-              .label=${msg('Cost')}
-              .defaultValue=${this.currentRecord.entry.cost || ''}
-            ></sl-input>
-          </div>
+        <div class="row" style="margin-bottom: 16px">
+          <sl-input
+            name="location"
+            required
+            style="flex: 1; margin-right: 16px"
+            .label=${msg('Location')}
+            .defaultValue=${this.currentRecord.entry.location}
+          ></sl-input>
+          <sl-input
+            name="cost"
+            style="flex: 1;"
+            .label=${msg('Cost')}
+            .defaultValue=${this.currentRecord.entry.cost || ''}
+          ></sl-input>
         </div>
 
         <div style="display: flex; flex-direction: row">

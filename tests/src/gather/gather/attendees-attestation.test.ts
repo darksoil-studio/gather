@@ -7,7 +7,7 @@ import { NewEntryAction, ActionHash, Record, DnaSource } from '@holochain/client
 import { decode } from '@msgpack/msgpack';
 
 
-test('create attendees_attestation', { concurrency: 1 }, async t => {
+test('create participants_attestation', { concurrency: 1 }, async t => {
   await runScenario(async scenario => {
 
     // Construct proper paths for your app.
@@ -32,10 +32,10 @@ test('create attendees_attestation', { concurrency: 1 }, async t => {
   event_hash: Buffer.from(new Uint8Array([132, 41, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
 };
 
-    // Alice creates a attendees_attestation
+    // Alice creates a participants_attestation
     const record: Record = await alice.cells[0].callZome({
       zome_name: "gather",
-      fn_name: "create_attendees_attestation",
+      fn_name: "create_participants_attestation",
       payload: createInput,
     });
     assert.ok(record);
@@ -44,7 +44,7 @@ test('create attendees_attestation', { concurrency: 1 }, async t => {
 });
 
 
-test('create and read attendees_attestation', { concurrency: 1 }, async t => {
+test('create and read participants_attestation', { concurrency: 1 }, async t => {
   await runScenario(async scenario => {
 
     // Construct proper paths for your app.
@@ -68,10 +68,10 @@ test('create and read attendees_attestation', { concurrency: 1 }, async t => {
   event_hash: Buffer.from(new Uint8Array([132, 41, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
 };
 
-    // Alice creates a attendees_attestation
+    // Alice creates a participants_attestation
     const record: Record = await alice.cells[0].callZome({
       zome_name: "gather",
-      fn_name: "create_attendees_attestation",
+      fn_name: "create_participants_attestation",
       payload: createInput,
     });
     assert.ok(record);
@@ -79,17 +79,17 @@ test('create and read attendees_attestation', { concurrency: 1 }, async t => {
     // Wait for the created entry to be propagated to the other node.
     await pause(300);
 
-    // Bob gets the created attendees_attestation
+    // Bob gets the created participants_attestation
     const createReadOutput: Record = await bob.cells[0].callZome({
       zome_name: "gather",
-      fn_name: "get_attendees_attestation",
+      fn_name: "get_participants_attestation",
       payload: record.signed_action.hashed.hash,
     });
     assert.deepEqual(createInput, decode((createReadOutput.entry as any).Present.entry) as any);
   });
 });
 
-test('create and update attendees_attestation', { concurrency: 1 }, async t => {
+test('create and update participants_attestation', { concurrency: 1 }, async t => {
   await runScenario(async scenario => {
 
     // Construct proper paths for your app.
@@ -113,29 +113,29 @@ test('create and update attendees_attestation', { concurrency: 1 }, async t => {
   event_hash: Buffer.from(new Uint8Array([132, 41, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
 };
 
-    // Alice creates a attendees_attestation
+    // Alice creates a participants_attestation
     const record: Record = await alice.cells[0].callZome({
       zome_name: "gather",
-      fn_name: "create_attendees_attestation",
+      fn_name: "create_participants_attestation",
       payload: createInput,
     });
     assert.ok(record);
         
     const originalActionHash = record.signed_action.hashed.hash;
  
-    // Alice updates the attendees_attestation
+    // Alice updates the participants_attestation
     let contentUpdate: any = {
   ateendees: [Buffer.from(new Uint8Array([132, 32, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])), Buffer.from(new Uint8Array([132, 32, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])), Buffer.from(new Uint8Array([132, 32, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))],
   event_hash: Buffer.from(new Uint8Array([132, 41, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
 };
     let updateInput = { 
-      previous_attendees_attestation_hash: originalActionHash,
-      updated_attendees_attestation: contentUpdate,
+      previous_participants_attestation_hash: originalActionHash,
+      updated_participants_attestation: contentUpdate,
     };
 
     let updatedRecord: Record = await alice.cells[0].callZome({
       zome_name: "gather",
-      fn_name: "update_attendees_attestation",
+      fn_name: "update_participants_attestation",
       payload: updateInput,
     });
     assert.ok(updatedRecord);
@@ -144,28 +144,28 @@ test('create and update attendees_attestation', { concurrency: 1 }, async t => {
     // Wait for the updated entry to be propagated to the other node.
     await pause(300);
         
-    // Bob gets the updated attendees_attestation
+    // Bob gets the updated participants_attestation
     const readUpdatedOutput0: Record = await bob.cells[0].callZome({
       zome_name: "gather",
-      fn_name: "get_attendees_attestation",
+      fn_name: "get_participants_attestation",
       payload: updatedRecord.signed_action.hashed.hash,
     });
     assert.deepEqual(contentUpdate, decode((readUpdatedOutput0.entry as any).Present.entry) as any);
 
 
-    // Alice updates the attendees_attestation again
+    // Alice updates the participants_attestation again
     contentUpdate = {
   ateendees: [Buffer.from(new Uint8Array([132, 32, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])), Buffer.from(new Uint8Array([132, 32, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])), Buffer.from(new Uint8Array([132, 32, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))],
   event_hash: Buffer.from(new Uint8Array([132, 41, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
 };
     updateInput = { 
-      previous_attendees_attestation_hash: updatedRecord.signed_action.hashed.hash,
-      updated_attendees_attestation: contentUpdate,
+      previous_participants_attestation_hash: updatedRecord.signed_action.hashed.hash,
+      updated_participants_attestation: contentUpdate,
     };
 
     updatedRecord = await alice.cells[0].callZome({
       zome_name: "gather",
-      fn_name: "update_attendees_attestation",
+      fn_name: "update_participants_attestation",
       payload: updateInput,
     });
     assert.ok(updatedRecord);
@@ -174,10 +174,10 @@ test('create and update attendees_attestation', { concurrency: 1 }, async t => {
     // Wait for the updated entry to be propagated to the other node.
     await pause(300);
         
-    // Bob gets the updated attendees_attestation
+    // Bob gets the updated participants_attestation
     const readUpdatedOutput1: Record = await bob.cells[0].callZome({
       zome_name: "gather",
-      fn_name: "get_attendees_attestation",
+      fn_name: "get_participants_attestation",
       payload: updatedRecord.signed_action.hashed.hash,
     });
     assert.deepEqual(contentUpdate, decode((readUpdatedOutput1.entry as any).Present.entry) as any);

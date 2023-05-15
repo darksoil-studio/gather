@@ -22,8 +22,23 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
     Ok(record)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetEventOutput {
+    record: Record,
+    deletes: Vec<SignedActionHashed>,
+}
 #[hdk_extern]
-pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>> {
+pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<GetEventOutput>> {
+    let Some(details) = get_details(original_event_hash.clone(), GetOptions::default())? else {
+        return Ok(None);
+    };
+    let deletes = match details {
+        Details::Record(details) => Ok(details.deletes),
+        _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(
+            "Malformed get details response"
+        )))),
+    }?;
+
     let links = get_links(original_event_hash.clone(), LinkTypes::EventUpdates, None)?;
     let latest_link = links
         .into_iter()
@@ -32,7 +47,15 @@ pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>
         Some(link) => ActionHash::from(link.target.clone()),
         None => original_event_hash.clone(),
     };
-    get(latest_event_hash, GetOptions::default())
+    let Some(details) =     get_details(latest_event_hash, GetOptions::default())? else {return Ok(None);};
+    let record = match details {
+        Details::Record(details) => Ok(details.record),
+        _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(
+            "Malformed get details response"
+        )))),
+    }?;
+
+    Ok(Some(GetEventOutput { record, deletes }))
 }
 
 #[hdk_extern]

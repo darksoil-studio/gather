@@ -1,7 +1,5 @@
 pub mod events_by_author;
 pub mod all_events;
-pub mod attendees_attestation;
-pub mod event_to_attendees;
 pub mod event;
 use hdk::prelude::*;
 #[hdk_extern]

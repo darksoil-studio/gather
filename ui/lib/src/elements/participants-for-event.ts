@@ -32,8 +32,8 @@ import { GatherStore } from '../gather-store.js';
 import { Event } from '../types.js';
 
 @localized()
-@customElement('attendees-for-event')
-export class AttendeesForEvent extends LitElement {
+@customElement('participants-for-event')
+export class ParticipantsForEvent extends LitElement {
   @property(hashProperty('event-hash'))
   eventHash!: ActionHash;
 
@@ -52,17 +52,20 @@ export class AttendeesForEvent extends LitElement {
   /**
    * @internal
    */
-  _attendees = new StoreSubscriber(
+  _participants = new StoreSubscriber(
     this,
     () =>
       join([
         this.gatherStore.events.get(this.eventHash),
         asyncDeriveStore(
-          this.gatherStore.attendeesForEvent.get(this.eventHash),
+          this.gatherStore.participantsForEvent.get(this.eventHash),
           agentPubKeys => this.profilesStore.agentsProfiles(agentPubKeys)
         ),
       ]) as AsyncReadable<
-        [EntryRecord<Event>, ReadonlyMap<AgentPubKey, Profile>]
+        [
+          { record: EntryRecord<Event>; isCancelled: boolean },
+          ReadonlyMap<AgentPubKey, Profile>
+        ]
       >,
     () => [this.eventHash]
   );
@@ -70,7 +73,7 @@ export class AttendeesForEvent extends LitElement {
   @state()
   committing = false;
 
-  async attendEvent(event: EntryRecord<Event>, attendees: AgentPubKey[]) {
+  async attendEvent(event: EntryRecord<Event>, participants: AgentPubKey[]) {
     if (this.committing) return;
 
     this.committing = true;
@@ -100,29 +103,33 @@ export class AttendeesForEvent extends LitElement {
           need_index: 0,
         });
 
-      const minNecessaryAttendees = callToAction.entry.needs[0].min_necessary;
+      const minNecessaryParticipants =
+        callToAction.entry.needs[0].min_necessary;
 
       if (
-        minNecessaryAttendees > 0 &&
-        attendees.length + 1 === minNecessaryAttendees
+        minNecessaryParticipants > 0 &&
+        participants.length + 1 === minNecessaryParticipants
       ) {
-        await this.gatherStore.assembleStore.client.createSatisfaction({
-          call_to_action_hash: event.entry.call_to_action_hash,
-          need_index: 0,
-          commitments_hashes: [
-            myCommitment.actionHash,
-            ...commitmentsForCallToAction.map(c => c.actionHash),
-          ],
-        });
+        const satisfaction =
+          await this.gatherStore.assembleStore.client.createSatisfaction({
+            call_to_action_hash: event.entry.call_to_action_hash,
+            need_index: 0,
+            commitments_hashes: [
+              myCommitment.actionHash,
+              ...commitmentsForCallToAction.map(c => c.actionHash),
+            ],
+          });
+
+        if (callToAction.entry.needs.length === 1) {
+          await this.gatherStore.assembleStore.client.createAssembly({
+            call_to_action_hash: event.entry.call_to_action_hash,
+            satisfactions_hashes: [satisfaction.actionHash],
+          });
+        }
       }
 
-      // await this.gatherStore.client.addAttendeeForEvent(
-      //   this.eventHash,
-      //   this.gatherStore.client.client.myPubKey
-      // );
-
       this.dispatchEvent(
-        new CustomEvent('attendee-added', {
+        new CustomEvent('participant-added', {
           bubbles: true,
           composed: true,
           detail: {
@@ -131,25 +138,25 @@ export class AttendeesForEvent extends LitElement {
         })
       );
     } catch (e: any) {
-      notifyError(msg('Error adding attendee.'));
+      notifyError(msg('Error adding participant.'));
       console.error(e);
     }
     this.committing = false;
   }
 
-  renderAttendeesList(
-    attendees: ReadonlyMap<AgentPubKey, Profile | undefined>
+  renderParticipantsList(
+    participants: ReadonlyMap<AgentPubKey, Profile | undefined>
   ) {
-    if (attendees.size === 0)
+    if (participants.size === 0)
       return html`<span class="placeholder"
-        >${msg('This event has no attendees yet.')}</span
+        >${msg('This event has no participants yet.')}</span
       >`;
     return html`
       <div class="column">
-        ${Array.from(attendees.entries()).map(
+        ${Array.from(participants.entries()).map(
           ([pubkey, profile]) => html`<div
             class="row"
-            style="align-items: center"
+            style="align-items: center; margin-bottom: 8px"
           >
             <agent-avatar
               size="40"
@@ -163,13 +170,15 @@ export class AttendeesForEvent extends LitElement {
     `;
   }
 
-  renderAttendees(
+  renderParticipants(
     event: EntryRecord<Event>,
-    attendees: ReadonlyMap<AgentPubKey, Profile | undefined>
+    participants: ReadonlyMap<AgentPubKey, Profile | undefined>
   ) {
     return html`
       <div class="row" style="align-items: center" slot="header">
-        <span class="title" style="margin-right: 8px">${msg('Attendees')}</span>
+        <span class="title" style="margin-right: 8px"
+          >${msg('Participants')}</span
+        >
 
         <call-to-action-need-progress
           .callToActionHash=${event.entry.call_to_action_hash}
@@ -178,21 +187,21 @@ export class AttendeesForEvent extends LitElement {
         ></call-to-action-need-progress>
       </div>
 
-      <div class="column">
-        ${this.renderAttendeesList(attendees)}
-        ${this.renderAttendButton(event, Array.from(attendees.keys()))}
+      <div class="column" style="flex: 1">
+        ${this.renderParticipantsList(participants)}
+        ${this.renderAttendButton(event, Array.from(participants.keys()))}
       </div>
     `;
   }
 
-  renderAttendButton(event: EntryRecord<Event>, attendees: AgentPubKey[]) {
+  renderAttendButton(event: EntryRecord<Event>, participants: AgentPubKey[]) {
     if (
       event.action.author.toString() ===
       this.gatherStore.client.client.myPubKey.toString()
     )
       return html``;
     if (
-      attendees
+      participants
         .map(a => a.toString())
         .includes(this.gatherStore.client.client.myPubKey.toString())
     )
@@ -201,14 +210,14 @@ export class AttendeesForEvent extends LitElement {
       variant="primary"
       .loading=${this.committing}
       style="margin-top: 16px;"
-      @click=${() => this.attendEvent(event, attendees)}
+      @click=${() => this.attendEvent(event, participants)}
     >
       ${msg("I'll attend!")}
     </sl-button>`;
   }
 
   render() {
-    switch (this._attendees.value.status) {
+    switch (this._participants.value.status) {
       case 'pending':
         return html`<div
           style="display: flex; flex: 1; align-items: center; justify-content: center"
@@ -218,16 +227,16 @@ export class AttendeesForEvent extends LitElement {
       case 'complete':
         return html`
           <sl-card style="flex: 1; display: flex;">
-            ${this.renderAttendees(
-              this._attendees.value.value[0],
-              this._attendees.value.value[1]
+            ${this.renderParticipants(
+              this._participants.value.value[0].record,
+              this._participants.value.value[1]
             )}
           </sl-card>
         `;
       case 'error':
         return html`<display-error
-          .headline=${msg('Error fetching the attendees for this event')}
-          .error=${this._attendees.value.error.data.data}
+          .headline=${msg('Error fetching the participants for this event')}
+          .error=${this._participants.value.error.data.data}
         ></display-error>`;
     }
   }

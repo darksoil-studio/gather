@@ -56,9 +56,9 @@ export class GatherEventsCalendar extends LitElement {
     if (this._allEvents.value.status !== 'complete') return [];
 
     const gatherEvents = this._allEvents.value.value;
-    const filteredEvents = Array.from(gatherEvents.values()).filter(
-      e => !!e
-    ) as Array<EntryRecord<Event>>;
+    const filteredEvents = Array.from(gatherEvents.values())
+      .filter(e => !!e && !e.isCancelled)
+      .map(e => e?.record) as Array<EntryRecord<Event>>;
     const events: EventCalendarEvent[] =
       filteredEvents.map(eventToEventCalendar);
     return events;

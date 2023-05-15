@@ -41,12 +41,14 @@ import '@darksoil/gather/dist/elements/create-event.js';
 import '@darksoil/gather/dist/elements/all-events.js';
 import '@darksoil/gather/dist/elements/all-events-proposals.js';
 import '@darksoil/gather/dist/elements/events-calendar.js';
-import '@darksoil/gather/dist/elements/events-for-agent.js';
+import '@darksoil/gather/dist/elements/my-events.js';
+import '@darksoil/gather/dist/elements/my-events-proposals.js';
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
+import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 
 type View =
   | { view: 'main' }
@@ -138,10 +140,19 @@ export class HolochainApp extends LitElement {
           <div class="flex-scrollable-y">
             <div class="column" style="flex: 1; align-items: center;">
               <create-event
-                @event-created=${(e: CustomEvent) => {
+                @event-created=${async (e: CustomEvent) => {
                   this._view = {
                     view: 'main',
                   };
+
+                  setTimeout(() => {
+                    const panel = e.detail.isProposal
+                      ? 'all_events_proposals'
+                      : 'all_events';
+                    (
+                      this.shadowRoot?.getElementById('tabs') as SlTabGroup
+                    ).show(panel);
+                  }, 10);
                 }}
                 style="margin-top: 16px; max-width: 600px"
               ></create-event>
@@ -152,11 +163,17 @@ export class HolochainApp extends LitElement {
 
     if (this._view.view === 'event_detail')
       return html`
-        <div class="column" style="align-items: center; flex: 1;">
-          <event-detail
-            style="margin: 16px"
-            .eventHash=${this._view.selectedEventHash}
-          ></event-detail>
+        <div class="flex-scrollable-parent">
+          <div class="flex-scrollable-container">
+            <div class="flex-scrollable-y">
+              <div class="column" style="flex: 1; align-items: center;">
+                <event-detail
+                  style="margin: 16px"
+                  .eventHash=${this._view.selectedEventHash}
+                ></event-detail>
+              </div>
+            </div>
+          </div>
         </div>
       `;
 
@@ -183,9 +200,12 @@ export class HolochainApp extends LitElement {
           ${msg('Create Event')}
         </sl-button>
         <sl-tab slot="nav" panel="all_event_proposals"
-          >${msg('Event Proposals')}</sl-tab
+          >${msg('All Event Proposals')}</sl-tab
         >
         <sl-tab slot="nav" panel="all_events">${msg('All Events')}</sl-tab>
+        <sl-tab slot="nav" panel="my_events_proposals"
+          >${msg('My Events Proposals')}</sl-tab
+        >
         <sl-tab slot="nav" panel="my_events">${msg('My Events')}</sl-tab>
         <sl-tab slot="nav" panel="calendar">${msg('Calendar')}</sl-tab>
 
@@ -194,7 +214,10 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <all-events-proposals style="max-width: 900px; margin: 16px">
+                  <all-events-proposals
+                    style="margin: 16px"
+                    class="tab-content"
+                  >
                   </all-events-proposals>
                 </div>
               </div>
@@ -206,8 +229,22 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <all-events style="max-width: 900px; margin: 16px">
+                  <all-events style="margin: 16px" class="tab-content">
                   </all-events>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sl-tab-panel>
+        <sl-tab-panel name="my_events_proposals">
+          <div class="flex-scrollable-parent">
+            <div class="flex-scrollable-container">
+              <div class="flex-scrollable-y">
+                <div class="column" style="align-items: center">
+                  <my-events-proposals
+                    class="tab-content"
+                    style="margin: 16px"
+                  ></my-events-proposals>
                 </div>
               </div>
             </div>
@@ -218,7 +255,10 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <my-events style="max-width: 900px; margin: 16px"></my-events>
+                  <my-events
+                    class="tab-content"
+                    style="900px; margin: 16px"
+                  ></my-events>
                 </div>
               </div>
             </div>
@@ -315,6 +355,10 @@ export class HolochainApp extends LitElement {
       .back-button:hover {
         background: #ffffff65;
         border-radius: 50%;
+      }
+      .tab-content {
+        max-width: 900px;
+        min-width: 500px;
       }
     `,
     sharedStyles,

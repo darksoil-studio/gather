@@ -17,9 +17,3 @@ export interface Event {
 
   call_to_action_hash: ActionHash;
 }
-
-export interface AttendeesAttestation {
-  ateendees: Array<AgentPubKey>;
-
-  event_hash: ActionHash;
-}

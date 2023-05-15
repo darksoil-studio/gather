@@ -102,6 +102,7 @@ export class CreateEvent extends LitElement {
           bubbles: true,
           detail: {
             eventHash: record.signed_action.hashed.hash,
+            isProposal,
           },
         })
       );
@@ -146,6 +147,7 @@ export class CreateEvent extends LitElement {
           <sl-input
             type="datetime-local"
             name="start_time"
+            .min=${new Date().toISOString().slice(0, 16)}
             required
             .label=${msg('Start Time')}
             style="margin-right: 16px; flex: 1"
@@ -265,7 +267,10 @@ export class CreateEvent extends LitElement {
               )?.checked}
               .disabled=${!(
                 this.shadowRoot?.getElementById('expiration-switch') as SlSwitch
-              )?.checked}
+              )?.checked ||
+              !(this.shadowRoot?.getElementById('proposal-field') as SlSwitch)
+                ?.checked}
+              .min=${new Date().toISOString().slice(0, 16)}
               .max=${(this.shadowRoot?.getElementById('start-time') as SlInput)
                 ?.value}
             ></sl-input>

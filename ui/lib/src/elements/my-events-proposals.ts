@@ -18,8 +18,8 @@ import { GatherStore } from '../gather-store.js';
 import './event-summary.js';
 
 @localized()
-@customElement('my-events')
-export class MyEvents extends LitElement {
+@customElement('my-events-proposals')
+export class MyEventsProposals extends LitElement {
   /**
    * @internal
    */
@@ -31,7 +31,7 @@ export class MyEvents extends LitElement {
    */
   _events = new StoreSubscriber(
     this,
-    () => this.gatherStore.myEvents,
+    () => this.gatherStore.myEventsProposals,
     () => []
   );
 
@@ -51,6 +51,7 @@ export class MyEvents extends LitElement {
       const callsToActionHashes = Array.from(events.values()).map(
         e => e.record.entry.call_to_action_hash
       );
+
       await this.gatherStore.assembleStore.clearCallsToAction(
         callsToActionHashes
       );
@@ -88,8 +89,8 @@ export class MyEvents extends LitElement {
         </div>`;
       case 'complete':
         const upcoming = this._events.value.value.upcoming;
+        const expired = this._events.value.value.expired;
         const cancelled = this._events.value.value.cancelled;
-        const past = this._events.value.value.past;
         return html`
           <div class="column">
             <span class="title" style="margin-bottom: 16px"
@@ -97,7 +98,7 @@ export class MyEvents extends LitElement {
             >
             ${this.renderList(upcoming)}
             <sl-divider></sl-divider>
-            <div class="row" style="margin-bottom: 16px;">
+            <div class="row" style="margin-bottom: 16px; align-items: center">
               <span class="title" style="flex: 1">${msg('Cancelled')}</span>
               <sl-button @click=${() => this.clearCallsToAction(cancelled)}
                 >${msg('Clear')}</sl-button
@@ -105,10 +106,13 @@ export class MyEvents extends LitElement {
             </div>
             ${this.renderList(cancelled)}
             <sl-divider></sl-divider>
-            <span class="title" style="margin-bottom: 16px;"
-              >${msg('Past')}</span
-            >
-            ${this.renderList(past)}
+            <div class="row" style="margin-bottom: 16px; align-items: center">
+              <span class="title" style="flex: 1">${msg('Expired')}</span>
+              <sl-button @click=${() => this.clearCallsToAction(expired)}
+                >${msg('Clear')}</sl-button
+              >
+            </div>
+            ${this.renderList(expired)}
           </div>
         `;
       case 'error':
