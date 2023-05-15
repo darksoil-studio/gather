@@ -128,12 +128,12 @@ export class EventSummary extends LitElement {
 
           <call-to-action-progress
             .callToActionHash=${entryRecord.entry.call_to_action_hash}
-            style="margin-top: 8px; margin-bottom: 15px;"
+            style="margin-top: 16px;"
           ></call-to-action-progress>
         </div>
 
         <show-image
-          style="width: 200px; height: 200px; flex: 0; margin-top: -20px; margin-bottom: -20px; margin-right: -20px"
+          style="width: 200px; height: 200px; flex: 0; margin-top: -20px; margin-bottom: -20px; margin-right: -20px; margin-left: 16px"
           .imageHash=${entryRecord.entry.image}
         ></show-image>
       </div>
@@ -187,6 +187,7 @@ export class EventSummary extends LitElement {
       }
       :host {
         display: flex;
+        min-width: 700px;
       }
     `,
   ];

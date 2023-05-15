@@ -47,9 +47,20 @@ export class GatherStore {
   /** Attendees for Event */
 
   attendeesForEvent = new LazyHoloHashMap((eventHash: ActionHash) =>
-    lazyLoadAndPoll(
-      async () => this.client.getAttendeesForEvent(eventHash),
-      4000
+    pipe(this.events.get(eventHash), event =>
+      !event
+        ? completed([])
+        : pipe(
+            this.assembleStore.commitmentsForCallToAction.get(
+              event.entry.call_to_action_hash
+            ),
+            commitments =>
+              completed(
+                commitments
+                  .filter(c => c.entry.need_index === 0)
+                  .map(c => c.action.author)
+              )
+          )
     )
   );
 
@@ -75,11 +86,7 @@ export class GatherStore {
       > = new HoloHashMap();
       for (const [eventHash, event] of Array.from(events.entries())) {
         if (event) {
-          if (event.entry.start_time < Date.now() * 1000) {
-            this.assembleStore.client.closeCallToAction(
-              event.entry.call_to_action_hash
-            );
-          } else {
+          if (event.entry.start_time >= Date.now() * 1000) {
             allEvents.set(eventHash, event);
           }
         }

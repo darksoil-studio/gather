@@ -24,12 +24,6 @@ export class AllEventsProposals extends LitElement {
     () => this.gatherStore.allEventsProposals
   );
 
-  async firstUpdated() {
-    const a =
-      await this.gatherStore.assembleStore.client.getOpenCallsToAction();
-    console.log(a);
-  }
-
   renderList(hashes: Array<ActionHash>) {
     if (hashes.length === 0)
       return html`<span>${msg('No event proposals found.')}</span>`;

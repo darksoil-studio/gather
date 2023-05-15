@@ -23,6 +23,9 @@ import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 
+import '@darksoil/assemble/dist/elements/call-to-action-needs.js';
+import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
+
 import './attendees-for-event.js';
 import './edit-event.js';
 
@@ -87,28 +90,6 @@ export class EventDetail extends LitElement {
       );
     } catch (e: any) {
       notifyError(msg('Error deleting the event'));
-      console.error(e);
-    }
-  }
-
-  async attendEvent() {
-    try {
-      await this.gatherStore.client.addAttendeeForEvent(
-        this.eventHash,
-        this.gatherStore.client.client.myPubKey
-      );
-
-      this.dispatchEvent(
-        new CustomEvent('attendee-added', {
-          bubbles: true,
-          composed: true,
-          detail: {
-            eventHash: this.eventHash,
-          },
-        })
-      );
-    } catch (e: any) {
-      notifyError(msg('Error adding attendee'));
       console.error(e);
     }
   }
@@ -223,47 +204,10 @@ export class EventDetail extends LitElement {
                 </div>
               </div>
             </div>
-
-            ${this.renderAttendButton(entryRecord)}
           </div>
         </div>
       </sl-card>
     `;
-  }
-
-  renderAttendButton(event: EntryRecord<Event>) {
-    switch (this._attendees.value.status) {
-      case 'pending':
-        return html`<sl-skeleton
-          style="margin-top: 16px;"
-          effect="pulse"
-        ></sl-skeleton>`;
-      case 'complete':
-        if (
-          event.action.author.toString() ===
-          this.gatherStore.client.client.myPubKey.toString()
-        )
-          return html``;
-        if (
-          this._attendees.value.value
-            .map(a => a.toString())
-            .includes(this.gatherStore.client.client.myPubKey.toString())
-        )
-          return html``;
-        return html`<sl-button
-          variant="primary"
-          style="margin-top: 16px;"
-          @click=${() => this.attendEvent()}
-        >
-          ${msg("I'll attend!")}
-        </sl-button>`;
-      case 'error':
-        return html`<display-error
-          .headline=${msg('Error fetching the attendees')}
-          .error=${this._attendees.value.error.data.data}
-          tooltip
-        ></display-error>`;
-    }
   }
 
   renderEvent(maybeEntryRecord: EntryRecord<Event> | undefined) {
@@ -285,8 +229,15 @@ export class EventDetail extends LitElement {
     }
 
     return html`<div class="row" style="justify-content: center">
-      ${this.renderDetail(maybeEntryRecord)}
-      <div class="column" style="margin-left: 16px;">
+      <div class="column" style="margin-right: 16px;">
+        ${this.renderDetail(maybeEntryRecord)}
+
+        <call-to-action-need
+          .callToActionHash=${maybeEntryRecord.entry.call_to_action_hash}
+          .hideNeeds=${[0]}
+        ></call-to-action-need>
+      </div>
+      <div class="column">
         <attendees-for-event
           style="margin-bottom: 16px;"
           .eventHash=${this.eventHash}

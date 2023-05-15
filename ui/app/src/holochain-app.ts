@@ -143,7 +143,7 @@ export class HolochainApp extends LitElement {
                     view: 'main',
                   };
                 }}
-                style="margin-top: 16px"
+                style="margin-top: 16px; max-width: 600px"
               ></create-event>
             </div>
           </div>
@@ -194,7 +194,7 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <all-events-proposals style="width: 900px; margin: 16px">
+                  <all-events-proposals style="max-width: 900px; margin: 16px">
                   </all-events-proposals>
                 </div>
               </div>
@@ -206,7 +206,8 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <all-events style="width: 900px; margin: 16px"> </all-events>
+                  <all-events style="max-width: 900px; margin: 16px">
+                  </all-events>
                 </div>
               </div>
             </div>
@@ -217,7 +218,7 @@ export class HolochainApp extends LitElement {
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
                 <div class="column" style="align-items: center">
-                  <my-events style="width: 900px; margin: 16px"></my-events>
+                  <my-events style="max-width: 900px; margin: 16px"></my-events>
                 </div>
               </div>
             </div>
