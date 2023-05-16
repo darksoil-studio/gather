@@ -77,32 +77,19 @@ function appletViews(
           weServices,
           html`
             <gather-applet-main
-              @event-selected=${async (e: CustomEvent) => {
+              @event-created=${async (e: CustomEvent) => {
                 const appInfo = await client.appInfo();
                 const dnaHash = (appInfo.cell_info.gather[0] as any)[
                   CellType.Provisioned
                 ].cell_id[0];
                 weServices.openViews.openHrl([dnaHash, e.detail.eventHash], {});
               }}
-              @call-to-action-created=${async (e: CustomEvent) => {
+              @event-selected=${async (e: CustomEvent) => {
                 const appInfo = await client.appInfo();
                 const dnaHash = (appInfo.cell_info.gather[0] as any)[
                   CellType.Provisioned
                 ].cell_id[0];
-                weServices.openViews.openHrl(
-                  [dnaHash, e.detail.callToActionHash],
-                  {}
-                );
-              }}
-              @event-proposal-selected=${async (e: CustomEvent) => {
-                const appInfo = await client.appInfo();
-                const dnaHash = (appInfo.cell_info.gather[0] as any)[
-                  CellType.Provisioned
-                ].cell_id[0];
-                weServices.openViews.openHrl(
-                  [dnaHash, e.detail.eventProposalHash],
-                  {}
-                );
+                weServices.openViews.openHrl([dnaHash, e.detail.eventHash], {});
               }}
             ></gather-applet-main>
           `
@@ -152,25 +139,6 @@ function appletViews(
                         ></attachments-card>
                       </event-detail>
                     </attachments-context>
-                  `
-                ),
-                element
-              ),
-          },
-        },
-        assemble: {
-          call_to_action: {
-            info: async (hrl: Hrl) => undefined,
-            view: (element, hrl: Hrl, context) =>
-              render(
-                wrapAppletView(
-                  client,
-                  profilesClient,
-                  weServices,
-                  html`
-                    <event-proposal-detail
-                      .callToActionHash=${hrl[1]}
-                    ></event-proposal-detail>
                   `
                 ),
                 element
