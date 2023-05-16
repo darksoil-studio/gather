@@ -6,14 +6,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "vite --port $UI_PORT --clearScreen false",
+    "start": "vite --port $UI_PORT --clearScreen false demo",
     "build": "vite build",
     "lint": "eslint --ext .ts,.html . && prettier \"**/*.ts\" --check",
     "format": "eslint --ext .ts,.html . --fix && prettier \"**/*.ts\" --write",
     "package": "npm run build && cd dist && bestzip ../dist.zip * && cd .. && hc web-app pack workdir --recursive"
   },
   "dependencies": {
-    "@darksoil/assemble": "^0.3.0-alpha.0",
+    "@darksoil/assemble": "^0.3.0",
     "@darksoil/gather": "^0.1.0",
     "@holochain-open-dev/elements": "^0.5.0",
     "@holochain-open-dev/file-storage": "^0.4.1",

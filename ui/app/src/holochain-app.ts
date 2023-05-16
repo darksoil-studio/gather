@@ -26,6 +26,7 @@ import { provide } from '@lit-labs/context';
 import { LitElement, css, html } from 'lit';
 import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
 import { mdiArrowLeft } from '@mdi/js';
 
 import {
@@ -133,55 +134,64 @@ export class HolochainApp extends LitElement {
     }
   }
 
-  renderContent() {
-    if (this._view.view === 'create_event')
-      return html` <div class="flex-scrollable-parent">
+  renderCreateEvent() {
+    return html` <div class="flex-scrollable-parent">
+      <div class="flex-scrollable-container">
+        <div class="flex-scrollable-y">
+          <div class="column" style="flex: 1; align-items: center;">
+            <create-event
+              @event-created=${async (e: CustomEvent) => {
+                this._view = {
+                  view: 'main',
+                };
+
+                setTimeout(() => {
+                  const panel = e.detail.isProposal
+                    ? 'all_event_proposals'
+                    : 'all_events';
+                  (this.shadowRoot?.getElementById('tabs') as SlTabGroup).show(
+                    panel
+                  );
+                }, 10);
+              }}
+              style="margin-top: 16px; max-width: 600px"
+            ></create-event>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  renderEventDetail(eventHash: ActionHash) {
+    return html`
+      <div class="flex-scrollable-parent">
         <div class="flex-scrollable-container">
           <div class="flex-scrollable-y">
             <div class="column" style="flex: 1; align-items: center;">
-              <create-event
-                @event-created=${async (e: CustomEvent) => {
-                  this._view = {
-                    view: 'main',
-                  };
-
-                  setTimeout(() => {
-                    const panel = e.detail.isProposal
-                      ? 'all_events_proposals'
-                      : 'all_events';
-                    (
-                      this.shadowRoot?.getElementById('tabs') as SlTabGroup
-                    ).show(panel);
-                  }, 10);
-                }}
-                style="margin-top: 16px; max-width: 600px"
-              ></create-event>
+              <event-detail
+                style="margin: 16px"
+                .eventHash=${eventHash}
+              ></event-detail>
             </div>
           </div>
         </div>
-      </div>`;
+      </div>
+    `;
+  }
 
-    if (this._view.view === 'event_detail')
-      return html`
-        <div class="flex-scrollable-parent">
-          <div class="flex-scrollable-container">
-            <div class="flex-scrollable-y">
-              <div class="column" style="flex: 1; align-items: center;">
-                <event-detail
-                  style="margin: 16px"
-                  .eventHash=${this._view.selectedEventHash}
-                ></event-detail>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
+  renderContent() {
     return html`
+      ${this._view.view === 'create_event' ? this.renderCreateEvent() : html``}
+      ${this._view.view === 'event_detail'
+        ? this.renderEventDetail(this._view.selectedEventHash)
+        : html``}
       <sl-tab-group
         id="tabs"
         placement="start"
-        style="display: flex; flex: 1; "
+        style=${styleMap({
+          display: this._view.view === 'main' ? 'flex' : 'none',
+          flex: '1',
+        })}
         @event-selected=${(e: CustomEvent) => {
           this._view = {
             view: 'event_detail',
@@ -204,7 +214,7 @@ export class HolochainApp extends LitElement {
         >
         <sl-tab slot="nav" panel="all_events">${msg('All Events')}</sl-tab>
         <sl-tab slot="nav" panel="my_events_proposals"
-          >${msg('My Events Proposals')}</sl-tab
+          >${msg('My Event Proposals')}</sl-tab
         >
         <sl-tab slot="nav" panel="my_events">${msg('My Events')}</sl-tab>
         <sl-tab slot="nav" panel="calendar">${msg('Calendar')}</sl-tab>
@@ -358,7 +368,7 @@ export class HolochainApp extends LitElement {
       }
       .tab-content {
         max-width: 900px;
-        min-width: 500px;
+        min-width: 700px;
       }
     `,
     sharedStyles,

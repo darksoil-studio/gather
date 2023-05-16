@@ -45,16 +45,17 @@ function wrapAppletView(
   weServices: WeServices,
   innerTemplate: TemplateResult
 ): TemplateResult {
-  const gatherStore = new GatherStore(new GatherClient(client, 'gather'));
-  const fileStorageClient = new FileStorageClient(client, 'gather');
   const assembleStore = new AssembleStore(new AssembleClient(client, 'gather'));
+  const gatherStore = new GatherStore(
+    new GatherClient(client, 'gather'),
+    assembleStore
+  );
+  const fileStorageClient = new FileStorageClient(client, 'gather');
   return html` <we-services-context .services=${weServices}>
     <file-storage-context .client=${fileStorageClient}>
       <profiles-context .store=${new ProfilesStore(profilesClient)}>
         <gather-context .store=${gatherStore}>
-          <assemble-context .store=${assembleStore}>
-            ${innerTemplate}
-          </assemble-context>
+          ${innerTemplate}
         </gather-context></profiles-context
       ></file-storage-context
     ></we-services-context
@@ -120,7 +121,7 @@ function appletViews(
               if (!record) return undefined;
 
               return {
-                name: record.entry.title,
+                name: record.event.entry.title,
                 icon_src: wrapPathInSvg(mdiCalendar),
               };
             },
@@ -204,8 +205,8 @@ const applet: WeApplet = {
     );
 
     const filteredEvents = events
-      .filter(e => !!e && e.entry.title.includes(searchFilter))
-      .map(e => e!.actionHash);
+      .filter(e => !!e && e.event.entry.title.includes(searchFilter))
+      .map(e => e!.event.actionHash);
 
     const appInfo = await appletClient.appInfo();
     const dnaHash = (appInfo.cell_info.gather[0] as any)[CellType.Provisioned]

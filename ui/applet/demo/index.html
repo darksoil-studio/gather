@@ -16,26 +16,25 @@
   </head>
   <body>
     <script type="module">
+      console.log('asdf');
       import '@shoelace-style/shoelace/dist/themes/light.css';
-      import { AppAgentWebsocket, AdminWebsocket } from '@holochain/client';
+      import { AppAgentWebsocket } from '@holochain/client';
+      import { fakeEntryHash } from '@holochain-open-dev/utils';
+      import { ProfilesClient } from '@holochain-open-dev/profiles';
+      import { ProfilesZomeMock } from '@holochain-open-dev/profiles/dist/mocks.js';
+      import { weServicesMock } from '@lightningrodlabs/we-applet/dist/mocks.js';
+
       import Applet from '../src/index.ts';
 
-      const element = document.body;
-
       async function setup() {
-        const appWs = await AppAgentWebsocket.connect('');
-        const adminWs = await AdminWebsocket.connect('');
+        const appWs = await AppAgentWebsocket.connect(``, '');
 
-        const appInfo = await appWs.appInfo({
-          installed_app_id: 'notebooks',
-        });
-
-        Applet.groupViews(
+        Applet.appletViews(
           appWs,
-          adminWs,
-          { profilesStore: null },
-          appInfo
-        ).blocks.main(element);
+          fakeEntryHash(),
+          new ProfilesClient(new ProfilesZomeMock()),
+          weServicesMock
+        ).main(document.body);
       }
       setup();
     </script>

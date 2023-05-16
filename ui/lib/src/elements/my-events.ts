@@ -51,7 +51,7 @@ export class MyEvents extends LitElement {
       const callsToActionHashes = Array.from(events.values()).map(
         e => e.record.entry.call_to_action_hash
       );
-      await this.gatherStore.assembleStore.clearCallsToAction(
+      await this.gatherStore.assembleStore.client.clearCallsToAction(
         callsToActionHashes
       );
     } catch (e: any) {
@@ -97,7 +97,7 @@ export class MyEvents extends LitElement {
             >
             ${this.renderList(upcoming)}
             <sl-divider></sl-divider>
-            <div class="row" style="margin-bottom: 16px;">
+            <div class="row" style="margin-bottom: 16px; align-items: center">
               <span class="title" style="flex: 1">${msg('Cancelled')}</span>
               <sl-button @click=${() => this.clearCallsToAction(cancelled)}
                 >${msg('Clear')}</sl-button

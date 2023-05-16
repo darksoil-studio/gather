@@ -1,16 +1,13 @@
 import {
-  FormField,
-  FormFieldController,
   notifyError,
   onSubmit,
-  serialize,
   sharedStyles,
 } from '@holochain-open-dev/elements';
 import { Record } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import '@shoelace-style/shoelace/dist/components/checkbox/checkbox.js';
@@ -56,7 +53,7 @@ export class CreateEvent extends LitElement {
       : [];
 
     const needs: Array<Need> = needsFields.map((n: string) => JSON.parse(n));
-    const participantsNeeds = JSON.parse(fields.participants);
+    const participantsNeeds: Need = JSON.parse(fields.participants);
 
     needs.unshift(participantsNeeds);
 
@@ -78,7 +75,15 @@ export class CreateEvent extends LitElement {
 
       const isProposal = fields.proposal === 'on';
 
-      if (!isProposal) {
+      if (isProposal) {
+        if (participantsNeeds.min_necessary === 0) {
+          await this.gatherStore.assembleStore.client.createSatisfaction({
+            call_to_action_hash: callToActionEntryRecord.actionHash,
+            commitments_hashes: [],
+            need_index: 0,
+          });
+        }
+      } else {
         await this.gatherStore.assembleStore.client.closeCallToAction(
           callToActionEntryRecord.actionHash
         );

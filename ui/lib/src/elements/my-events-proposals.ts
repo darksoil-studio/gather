@@ -52,7 +52,7 @@ export class MyEventsProposals extends LitElement {
         e => e.record.entry.call_to_action_hash
       );
 
-      await this.gatherStore.assembleStore.clearCallsToAction(
+      await this.gatherStore.assembleStore.client.clearCallsToAction(
         callsToActionHashes
       );
     } catch (e: any) {
