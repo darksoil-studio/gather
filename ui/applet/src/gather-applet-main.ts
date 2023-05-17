@@ -16,23 +16,13 @@ import '@darksoil/gather/dist/elements/my-events-proposals.js';
 
 import { localized, msg } from '@lit/localize';
 import { sharedStyles } from '@holochain-open-dev/elements';
-import { GatherStore, gatherStoreContext } from '@darksoil/gather';
-import { consume } from '@lit-labs/context';
 import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 
-type View =
-  | { view: 'main' }
-  | { view: 'create_event' }
-  | { view: 'create_event_proposal' };
+type View = { view: 'main' } | { view: 'create_event' };
 
 @localized()
 @customElement('gather-applet-main')
 export class GatherAppletMain extends LitElement {
-  @consume({ context: gatherStoreContext, subscribe: true })
-  gatherStore!: GatherStore;
-
-  @state() _loading = true;
-
   @state() _view: View = { view: 'main' };
 
   renderCreateEvent() {

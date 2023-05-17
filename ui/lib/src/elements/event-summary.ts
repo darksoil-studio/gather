@@ -153,7 +153,7 @@ export class EventSummary extends LitElement {
         </div>
 
         <show-image
-          style="width: 200px; flex: 0; margin-top: -20px; margin-bottom: -20px; margin-right: -20px; margin-left: 16px"
+          style="width: 200px; height: 200px; flex: 0; margin-top: -20px; margin-bottom: -20px; margin-right: -20px; margin-left: 16px"
           .imageHash=${event.record.entry.image}
         ></show-image>
       </div>
