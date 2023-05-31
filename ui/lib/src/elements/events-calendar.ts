@@ -46,10 +46,13 @@ export class GatherEventsCalendar extends LitElement {
   @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  _allEvents = new StoreSubscriber(this, () =>
-    asyncDeriveStore(this.gatherStore.allEvents, allEventsHashes =>
-      joinAsyncMap(slice(this.gatherStore.events, allEventsHashes))
-    )
+  _allEvents = new StoreSubscriber(
+    this,
+    () =>
+      asyncDeriveStore(this.gatherStore.allEvents, allEventsHashes =>
+        joinAsyncMap(slice(this.gatherStore.events, allEventsHashes))
+      ),
+    () => [this.gatherStore]
   );
 
   events(): EventCalendarEvent[] {

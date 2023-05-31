@@ -18,7 +18,10 @@ import '@holochain-open-dev/file-storage/dist/elements/file-storage-context.js';
 
 import { AssembleClient, AssembleStore } from '@darksoil/assemble';
 import { mdiCalendar } from '@mdi/js';
-import { wrapPathInSvg } from '@holochain-open-dev/elements';
+import {
+  wrapPathInSvg,
+  wrapPathInSvgWithoutPrefix,
+} from '@holochain-open-dev/elements';
 import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 
 import {
@@ -38,6 +41,7 @@ import '@lightningrodlabs/we-applet/dist/attachments/elements/attachments-card.j
 import '@lightningrodlabs/we-applet/dist/elements/share-hrl.js';
 
 import './gather-applet-main';
+import { msg } from '@lit/localize';
 
 function wrapAppletView(
   client: AppAgentClient,
@@ -62,12 +66,12 @@ function wrapAppletView(
   >`;
 }
 
-function appletViews(
+async function appletViews(
   client: AppAgentClient,
   _appletId: EntryHash,
   profilesClient: ProfilesClient,
   weServices: WeServices
-): AppletViews {
+): Promise<AppletViews> {
   return {
     main: element =>
       render(
@@ -96,7 +100,36 @@ function appletViews(
         ),
         element
       ),
-    blocks: {},
+    blocks: {
+      calendar: {
+        label: msg('Calendar'),
+        icon_src: wrapPathInSvgWithoutPrefix(mdiCalendar),
+        view(element, context) {
+          render(
+            wrapAppletView(
+              client,
+              profilesClient,
+              weServices,
+              html`
+                <gather-events-calendar
+                  @event-selected=${async (e: CustomEvent) => {
+                    const appInfo = await client.appInfo();
+                    const dnaHash = (appInfo.cell_info.gather[0] as any)[
+                      CellType.Provisioned
+                    ].cell_id[0];
+                    weServices.openViews.openHrl(
+                      [dnaHash, e.detail.eventHash],
+                      {}
+                    );
+                  }}
+                ></gather-events-calendar>
+              `
+            ),
+            element
+          );
+        },
+      },
+    },
     entries: {
       gather: {
         gather: {
@@ -150,10 +183,10 @@ function appletViews(
   };
 }
 
-function crossAppletViews(
+async function crossAppletViews(
   applets: ReadonlyMap<EntryHash, AppletClients>,
   weServices: WeServices
-): CrossAppletViews {
+): Promise<CrossAppletViews> {
   return {
     main: element => {},
     blocks: {},
