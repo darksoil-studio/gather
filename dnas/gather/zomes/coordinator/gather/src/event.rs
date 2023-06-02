@@ -6,6 +6,16 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
     let record = get(event_hash.clone(), GetOptions::default())?.ok_or(wasm_error!(
         WasmErrorInner::Guest(String::from("Could not find the newly created Event"))
     ))?;
+
+    let path = Path::from("all_events");
+
+    create_link(
+        path.path_entry_hash()?,
+        event_hash.clone(),
+        LinkTypes::AllEvents,
+        (),
+    )?;
+
     create_link(
         event.call_to_action_hash,
         event_hash.clone(),

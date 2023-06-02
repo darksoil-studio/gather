@@ -21,8 +21,8 @@ import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-g
 type View = { view: 'main' } | { view: 'create_event' };
 
 @localized()
-@customElement('gather-applet-main')
-export class GatherAppletMain extends LitElement {
+@customElement('applet-main')
+export class AppletMain extends LitElement {
   @state() _view: View = { view: 'main' };
 
   renderCreateEvent() {

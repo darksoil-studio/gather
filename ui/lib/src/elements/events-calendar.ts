@@ -3,23 +3,24 @@ import { css, html, LitElement } from 'lit';
 import {
   asyncDeriveStore,
   joinAsyncMap,
+  sliceAndJoin,
   StoreSubscriber,
 } from '@holochain-open-dev/stores';
 import { decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
 import { localized } from '@lit/localize';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar';
+import { EntryRecord } from '@holochain-open-dev/utils';
 import '@scoped-elements/event-calendar';
 
 import { Event } from '../types.js';
 import { gatherStoreContext } from '../context';
 import { GatherStore } from '../gather-store';
 import './event-summary';
-import { EntryRecord, slice } from '@holochain-open-dev/utils';
 
 export function eventToEventCalendar(
   gatherEvent: EntryRecord<Event>
@@ -46,22 +47,18 @@ export class GatherEventsCalendar extends LitElement {
   @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  _allEvents = new StoreSubscriber(
+  @property()
+  allEvents = new StoreSubscriber(
     this,
-    () =>
-      asyncDeriveStore(this.gatherStore.allEvents, allEventsHashes =>
-        joinAsyncMap(slice(this.gatherStore.events, allEventsHashes))
-      ),
+    () => this.gatherStore.allEvents,
     () => [this.gatherStore]
   );
 
   events(): EventCalendarEvent[] {
-    if (this._allEvents.value.status !== 'complete') return [];
+    if (this.allEvents.value.status !== 'complete') return [];
 
-    const gatherEvents = this._allEvents.value.value;
-    const filteredEvents = Array.from(gatherEvents.values())
-      .filter(e => !!e && !e.isCancelled)
-      .map(e => e?.record) as Array<EntryRecord<Event>>;
+    const gatherEvents = this.allEvents.value.value;
+    const filteredEvents = Array.from(gatherEvents.values());
     const events: EventCalendarEvent[] =
       filteredEvents.map(eventToEventCalendar);
     return events;

@@ -18,24 +18,73 @@
     <script type="module">
       import '@shoelace-style/shoelace/dist/themes/light.css';
       import { AppAgentWebsocket } from '@holochain/client';
-      import { fakeEntryHash } from '@holochain-open-dev/utils';
+      import {
+        HoloHashMap,
+        fakeEntryHash,
+        fakeActionHash,
+      } from '@holochain-open-dev/utils';
       import { ProfilesClient } from '@holochain-open-dev/profiles';
       import { ProfilesZomeMock } from '@holochain-open-dev/profiles/dist/mocks.js';
       import { weServicesMock } from '@lightningrodlabs/we-applet/dist/mocks.js';
+      import { GatherClient } from '@darksoil/gather';
+      import { AssembleClient } from '@darksoil/assemble';
+      import { encode } from '@msgpack/msgpack';
 
       import Applet from '../src/index.ts';
 
-      async function setup() {
-        const appWs = await AppAgentWebsocket.connect(``, '');
-
-        Applet.appletViews(
+      async function setupAppletMain() {
+        const views = await Applet.appletViews(
           appWs,
           fakeEntryHash(),
           new ProfilesClient(new ProfilesZomeMock()),
           weServicesMock
-        ).main(document.body);
+        );
+        views.main(document.body);
       }
-      setup();
+
+      async function setupCrossAppletMain() {
+        const appWs = await AppAgentWebsocket.connect(``, '');
+
+        const client = new GatherClient(appWs, 'gather');
+        const assembleClient = new AssembleClient(appWs, 'gather');
+
+        const callToAction = await assembleClient.createCallToAction({
+          custom_content: encode({}),
+          expiration_time: undefined,
+          needs: [],
+          parent_call_to_action_hash: undefined,
+        });
+        const call_to_action_hash = callToAction.actionHash;
+
+        await client.createEvent({
+          title: 'asdf',
+
+          description: 'd',
+
+          image: fakeEntryHash(),
+
+          location: 'my',
+
+          start_time: Date.now() * 1000,
+
+          end_time: Date.now() * 1000 + 1,
+
+          cost: undefined,
+
+          call_to_action_hash,
+        });
+        await assembleClient.createAssembly({
+          call_to_action_hash,
+          satisfactions_hashes: [],
+        });
+        const map = new HoloHashMap();
+        map.set(fakeEntryHash(), { appletClient: appWs });
+        (await Applet.crossAppletViews(map, weServicesMock)).main(
+          document.body
+        );
+      }
+
+      setupAppletMain().catch(console.log);
     </script>
   </body>
 </html>

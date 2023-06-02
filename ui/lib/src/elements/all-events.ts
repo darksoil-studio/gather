@@ -19,7 +19,10 @@ export class AllEvents extends LitElement {
   @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  _allEvents = new StoreSubscriber(this, () => this.gatherStore.allEvents);
+  _allEvents = new StoreSubscriber(
+    this,
+    () => this.gatherStore.allFutureEvents
+  );
 
   renderList(hashes: Array<ActionHash>) {
     if (hashes.length === 0)

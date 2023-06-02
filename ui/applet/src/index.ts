@@ -15,6 +15,7 @@ import '@darksoil/assemble/dist/elements/assemble-context.js';
 import { FileStorageClient } from '@holochain-open-dev/file-storage';
 import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
 import '@holochain-open-dev/file-storage/dist/elements/file-storage-context.js';
+import { msg } from '@lit/localize';
 
 import { AssembleClient, AssembleStore } from '@darksoil/assemble';
 import { mdiCalendar } from '@mdi/js';
@@ -25,10 +26,12 @@ import {
 import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 
 import {
-  AppletClients,
-  AppletViews,
   AttachmentsClient,
   AttachmentsStore,
+} from '@lightningrodlabs/attachments';
+import {
+  AppletClients,
+  AppletViews,
   CrossAppletViews,
   Hrl,
   WeApplet,
@@ -36,12 +39,12 @@ import {
 } from '@lightningrodlabs/we-applet';
 
 import '@lightningrodlabs/we-applet/dist/elements/we-services-context.js';
-import '@lightningrodlabs/we-applet/dist/attachments/elements/attachments-context.js';
-import '@lightningrodlabs/we-applet/dist/attachments/elements/attachments-card.js';
+import '@lightningrodlabs/attachments/dist/elements/attachments-context.js';
+import '@lightningrodlabs/attachments/dist/elements/attachments-card.js';
 import '@lightningrodlabs/we-applet/dist/elements/share-hrl.js';
 
-import './gather-applet-main';
-import { msg } from '@lit/localize';
+import './applet-main';
+import './cross-applet-main';
 
 function wrapAppletView(
   client: AppAgentClient,
@@ -55,14 +58,18 @@ function wrapAppletView(
     assembleStore
   );
   const fileStorageClient = new FileStorageClient(client, 'gather');
-  return html` <we-services-context .services=${weServices}>
-    <file-storage-context .client=${fileStorageClient}>
-      <profiles-context .store=${new ProfilesStore(profilesClient)}>
-        <gather-context .store=${gatherStore}>
-          ${innerTemplate}
-        </gather-context></profiles-context
-      ></file-storage-context
-    ></we-services-context
+  return html` <attachments-context
+    .store=${new AttachmentsStore(new AttachmentsClient(client, 'gather'))}
+  >
+    <we-services-context .services=${weServices}>
+      <file-storage-context .client=${fileStorageClient}>
+        <profiles-context .store=${new ProfilesStore(profilesClient)}>
+          <gather-context .store=${gatherStore}>
+            ${innerTemplate}
+          </gather-context></profiles-context
+        ></file-storage-context
+      ></we-services-context
+    ></attachments-context
   >`;
 }
 
@@ -80,7 +87,7 @@ async function appletViews(
           profilesClient,
           weServices,
           html`
-            <gather-applet-main
+            <applet-main
               @event-created=${async (e: CustomEvent) => {
                 const appInfo = await client.appInfo();
                 const dnaHash = (appInfo.cell_info.gather[0] as any)[
@@ -95,7 +102,7 @@ async function appletViews(
                 ].cell_id[0];
                 weServices.openViews.openHrl([dnaHash, e.detail.eventHash], {});
               }}
-            ></gather-applet-main>
+            ></applet-main>
           `
         ),
         element
@@ -152,26 +159,20 @@ async function appletViews(
                   profilesClient,
                   weServices,
                   html`
-                    <attachments-context
-                      .store=${new AttachmentsStore(
-                        new AttachmentsClient(client, hrl[0])
-                      )}
+                    <event-detail
+                      .eventHash=${hrl[1]}
+                      style="flex: 1; margin: 16px"
                     >
-                      <event-detail
-                        .eventHash=${hrl[1]}
-                        style="flex: 1; margin: 16px"
-                      >
-                        <share-hrl
-                          .hrl=${hrl}
-                          slot="action"
-                          style="margin-left: 8px"
-                        ></share-hrl>
-                        <attachments-card
-                          .hash=${hrl[1]}
-                          slot="attachments"
-                        ></attachments-card>
-                      </event-detail>
-                    </attachments-context>
+                      <share-hrl
+                        .hrl=${hrl}
+                        slot="action"
+                        style="margin-left: 8px"
+                      ></share-hrl>
+                      <attachments-card
+                        .hash=${hrl[1]}
+                        slot="attachments"
+                      ></attachments-card>
+                    </event-detail>
                   `
                 ),
                 element
@@ -187,8 +188,13 @@ async function crossAppletViews(
   applets: ReadonlyMap<EntryHash, AppletClients>,
   weServices: WeServices
 ): Promise<CrossAppletViews> {
+  console.log(applets);
   return {
-    main: element => {},
+    main: element =>
+      render(
+        html` <cross-applet-main .applets=${applets}></cross-applet-main> `,
+        element
+      ),
     blocks: {},
   };
 }

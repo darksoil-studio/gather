@@ -92,21 +92,25 @@ export class GatherStore {
       > = new HoloHashMap();
       for (const [eventHash, event] of Array.from(events.entries())) {
         if (event) {
-          if (!event.isCancelled && !isPast(event.record.entry)) {
+          if (!event.isCancelled) {
             allEvents.set(eventHash, event.record);
           }
         }
       }
-
-      const sorted = Array.from(allEvents.entries())
-        .sort(
-          ([h1, event1], [h2, event2]) =>
-            event1.entry.start_time - event2.entry.start_time
-        )
-        .map(([h, _]) => h);
-      return completed(sorted);
+      return completed(allEvents);
     }
   );
+
+  allFutureEvents = asyncDerived(this.allEvents, allEvents => {
+    const sorted = Array.from(allEvents.entries())
+      .filter(([h, event]) => !isPast(event.entry))
+      .sort(
+        ([h1, event1], [h2, event2]) =>
+          event1.entry.start_time - event2.entry.start_time
+      )
+      .map(([h, _]) => h);
+    return sorted;
+  });
 
   allEventsProposals = pipe(
     this.assembleStore.openCallsToAction,
