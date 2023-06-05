@@ -23,6 +23,7 @@ module.exports = {
     "default-case": "off",
     "consistent-return": "off",
     "no-case-declarations": "off",
-    "import/order": "off"
+    "import/order": "off",
+    "no-await-in-loop": "off"
   }
 };

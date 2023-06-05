@@ -22,10 +22,11 @@
     "@holochain-open-dev/utils": "^0.14.2",
     "@holochain/client": "^0.14.1",
     "@lightningrodlabs/attachments": "^0.1.0",
-    "@lightningrodlabs/we-applet": "^0.6.0",
+    "@lightningrodlabs/we-applet": "^0.6.1",
     "@lit-labs/context": "^0.2.0",
     "@lit/localize": "^0.11.4",
     "@mdi/js": "^7.2.0",
+    "@scoped-elements/event-calendar": "^0.1.0",
     "@shoelace-style/shoelace": "^2.3.0",
     "lit": "^2.6.0"
   },

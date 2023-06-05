@@ -203,7 +203,7 @@ const applet: WeApplet = {
   appletViews,
   crossAppletViews,
   attachmentTypes: async client => ({}),
-  search: async (appletClient, searchFilter) => {
+  search: async (appletClient, _appletId, _weServices, searchFilter) => {
     const client = new GatherClient(appletClient, 'gather');
 
     const eventsHashes = await client.getAllEvents();
