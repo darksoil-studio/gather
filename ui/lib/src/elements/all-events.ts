@@ -21,7 +21,8 @@ export class AllEvents extends LitElement {
 
   _allEvents = new StoreSubscriber(
     this,
-    () => this.gatherStore.allFutureEvents
+    () => this.gatherStore.allFutureEvents,
+    () => []
   );
 
   renderList(hashes: Array<ActionHash>) {

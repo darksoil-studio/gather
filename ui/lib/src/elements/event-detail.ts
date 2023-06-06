@@ -71,8 +71,10 @@ export class EventDetail extends LitElement {
   /**
    * @internal
    */
-  _participants = new StoreSubscriber(this, () =>
-    this.gatherStore.participantsForEvent.get(this.eventHash)
+  _participants = new StoreSubscriber(
+    this,
+    () => this.gatherStore.participantsForEvent.get(this.eventHash),
+    () => []
   );
 
   /**

@@ -101,7 +101,7 @@ export class CrossAppletMain extends LitElement {
         const converted = eventToEventCalendar(e);
         converted.id = `hrl://${encodeHashToBase64(
           dnaHash
-        )}${encodeHashToBase64(e.actionHash)}`;
+        )}/${encodeHashToBase64(e.actionHash)}`;
         return converted;
       });
 

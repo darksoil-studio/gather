@@ -58,19 +58,12 @@
 
         await client.createEvent({
           title: 'asdf',
-
           description: 'd',
-
           image: fakeEntryHash(),
-
           location: 'my',
-
           start_time: Date.now() * 1000,
-
           end_time: Date.now() * 1000 + 1,
-
           cost: undefined,
-
           call_to_action_hash,
         });
         await assembleClient.createAssembly({
