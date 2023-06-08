@@ -1,7 +1,10 @@
 {
   "name": "gather-dev",
   "private": true,
-  "workspaces": ["ui/*", "tests"],
+  "workspaces": [
+    "ui/*",
+    "tests"
+  ],
   "scripts": {
     "start": "AGENTS=2 npm run network:app",
     "start:applet": "AGENTS=2 npm run network:applet",
@@ -23,6 +26,7 @@
     "@rocket/components": "^0.2.0",
     "@rocket/engine": "^0.2.7",
     "@rocket/spark": "^0.2.0",
+    "@rollup/plugin-replace": "^5.0.2",
     "concurrently": "^6.2.1"
   },
   "engines": {
