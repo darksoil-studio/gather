@@ -23,7 +23,7 @@ import '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event } from '../types.js';
+import { Event as GatherEvent } from '../types.js';
 import { CallToAction, Need } from '@darksoil/assemble';
 import { encode } from '@msgpack/msgpack';
 import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
@@ -93,7 +93,7 @@ export class CreateEvent extends LitElement {
         });
       }
 
-      const event: Event = {
+      const event: GatherEvent = {
         ...fields,
         start_time: new Date(fields.start_time).valueOf() * 1000,
         end_time: new Date(fields.end_time).valueOf() * 1000,
@@ -157,6 +157,7 @@ export class CreateEvent extends LitElement {
             .label=${msg('Start Time')}
             style="margin-right: 16px; flex: 1"
             id="start-time"
+            @click=${(e: Event) => e.preventDefault()}
             @input=${() => this.requestUpdate()}
           ></sl-input>
           <sl-input
@@ -165,6 +166,7 @@ export class CreateEvent extends LitElement {
             required
             .label=${msg('End Time')}
             style="flex: 1"
+            @click=${(e: Event) => e.preventDefault()}
             .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
               ?.value}
           ></sl-input>
@@ -266,6 +268,7 @@ export class CreateEvent extends LitElement {
             <sl-input
               type="datetime-local"
               name="expiration_time"
+              @click=${(e: Event) => e.preventDefault()}
               .label=${msg('Expiration Date')}
               .required=${(
                 this.shadowRoot?.getElementById('expiration-switch') as SlSwitch

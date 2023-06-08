@@ -20,7 +20,7 @@ import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event } from '../types.js';
+import { Event as GatherEvent } from '../types.js';
 import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
 
 @localized()
@@ -30,7 +30,7 @@ export class EditEvent extends LitElement {
   originalEventHash!: ActionHash;
 
   @property()
-  currentRecord!: EntryRecord<Event>;
+  currentRecord!: EntryRecord<GatherEvent>;
 
   @consume({ context: gatherStoreContext })
   gatherStore!: GatherStore;
@@ -40,7 +40,7 @@ export class EditEvent extends LitElement {
   }
 
   async updateEvent(fields: any) {
-    const event: Event = {
+    const event: GatherEvent = {
       ...fields,
       call_to_action_hash: this.currentRecord.entry.call_to_action_hash,
       start_time: new Date(fields.start_time).valueOf() * 1000,
@@ -107,6 +107,7 @@ export class EditEvent extends LitElement {
             required
             id="start-time"
             type="datetime-local"
+            @click=${(e: Event) => e.preventDefault()}
             .defaultValue=${new Date(this.currentRecord.entry.start_time / 1000)
               .toISOString()
               .slice(0, 16)}
@@ -120,6 +121,7 @@ export class EditEvent extends LitElement {
               ?.value}
             name="end_time"
             type="datetime-local"
+            @click=${(e: Event) => e.preventDefault()}
             .defaultValue=${new Date(this.currentRecord.entry.end_time / 1000)
               .toISOString()
               .slice(0, 16)}
