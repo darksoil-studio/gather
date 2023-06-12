@@ -10,7 +10,7 @@ import '@scoped-elements/event-calendar';
 import { Event } from '@darksoil/gather';
 
 import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar';
-import { eventToEventCalendar } from '@darksoil/gather/dist/elements/events-calendar.js';
+import { eventToEventCalendar } from '@darksoil/gather';
 
 import { localized, msg } from '@lit/localize';
 import { sharedStyles } from '@holochain-open-dev/elements';

@@ -18,7 +18,7 @@ import '@holochain-open-dev/file-storage/dist/elements/file-storage-context.js';
 import { msg } from '@lit/localize';
 
 import { AssembleClient, AssembleStore } from '@darksoil/assemble';
-import { mdiCalendar } from '@mdi/js';
+import { mdiCalendar, mdiTimelapse, mdiTimetable } from '@mdi/js';
 import {
   wrapPathInSvg,
   wrapPathInSvgWithoutPrefix,
@@ -136,10 +136,71 @@ async function appletViews(
           );
         },
       },
+      events_next_week: {
+        label: msg('Events Next Week'),
+        icon_src: wrapPathInSvgWithoutPrefix(mdiTimetable),
+
+        view(element, context) {
+          render(
+            wrapAppletView(
+              client,
+              profilesClient,
+              weServices,
+              html`
+                <gather-events-calendar
+                  view="listWeek"
+                  @event-selected=${async (e: CustomEvent) => {
+                    const appInfo = await client.appInfo();
+                    const dnaHash = (appInfo.cell_info.gather[0] as any)[
+                      CellType.Provisioned
+                    ].cell_id[0];
+                    weServices.openViews.openHrl(
+                      [dnaHash, e.detail.eventHash],
+                      {}
+                    );
+                  }}
+                ></gather-events-calendar>
+              `
+            ),
+            element
+          );
+        },
+      },
+      events_today: {
+        label: msg("Today's Events"),
+        icon_src: wrapPathInSvgWithoutPrefix(mdiTimetable),
+
+        view(element, context) {
+          render(
+            wrapAppletView(
+              client,
+              profilesClient,
+              weServices,
+              html`
+                <gather-events-calendar
+                  view="listDay"
+                  @event-selected=${async (e: CustomEvent) => {
+                    console.log(e);
+                    const appInfo = await client.appInfo();
+                    const dnaHash = (appInfo.cell_info.gather[0] as any)[
+                      CellType.Provisioned
+                    ].cell_id[0];
+                    weServices.openViews.openHrl(
+                      [dnaHash, e.detail.eventHash],
+                      {}
+                    );
+                  }}
+                ></gather-events-calendar>
+              `
+            ),
+            element
+          );
+        },
+      },
     },
     entries: {
       gather: {
-        gather: {
+        gather_integrity: {
           event: {
             info: async (hrl: Hrl) => {
               const gatherClient = new GatherClient(client, 'gather');

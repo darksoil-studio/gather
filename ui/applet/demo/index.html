@@ -33,13 +33,14 @@
       import Applet from '../src/index.ts';
 
       async function setupAppletMain() {
+        const appWs = await AppAgentWebsocket.connect(``, '');
         const views = await Applet.appletViews(
           appWs,
           fakeEntryHash(),
           new ProfilesClient(new ProfilesZomeMock()),
           weServicesMock
         );
-        views.main(document.body);
+        views.blocks['events_today'].view(document.body);
       }
 
       async function setupCrossAppletMain() {
