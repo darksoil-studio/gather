@@ -17,6 +17,7 @@ import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
+import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
 
 import '@darksoil/assemble/dist/elements/call-to-action-need-form.js';
 import '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
@@ -149,27 +150,23 @@ export class CreateEvent extends LitElement {
         ></sl-textarea>
 
         <div class="row" style="margin-bottom: 16px">
-          <sl-input
-            type="datetime-local"
+          <sl-datetime-input
             name="start_time"
             .min=${new Date().toISOString().slice(0, 16)}
             required
             .label=${msg('Start Time')}
             style="margin-right: 16px; flex: 1"
             id="start-time"
-            @click=${(e: Event) => e.preventDefault()}
             @input=${() => this.requestUpdate()}
-          ></sl-input>
-          <sl-input
-            type="datetime-local"
+          ></sl-datetime-input>
+          <sl-datetime-input
             name="end_time"
             required
             .label=${msg('End Time')}
             style="flex: 1"
-            @click=${(e: Event) => e.preventDefault()}
             .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
               ?.value}
-          ></sl-input>
+          ></sl-datetime-input>
         </div>
 
         <div class="row" style="margin-bottom: 16px">
@@ -265,10 +262,9 @@ export class CreateEvent extends LitElement {
               )?.checked}
               >${msg('Set an expiration time')}</sl-switch
             >
-            <sl-input
-              type="datetime-local"
+
+            <sl-datetime-input
               name="expiration_time"
-              @click=${(e: Event) => e.preventDefault()}
               .label=${msg('Expiration Date')}
               .required=${(
                 this.shadowRoot?.getElementById('expiration-switch') as SlSwitch
@@ -281,7 +277,7 @@ export class CreateEvent extends LitElement {
               .min=${new Date().toISOString().slice(0, 16)}
               .max=${(this.shadowRoot?.getElementById('start-time') as SlInput)
                 ?.value}
-            ></sl-input>
+            ></sl-datetime-input>
           </div>
 
           <span class="title">${msg('Participants')}</span>

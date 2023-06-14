@@ -112,23 +112,31 @@ export class CrossAppletMain extends LitElement {
 
   render() {
     return html`
-      <event-calendar
-        style="flex: 1"
-        .events=${this.events()}
-        .props=${{ view: 'dayGridMonth' }}
-        @event-clicked=${(e: CustomEvent) => {
-          const id = e.detail.event.id;
-          this.dispatchEvent(
-            new CustomEvent('event-selected', {
-              bubbles: true,
-              composed: true,
-              detail: {
-                hrl: parseHrl(id),
-              },
-            })
-          );
-        }}
-      ></event-calendar>
+      <div class="column" style="flex: 1">
+        <span class="placeholder" style="margin: 16px"
+          >${msg(
+            'This is an integrated calendar showing all the events in all the gather applets of all your groups.'
+          )}</span
+        >
+
+        <event-calendar
+          style="flex: 1"
+          .events=${this.events()}
+          .props=${{ view: 'dayGridMonth' }}
+          @event-clicked=${(e: CustomEvent) => {
+            const id = e.detail.event.id;
+            this.dispatchEvent(
+              new CustomEvent('event-selected', {
+                bubbles: true,
+                composed: true,
+                detail: {
+                  hrl: parseHrl(id),
+                },
+              })
+            );
+          }}
+        ></event-calendar>
+      </div>
     `;
   }
 

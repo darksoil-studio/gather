@@ -11,6 +11,7 @@ import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
+import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
 import '@shoelace-style/shoelace/dist/components/checkbox/checkbox.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/input/input.js';
@@ -18,10 +19,11 @@ import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 
+import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
+
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { Event as GatherEvent } from '../types.js';
-import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
 
 @localized()
 @customElement('edit-event')
@@ -102,32 +104,27 @@ export class EditEvent extends LitElement {
         ></sl-input>
 
         <div class="row" style="margin-bottom: 16px">
-          <sl-input
+          <sl-datetime-input
             name="start_time"
             required
             id="start-time"
-            type="datetime-local"
-            @click=${(e: Event) => e.preventDefault()}
-            .defaultValue=${new Date(this.currentRecord.entry.start_time / 1000)
-              .toISOString()
-              .slice(0, 16)}
+            .defaultValue=${new Date(
+              this.currentRecord.entry.start_time / 1000
+            )}
             .label=${msg('Start Time')}
             style="flex: 1; margin-right: 16px"
             @input=${() => this.requestUpdate()}
-          ></sl-input>
-          <sl-input
+          ></sl-datetime-input>
+          <sl-datetime-input
             required
             .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
               ?.value}
             name="end_time"
             type="datetime-local"
-            @click=${(e: Event) => e.preventDefault()}
-            .defaultValue=${new Date(this.currentRecord.entry.end_time / 1000)
-              .toISOString()
-              .slice(0, 16)}
+            .defaultValue=${new Date(this.currentRecord.entry.end_time / 1000)}
             .label=${msg('End Time')}
             style="flex: 1;"
-          ></sl-input>
+          ></sl-datetime-input>
         </div>
 
         <div class="row" style="margin-bottom: 16px">
