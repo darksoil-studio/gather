@@ -180,7 +180,6 @@ async function appletViews(
                 <gather-events-calendar
                   view="listDay"
                   @event-selected=${async (e: CustomEvent) => {
-                    console.log(e);
                     const appInfo = await client.appInfo();
                     const dnaHash = (appInfo.cell_info.gather[0] as any)[
                       CellType.Provisioned
@@ -249,11 +248,17 @@ async function crossAppletViews(
   applets: ReadonlyMap<EntryHash, AppletClients>,
   weServices: WeServices
 ): Promise<CrossAppletViews> {
-  console.log(applets);
   return {
     main: element =>
       render(
-        html` <cross-applet-main .applets=${applets}></cross-applet-main> `,
+        html`
+          <cross-applet-main
+            .applets=${applets}
+            @event-selected=${async (e: CustomEvent) => {
+              weServices.openViews.openHrl(e.detail.hrl, {});
+            }}
+          ></cross-applet-main>
+        `,
         element
       ),
     blocks: {},

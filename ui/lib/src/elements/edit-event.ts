@@ -77,7 +77,7 @@ export class EditEvent extends LitElement {
     return html` <sl-card style="display: flex;">
       <span slot="header">${msg('Edit Event')}</span>
       <form
-        style="display: flex; flex-direction: column;"
+        style="display: flex; flex-direction: column; margin: 0;"
         ${onSubmit(fields => this.updateEvent(fields))}
       >
         <upload-files
@@ -120,7 +120,6 @@ export class EditEvent extends LitElement {
             .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
               ?.value}
             name="end_time"
-            type="datetime-local"
             .defaultValue=${new Date(this.currentRecord.entry.end_time / 1000)}
             .label=${msg('End Time')}
             style="flex: 1;"

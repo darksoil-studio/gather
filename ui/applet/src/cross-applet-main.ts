@@ -112,8 +112,8 @@ export class CrossAppletMain extends LitElement {
 
   render() {
     return html`
-      <div class="column" style="flex: 1">
-        <span class="placeholder" style="margin: 16px"
+      <div class="column" style="flex: 1; margin: 16px">
+        <span class="placeholder" style="margin-bottom: 16px"
           >${msg(
             'This is an integrated calendar showing all the events in all the gather applets of all your groups.'
           )}</span

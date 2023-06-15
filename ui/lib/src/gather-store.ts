@@ -31,9 +31,7 @@ export class GatherStore {
   constructor(
     public client: GatherClient,
     public assembleStore: AssembleStore
-  ) {
-    this.assembleStore.client.onSignal(console.log);
-  }
+  ) {}
 
   /** Event */
 

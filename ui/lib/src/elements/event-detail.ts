@@ -8,7 +8,7 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
-import { LitElement, html } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 
@@ -364,7 +364,7 @@ export class EventDetail extends LitElement {
         @edit-canceled=${() => {
           this._editing = false;
         }}
-        style="display: flex; flex: 1;"
+        style="display: flex;"
       ></edit-event>`;
     }
 
@@ -417,5 +417,14 @@ export class EventDetail extends LitElement {
     }
   }
 
-  static styles = [sharedStyles];
+  static styles = [
+    sharedStyles,
+    css`
+      :host {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    `,
+  ];
 }
