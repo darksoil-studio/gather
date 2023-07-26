@@ -12,4 +12,4 @@ hdi = { workspace = true }
 
 serde = { workspace = true }
 
-hc_zome_attachments_integrity = { git = "https://github.com/lightningrodlabs/we", branch = "main" }
+hc_zome_attachments_integrity = { git = "https://github.com/lightningrodlabs/we", branch = "holochain-0.2.1" }

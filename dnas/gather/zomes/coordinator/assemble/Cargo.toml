@@ -12,4 +12,4 @@ hdk = { workspace = true }
 
 serde = { workspace = true }
 
-hc_zome_assemble_coordinator = { git = "https://github.com/darksoil-studio/assemble", branch = "main" }
+hc_zome_assemble_coordinator = { git = "https://github.com/darksoil-studio/assemble", branch = "holochain-0.2.1" }

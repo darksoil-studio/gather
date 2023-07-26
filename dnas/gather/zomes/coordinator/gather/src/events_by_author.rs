@@ -5,8 +5,9 @@ pub fn get_events_by_author(author: AgentPubKey) -> ExternResult<Vec<Record>> {
     let links = get_links(author, LinkTypes::EventsByAuthor, None)?;
     let get_input: Vec<GetInput> = links
         .into_iter()
-        .map(|link| GetInput::new(
-            ActionHash::from(link.target).into(),
+        .filter_map(|link| ActionHash::try_from(link.target).ok())
+        .map(|action_hash| GetInput::new(
+            action_hash.into(),
             GetOptions::default(),
         ))
         .collect();

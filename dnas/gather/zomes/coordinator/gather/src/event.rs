@@ -54,7 +54,7 @@ pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<GetEven
         .into_iter()
         .max_by(|link_a, link_b| link_a.timestamp.cmp(&link_b.timestamp));
     let latest_event_hash = match latest_link {
-        Some(link) => ActionHash::from(link.target.clone()),
+        Some(link) => ActionHash::try_from(link.target).map_err(|e| wasm_error!(WasmErrorInner::from(e)))?,
         None => original_event_hash.clone(),
     };
     let Some(details) =     get_details(latest_event_hash, GetOptions::default())? else {return Ok(None);};
@@ -77,7 +77,7 @@ pub fn get_event_for_call_to_action(call_to_action_hash: ActionHash) -> ExternRe
     )?;
 
     match links.first() {
-        Some(l) => Ok(ActionHash::from(l.target.clone())),
+        Some(l) => ActionHash::try_from(l.target.clone()).map_err(|e| wasm_error!(WasmErrorInner::from(e))),
         None => Err(wasm_error!(WasmErrorInner::Guest(String::from(
             "No links found for this event"
         )))),
