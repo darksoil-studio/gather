@@ -1,7 +1,7 @@
 import { CallToAction } from '@darksoil/assemble';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { encodeHashToBase64 } from '@holochain/client';
-import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar';
+import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar/dist/types.js';
 import { Event } from './types.js';
 
 export function isExpired(callToAction: CallToAction) {

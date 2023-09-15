@@ -17,7 +17,7 @@ import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/input/input.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
-import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
+// import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 
 import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
 

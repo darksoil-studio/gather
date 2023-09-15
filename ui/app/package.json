@@ -14,12 +14,12 @@
   "dependencies": {
     "@darksoil/assemble": "^0.3.0",
     "@darksoil/gather": "^0.1.0",
-    "@holochain-open-dev/elements": "^0.5.0",
-    "@holochain-open-dev/file-storage": "^0.4.1",
-    "@holochain-open-dev/profiles": "^0.14.0",
-    "@holochain-open-dev/stores": "^0.5.0",
-    "@holochain-open-dev/utils": "^0.14.0",
-    "@holochain/client": "^0.14.1",
+    "@holochain-open-dev/elements": "^0.7.0",
+    "@holochain-open-dev/file-storage": "^0.6.0",
+    "@holochain-open-dev/profiles": "^0.16.1",
+    "@holochain-open-dev/stores": "^0.7.0",
+    "@holochain-open-dev/utils": "^0.15.0",
+    "@holochain/client": "^0.16.0",
     "@lit-labs/context": "^0.2.0",
     "@lit/localize": "^0.11.4",
     "@mdi/js": "^7.2.0",
@@ -42,7 +42,7 @@
     "rimraf": "^3.0.2",
     "tslib": "^2.0.0",
     "typescript": "^4.9.0",
-    "vite": "^4.0.4",
+    "vite": "^4.4.9",
     "vite-plugin-checker": "^0.5.3",
     "vite-plugin-static-copy": "^0.13.1"
   }

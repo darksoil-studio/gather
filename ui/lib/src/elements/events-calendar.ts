@@ -8,7 +8,7 @@ import { localized } from '@lit/localize';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
-import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar';
+import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar/dist/types.js';
 import '@scoped-elements/event-calendar';
 
 import { gatherStoreContext } from '../context';

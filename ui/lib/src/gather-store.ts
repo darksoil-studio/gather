@@ -9,7 +9,7 @@ import {
   asyncDerived,
   AsyncReadable,
   completed,
-  join,
+  joinAsync,
   lazyLoadAndPoll,
   mapAndJoin,
   pipe,
@@ -270,16 +270,14 @@ export class GatherStore {
     (eventHash: ActionHash) =>
       asyncDeriveAndJoin(this.events.get(eventHash), event =>
         event
-          ? (join([
+          ? joinAsync([
               this.assembleStore.callToActions.get(
                 event.record.entry.call_to_action_hash
               ),
               this.assembleStore.assembliesForCallToAction.get(
                 event.record.entry.call_to_action_hash
               ),
-            ]) as AsyncReadable<
-              [EntryRecord<CallToAction> | undefined, ActionHash[]]
-            >)
+            ])
           : completed(undefined)
       )
   );

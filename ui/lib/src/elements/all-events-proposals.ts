@@ -11,7 +11,6 @@ import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import './event-proposal-summary';
 
 @localized()
 @customElement('all-events-proposals')

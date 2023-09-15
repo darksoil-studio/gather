@@ -9,9 +9,8 @@ import {
   profilesStoreContext,
 } from '@holochain-open-dev/profiles';
 import {
-  asyncDeriveStore,
-  AsyncReadable,
-  join,
+  joinAsync,
+  pipe,
   StoreSubscriber,
   toPromise,
 } from '@holochain-open-dev/stores';
@@ -55,18 +54,13 @@ export class ParticipantsForEvent extends LitElement {
   _participants = new StoreSubscriber(
     this,
     () =>
-      join([
+      joinAsync([
         this.gatherStore.events.get(this.eventHash),
-        asyncDeriveStore(
+        pipe(
           this.gatherStore.participantsForEvent.get(this.eventHash),
           agentPubKeys => this.profilesStore.agentsProfiles(agentPubKeys)
         ),
-      ]) as AsyncReadable<
-        [
-          { record: EntryRecord<Event>; isCancelled: boolean },
-          ReadonlyMap<AgentPubKey, Profile>
-        ]
-      >,
+      ]),
     () => [this.eventHash]
   );
 
@@ -228,7 +222,7 @@ export class ParticipantsForEvent extends LitElement {
         return html`
           <sl-card style="flex: 1; display: flex;">
             ${this.renderParticipants(
-              this._participants.value.value[0].record,
+              this._participants.value.value[0]!.record,
               this._participants.value.value[1]
             )}
           </sl-card>

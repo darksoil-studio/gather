@@ -6,8 +6,8 @@ pub fn get_all_events(_: ()) -> ExternResult<Vec<ActionHash>> {
     let links = get_links(path.path_entry_hash()?, LinkTypes::AllEvents, None)?;
     let get_input: Vec<GetInput> = links
         .into_iter()
-        .map(|link| GetInput::new(
-            ActionHash::from(link.target).into(),
+        .filter_map(|link| link.target.into_any_dht_hash())
+        .map(|any_dht_hash| GetInput::new(any_dht_hash,
             GetOptions::default(),
         ))
         .collect();
