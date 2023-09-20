@@ -35,10 +35,6 @@
                 pkgs.cargo-nextest
               ];
 
-              shellHook = ''
-                unset CARGO_TARGET_DIR
-                unset CARGO_HOME
-              '';
             };
           };
       };

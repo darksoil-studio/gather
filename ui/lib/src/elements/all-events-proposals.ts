@@ -53,7 +53,7 @@ export class AllEventsProposals extends LitElement {
         return this.renderList(this._allEventsProposals.value.value);
       case 'error':
         return html`<display-error
-          .error=${this._allEventsProposals.value.error.data.data}
+          .error=${this._allEventsProposals.value.error}
         ></display-error>`;
     }
   }

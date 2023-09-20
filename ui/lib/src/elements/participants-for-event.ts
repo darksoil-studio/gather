@@ -230,7 +230,7 @@ export class ParticipantsForEvent extends LitElement {
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching the participants for this event')}
-          .error=${this._participants.value.error.data.data}
+          .error=${this._participants.value.error}
         ></display-error>`;
     }
   }

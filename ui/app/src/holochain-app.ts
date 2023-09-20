@@ -27,7 +27,9 @@ import { LitElement, css, html } from 'lit';
 import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
+import { classMap } from 'lit/directives/class-map.js';
 import { mdiArrowLeft } from '@mdi/js';
+import { decode } from '@msgpack/msgpack';
 
 import {
   GatherStore,
@@ -50,6 +52,22 @@ import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
+
+export async function sendRequest(request: any) {
+  return new Promise((resolve, reject) => {
+    const channel = new MessageChannel();
+
+    window.top!.postMessage(request, '*', [channel.port2]);
+
+    channel.port1.onmessage = m => {
+      if (m.data.type === 'success') {
+        resolve(m.data.result);
+      } else if (m.data.type === 'error') {
+        reject(m.data.error);
+      }
+    };
+  });
+}
 
 type View =
   | { view: 'main' }
@@ -79,19 +97,43 @@ export class HolochainApp extends LitElement {
   @property()
   _profilesStore!: ProfilesStore;
 
+  @property()
+  _isMobile = false;
+
   _myProfile!: StoreSubscriber<AsyncStatus<Profile | undefined>>;
 
   _client!: AppAgentClient;
 
   async firstUpdated() {
+    const envresponse = await fetch('/__HC_ENVIRONMENT__.json');
+    const env = await envresponse.json();
+    const port = env.APP_INTERFACE_PORT;
     this._client = await AppAgentWebsocket.connect(
-      new URL('ws://localhost'),
-      'gather'
+      new URL(`ws://localhost:${port}`),
+      env?.INSTALLED_APP_ID || 'gather',
+      60000 * 15
     );
+
+    const appWs = (this._client as AppAgentWebsocket).appWebsocket;
+    appWs.callZome = appWs._requester('call_zome', {
+      input: async request => {
+        if ('signature' in request) {
+          return request;
+        }
+
+        return sendRequest({
+          type: 'sign-zome-call',
+          zomeCall: request,
+        });
+      },
+      output: response => decode(response as any),
+    });
 
     await this.initStores(this._client);
 
     this._loading = false;
+
+    this._isMobile = this.getBoundingClientRect().width < 700;
   }
 
   async initStores(appAgentClient: AppAgentClient) {
@@ -131,7 +173,7 @@ export class HolochainApp extends LitElement {
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching your profile')}
-          .error=${this._myProfile.value.error.data.data}
+          .error=${this._myProfile.value.error}
           tooltip
         ></display-error>`;
     }
@@ -157,7 +199,7 @@ export class HolochainApp extends LitElement {
                   );
                 }, 10);
               }}
-              style="margin-top: 16px; max-width: 600px"
+              style="max-width: 600px"
             ></create-event>
           </div>
         </div>
@@ -166,6 +208,11 @@ export class HolochainApp extends LitElement {
   }
 
   renderEventDetail(eventHash: ActionHash) {
+    if (this._isMobile)
+      return html`
+        <event-detail style="flex: 1" .eventHash=${eventHash}></event-detail>
+      `;
+
     return html`
       <div class="flex-scrollable-parent">
         <div class="flex-scrollable-container">
@@ -182,6 +229,21 @@ export class HolochainApp extends LitElement {
     `;
   }
 
+  renderCreateEventButton() {
+    return html`
+      <sl-button
+        variant="primary"
+        @click=${() => {
+          this._view = { view: 'create_event' };
+        }}
+        slot="nav"
+        style="margin: 8px; margin-top: 8px"
+      >
+        ${msg('Create Event')}
+      </sl-button>
+    `;
+  }
+
   renderContent() {
     return html`
       ${this._view.view === 'create_event' ? this.renderCreateEvent() : html``}
@@ -190,7 +252,7 @@ export class HolochainApp extends LitElement {
         : html``}
       <sl-tab-group
         id="tabs"
-        placement="start"
+        .placement=${this._isMobile ? 'bottom' : 'start'}
         style=${styleMap({
           display: this._view.view === 'main' ? 'flex' : 'none',
           flex: '1',
@@ -202,62 +264,30 @@ export class HolochainApp extends LitElement {
           };
         }}
       >
-        <sl-button
-          variant="primary"
-          @click=${() => {
-            this._view = { view: 'create_event' };
-          }}
-          slot="nav"
-          style="margin: 8px; margin-top: 8px"
-        >
-          ${msg('Create Event')}
-        </sl-button>
-        <sl-tab slot="nav" panel="all_event_proposals"
-          >${msg('All Event Proposals')}</sl-tab
-        >
+        ${this._isMobile ? html`` : this.renderCreateEventButton()}
         <sl-tab slot="nav" panel="all_events">${msg('All Events')}</sl-tab>
-        <sl-tab slot="nav" panel="my_events_proposals"
-          >${msg('My Event Proposals')}</sl-tab
-        >
         <sl-tab slot="nav" panel="my_events">${msg('My Events')}</sl-tab>
         <sl-tab slot="nav" panel="calendar">${msg('Calendar')}</sl-tab>
 
-        <sl-tab-panel name="all_event_proposals">
-          <div class="flex-scrollable-parent">
-            <div class="flex-scrollable-container">
-              <div class="flex-scrollable-y">
-                <div class="column" style="align-items: center">
-                  <all-events-proposals
-                    style="margin: 16px"
-                    class="tab-content"
-                  >
-                  </all-events-proposals>
-                </div>
-              </div>
-            </div>
-          </div>
-        </sl-tab-panel>
         <sl-tab-panel name="all_events">
           <div class="flex-scrollable-parent">
             <div class="flex-scrollable-container">
               <div class="flex-scrollable-y">
-                <div class="column" style="align-items: center">
+                <div
+                  class="column"
+                  style=${styleMap({
+                    'align-items': this._isMobile ? 'stretch' : 'center',
+                  })}
+                >
+                  ${this._isMobile
+                    ? html`<div
+                        style="position: absolute; bottom: 16px; right: 16px"
+                      >
+                        ${this.renderCreateEventButton()}
+                      </div>`
+                    : html``}
                   <all-events style="margin: 16px" class="tab-content">
                   </all-events>
-                </div>
-              </div>
-            </div>
-          </div>
-        </sl-tab-panel>
-        <sl-tab-panel name="my_events_proposals">
-          <div class="flex-scrollable-parent">
-            <div class="flex-scrollable-container">
-              <div class="flex-scrollable-y">
-                <div class="column" style="align-items: center">
-                  <my-events-proposals
-                    class="tab-content"
-                    style="margin: 16px"
-                  ></my-events-proposals>
                 </div>
               </div>
             </div>
@@ -312,7 +342,15 @@ export class HolochainApp extends LitElement {
       </div>`;
 
     return html`
-      <div class="column fill">
+      <div
+        class=${classMap({
+          column: true,
+          fill: true,
+          mobile: this._isMobile,
+          desktop: !this._isMobile,
+        })}
+        style="position: relative"
+      >
         <div
           class="row"
           style="align-items: center; color:white; background-color: var(--sl-color-primary-900); padding: 0 16px; height: 65px;"
@@ -340,7 +378,7 @@ export class HolochainApp extends LitElement {
         display: flex;
         flex: 1;
       }
-      sl-tab-group::part(active-tab-indicator) {
+      .desktop sl-tab-group::part(active-tab-indicator) {
         margin-top: 52px;
       }
       sl-tab-group::part(body) {
@@ -360,6 +398,7 @@ export class HolochainApp extends LitElement {
       }
       sl-tab-panel {
         width: 100%;
+        --padding: 0;
       }
       .back-button {
         color: white;
@@ -369,9 +408,19 @@ export class HolochainApp extends LitElement {
         background: #ffffff65;
         border-radius: 50%;
       }
-      .tab-content {
-        max-width: 900px;
-        min-width: 700px;
+      .desktop .tab-content {
+        max-width: 80vw;
+        min-width: 60vw;
+      }
+
+      .mobile sl-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .desktop create-event {
+        margin-top: 16px;
       }
     `,
     sharedStyles,

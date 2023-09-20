@@ -14,7 +14,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
-// import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
+import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/icon-button/icon-button.js';
@@ -24,6 +24,9 @@ import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js'
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
+import '@shoelace-style/shoelace/dist/components/tab/tab.js';
+import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
+import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 
 import '@darksoil/assemble/dist/elements/call-to-action-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
@@ -94,6 +97,16 @@ export class EventDetail extends LitElement {
    */
   @state()
   _approving = false;
+
+  /**
+   * @internal
+   */
+  @state()
+  small = false;
+
+  firstUpdated() {
+    this.small = this.getBoundingClientRect().width < 600;
+  }
 
   async deleteEvent(event: EntryRecord<Event>) {
     if (this._cancelling) return;
@@ -264,7 +277,7 @@ export class EventDetail extends LitElement {
         <show-image
           slot="image"
           .imageHash=${event.entry.image}
-          style="width: 700px; height: 300px; flex-basis: 0;"
+          style="height: 300px; flex: 1"
         ></show-image>
 
         <div class="row" style="flex: 1">
@@ -368,6 +381,32 @@ export class EventDetail extends LitElement {
       ></edit-event>`;
     }
 
+    if (this.small)
+      return html`
+        <sl-tab-group placement="bottom" style="flex: 1">
+          <sl-tab slot="nav" panel="event">${msg('Event')}</sl-tab>
+          <sl-tab slot="nav" panel="participants"
+            >${msg('Participants')}</sl-tab
+          >
+          <sl-tab slot="nav" panel="needs">${msg('Needs')} </sl-tab>
+          <sl-tab-panel name="event">
+            ${this.renderDetail(event, isCancelled, callToAction, assemblies)}
+          </sl-tab-panel>
+          <sl-tab-panel name="participants">
+            <participants-for-event
+              style="margin-bottom: 16px;"
+              .eventHash=${this.eventHash}
+            ></participants-for-event>
+          </sl-tab-panel>
+          <sl-tab-panel name="needs">
+            <call-to-action-needs
+              .callToActionHash=${event.entry.call_to_action_hash}
+              .hideNeeds=${[0]}
+            ></call-to-action-needs>
+          </sl-tab-panel>
+        </sl-tab-group>
+      `;
+
     return html`<div class="row" style="justify-content: center">
       <div class="column" style="margin-right: 16px;">
         ${this.renderDetail(event, isCancelled, callToAction, assemblies)}
@@ -412,7 +451,7 @@ export class EventDetail extends LitElement {
         );
       case 'error':
         return html`<display-error
-          .error=${this._event.value.error.data.data}
+          .error=${this._event.value.error}
         ></display-error>`;
     }
   }
@@ -424,6 +463,23 @@ export class EventDetail extends LitElement {
         display: flex;
         flex-direction: column;
         align-items: center;
+      }
+      sl-tab-group::part(body) {
+        display: flex;
+        flex: 1;
+      }
+      sl-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      sl-tab-group {
+        display: flex;
+      }
+      sl-tab-group::part(base) {
+        display: flex;
+        flex: 1;
       }
     `,
   ];

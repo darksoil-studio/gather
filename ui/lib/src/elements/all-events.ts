@@ -30,13 +30,9 @@ export class AllEvents extends LitElement {
       return html`<span>${msg('No events found.')}</span>`;
 
     return html`
-      <div style="display: flex; flex-direction: column; flex: 1">
+      <div style="display: flex; flex-direction: column; flex: 1; gap: 16px">
         ${hashes.map(
-          hash =>
-            html`<event-summary
-              .eventHash=${hash}
-              style="margin-bottom: 16px;"
-            ></event-summary>`
+          hash => html`<event-summary .eventHash=${hash}></event-summary>`
         )}
       </div>
     `;
@@ -54,7 +50,7 @@ export class AllEvents extends LitElement {
         return this.renderList(this._allEvents.value.value);
       case 'error':
         return html`<display-error
-          .error=${this._allEvents.value.error.data.data}
+          .error=${this._allEvents.value.error}
         ></display-error>`;
     }
   }

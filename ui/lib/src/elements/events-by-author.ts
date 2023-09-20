@@ -88,7 +88,7 @@ export class EventsByAuthor extends LitElement {
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching the events')}
-          .error=${this._eventsByAuthor.value.error.data.data}
+          .error=${this._eventsByAuthor.value.error}
         ></display-error>`;
     }
   }

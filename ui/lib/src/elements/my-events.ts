@@ -114,7 +114,7 @@ export class MyEvents extends LitElement {
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching the events for this agent')}
-          .error=${this._events.value.error.data.data}
+          .error=${this._events.value.error}
         ></display-error>`;
     }
   }

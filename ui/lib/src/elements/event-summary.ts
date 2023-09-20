@@ -22,7 +22,7 @@ import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
-// import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
+import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 
 import { gatherStoreContext } from '../context.js';
@@ -65,6 +65,13 @@ export class EventSummary extends LitElement {
     () => [this.eventHash]
   );
 
+  @property()
+  simple = false;
+
+  firstUpdated() {
+    this.simple = this.getBoundingClientRect().width < 600;
+  }
+
   renderParticipants() {
     if (this._participants.value.status !== 'complete') return html``;
     const participants = this._participants.value.value;
@@ -90,39 +97,53 @@ export class EventSummary extends LitElement {
 
   renderSummary(event: { record: EntryRecord<Event>; isCancelled: boolean }) {
     return html`
-      <div style="display: flex; flex-direction: row; flex: 1">
-        <div style="display: flex; flex-direction: column; flex: 1;">
-          <span class="title" style="margin-bottom: 8px"
-            >${event.record.entry.title}</span
-          >
+      ${this.simple
+        ? html`
+            <show-image
+              slot="image"
+              style="flex: 1; height: 200px"
+              .imageHash=${event.record.entry.image}
+            ></show-image>
+          `
+        : html``}
 
-          <span style="white-space: pre-line; margin-bottom: 8px"
-            >${event.record.entry.description}</span
+      <div style="display: flex; flex-direction: row; flex: 1">
+        <div style="display: flex; flex-direction: column; flex: 1; gap: 8px">
+          <div
+            style="display: flex; flex-direction: row; flex: 1; align-items: center"
           >
+            <span class="title" style="flex: 1"
+              >${event.record.entry.title}</span
+            >
+            <span style="margin-right: 8px">${msg('Created by')}</span>
+            <agent-avatar
+              .agentPubKey=${event.record.action.author}
+            ></agent-avatar>
+          </div>
 
           <span style="flex: 1"></span>
 
-          <div style="display: flex; flex-direction: row;">
-            <div class="column" style="justify-content: end">
+          <div style="display: flex; flex-direction: row; ">
+            <div class="column" style="justify-content: end; gap: 8px">
+              ${this.simple
+                ? html``
+                : html`
+                    <div
+                      style="display: flex; flex-direction: row; align-items: center; gap: 4px"
+                    >
+                      <sl-icon
+                        title=${msg('location')}
+                        .src=${wrapPathInSvg(mdiMapMarker)}
+                      ></sl-icon>
+                      <span style="white-space: pre-line"
+                        >${event.record.entry.location}</span
+                      >
+                    </div>
+                  `}
               <div
-                style="display: flex; flex-direction: row; align-items: center; margin-bottom: 8px"
+                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
               >
-                <sl-icon
-                  style="margin-right: 4px"
-                  .src=${wrapPathInSvg(mdiMapMarker)}
-                ></sl-icon>
-                <span style="white-space: pre-line"
-                  >${event.record.entry.location}</span
-                >
-              </div>
-
-              <div
-                style="display: flex; flex-direction: row; align-items: center"
-              >
-                <sl-icon
-                  style="margin-right: 4px"
-                  .src=${wrapPathInSvg(mdiCalendarClock)}
-                ></sl-icon>
+                <sl-icon .src=${wrapPathInSvg(mdiCalendarClock)}></sl-icon>
                 <span style="white-space: pre-line"
                   >${new Date(
                     event.record.entry.start_time / 1000
@@ -133,31 +154,22 @@ export class EventSummary extends LitElement {
 
             <span style="flex: 1"></span>
 
-            <div class="column">
-              <div
-                class="row"
-                style="align-items: center; margin-bottom: 8px; justify-content: end;"
-              >
-                <span style="margin-right: 8px">${msg('Hosted by')}</span>
-                <agent-avatar
-                  .agentPubKey=${event.record.action.author}
-                ></agent-avatar>
-              </div>
-
-              ${this.renderParticipants()}
-            </div>
+            <div class="column">${this.renderParticipants()}</div>
           </div>
 
-          <call-to-action-progress
-            .callToActionHash=${event.record.entry.call_to_action_hash}
-            style="margin-top: 16px;"
-          ></call-to-action-progress>
+          ${!this.simple
+            ? html` <call-to-action-progress
+                .callToActionHash=${event.record.entry.call_to_action_hash}
+              ></call-to-action-progress>`
+            : html``}
         </div>
 
-        <show-image
-          style="width: 200px; height: 200px; flex: 0; margin-top: -20px; margin-bottom: -20px; margin-right: -20px; margin-left: 16px"
-          .imageHash=${event.record.entry.image}
-        ></show-image>
+        ${!this.simple
+          ? html` <show-image
+              style="width: 200px; height: 200px; margin-top: -20px; margin-bottom: -20px; margin-right: -20px; margin-left: 16px"
+              .imageHash=${event.record.entry.image}
+            ></show-image>`
+          : html``}
       </div>
     `;
   }
@@ -182,7 +194,7 @@ export class EventSummary extends LitElement {
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching the event')}
-          .error=${event.error.data.data}
+          .error=${event.error}
         ></display-error>`;
     }
   }
@@ -214,7 +226,6 @@ export class EventSummary extends LitElement {
 
       :host {
         display: flex;
-        min-width: 700px;
       }
     `,
   ];

@@ -16,7 +16,7 @@ import '@shoelace-style/shoelace/dist/components/input/input.js';
 import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
-// import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
+import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
 
 import '@darksoil/assemble/dist/elements/call-to-action-need-form.js';
@@ -125,37 +125,32 @@ export class CreateEvent extends LitElement {
         class="column"
         style=${styleMap({
           display: this.page === 'event-form' ? 'flex' : 'none',
+          gap: '16px',
         })}
       >
-        <span style="margin-bottom: 16px">${msg('Event Image')}</span>
+        <span>${msg('Event Image')}</span>
         <upload-files
           name="image"
           required
-          style="margin-bottom: 16px; display: flex"
+          style="display: flex"
           one-file
           accepted-files="image/jpeg,image/png,image/gif"
         ></upload-files>
 
-        <sl-input
-          name="title"
-          required
-          .label=${msg('Title')}
-          style="margin-bottom: 16px"
-        ></sl-input>
+        <sl-input name="title" required .label=${msg('Title')}></sl-input>
         <sl-textarea
           name="description"
           required
           .label=${msg('Description')}
-          style="margin-bottom: 16px"
         ></sl-textarea>
 
-        <div class="row" style="margin-bottom: 16px">
+        <div class="row" style="gap: 16px; flex-wrap: wrap;">
           <sl-datetime-input
             name="start_time"
             .min=${new Date().toISOString().slice(0, 16)}
             required
             .label=${msg('Start Time')}
-            style="margin-right: 16px; flex: 1"
+            style="flex: 1"
             id="start-time"
             @input=${() => this.requestUpdate()}
           ></sl-datetime-input>
@@ -169,12 +164,12 @@ export class CreateEvent extends LitElement {
           ></sl-datetime-input>
         </div>
 
-        <div class="row" style="margin-bottom: 16px">
+        <div class="row" style="gap: 16px; flex-wrap: wrap;">
           <sl-input
             name="location"
             required
             .label=${msg('Location')}
-            style="margin-right: 16px; flex: 1"
+            style="flex: 1"
           ></sl-input>
           <sl-input
             name="cost"
