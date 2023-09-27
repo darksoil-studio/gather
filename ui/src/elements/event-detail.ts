@@ -383,7 +383,7 @@ export class EventDetail extends LitElement {
 
     if (this.small)
       return html`
-        <sl-tab-group placement="bottom" style="flex: 1">
+        <sl-tab-group placement="bottom" style="flex: 1; width: 100%">
           <sl-tab slot="nav" panel="event">${msg('Event')}</sl-tab>
           <sl-tab slot="nav" panel="participants"
             >${msg('Participants')}</sl-tab

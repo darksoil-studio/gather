@@ -10,6 +10,7 @@ export function isExpired(callToAction: CallToAction) {
     callToAction.expiration_time < Date.now() * 1000
   );
 }
+
 export function isPast(event: Event) {
   return event.start_time < Date.now() * 1000;
 }
@@ -32,3 +33,5 @@ export function eventToEventCalendar(
     end: new Date(Math.floor(gatherEvent.entry.end_time / 1000)),
   };
 }
+
+export const MOBILE_WIDTH_PX = 600;

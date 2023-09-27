@@ -28,6 +28,7 @@ import '@shoelace-style/shoelace/dist/components/card/card.js';
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { Event } from '../types.js';
+import { MOBILE_WIDTH_PX } from '../utils.js';
 
 @localized()
 @customElement('event-summary')
@@ -69,7 +70,7 @@ export class EventSummary extends LitElement {
   simple = false;
 
   firstUpdated() {
-    this.simple = this.getBoundingClientRect().width < 600;
+    this.simple = this.getBoundingClientRect().width < MOBILE_WIDTH_PX;
   }
 
   renderParticipants() {

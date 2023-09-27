@@ -31,27 +31,29 @@ import { classMap } from 'lit/directives/class-map.js';
 import { mdiArrowLeft } from '@mdi/js';
 import { decode } from '@msgpack/msgpack';
 
-import {
-  GatherStore,
-  GatherClient,
-  gatherStoreContext,
-} from '@darksoil/gather';
 import { localized, msg } from '@lit/localize';
 import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
 
-import '@darksoil/gather/dist/elements/event-detail.js';
-import '@darksoil/gather/dist/elements/create-event.js';
-import '@darksoil/gather/dist/elements/all-events.js';
-import '@darksoil/gather/dist/elements/all-events-proposals.js';
-import '@darksoil/gather/dist/elements/events-calendar.js';
-import '@darksoil/gather/dist/elements/my-events.js';
-import '@darksoil/gather/dist/elements/my-events-proposals.js';
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
+
 import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/drawer/drawer.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
+
+import './elements/event-detail.js';
+import './elements/create-event.js';
+import './elements/all-events.js';
+import './elements/events-filter.js';
+import './elements/events-calendar.js';
+import './elements/my-events.js';
+import { gatherStoreContext, isMobileContext } from './context.js';
+import { GatherStore } from './gather-store.js';
+import { GatherClient } from './gather-client.js';
+import { ResizeController } from '@lit-labs/observers/resize-controller.js';
+import { MOBILE_WIDTH_PX } from './utils.js';
 
 export async function sendRequest(request: any) {
   return new Promise((resolve, reject) => {
@@ -97,49 +99,76 @@ export class HolochainApp extends LitElement {
   @property()
   _profilesStore!: ProfilesStore;
 
+  @provide({ context: isMobileContext })
   @property()
-  _isMobile = false;
+  _isMobile: boolean = false;
 
   _myProfile!: StoreSubscriber<AsyncStatus<Profile | undefined>>;
 
   _client!: AppAgentClient;
 
   async firstUpdated() {
-    const envresponse = await fetch('/__HC_ENVIRONMENT__.json');
-    const env = await envresponse.json();
-    const port = env.APP_INTERFACE_PORT;
-    this._client = await AppAgentWebsocket.connect(
-      new URL(`ws://localhost:${port}`),
-      env?.INSTALLED_APP_ID || 'gather',
-      60000 * 15
-    );
-
-    const appWs = (this._client as AppAgentWebsocket).appWebsocket;
-    appWs.callZome = appWs._requester('call_zome', {
-      input: async request => {
-        if ('signature' in request) {
-          return request;
-        }
-
-        return sendRequest({
-          type: 'sign-zome-call',
-          zomeCall: request,
-        });
+    new ResizeController(this, {
+      callback: () => {
+        this._isMobile = this.getBoundingClientRect().width < MOBILE_WIDTH_PX;
       },
-      output: response => decode(response as any),
     });
+    try {
+      const envresponse = await fetch('/__HC_ENVIRONMENT__.json');
+
+      const env = await envresponse.json();
+      const port = env.APP_INTERFACE_PORT;
+      this._client = await AppAgentWebsocket.connect(
+        new URL(`ws://localhost:${port}`),
+        env.INSTALLED_APP_ID,
+        60000
+      );
+
+      const appWs = (this._client as AppAgentWebsocket).appWebsocket;
+      appWs.callZome = appWs._requester('call_zome', {
+        input: async request => {
+          if ('signature' in request) {
+            return request;
+          }
+
+          return sendRequest({
+            type: 'sign-zome-call',
+            zomeCall: request,
+          });
+        },
+        output: response => decode(response as any),
+      });
+    } catch (e) {
+      // console.log('we are in the normal launcher env');
+      this._client = await AppAgentWebsocket.connect(
+        new URL(`ws://localhost`),
+        'gather',
+        60000
+      );
+    }
 
     await this.initStores(this._client);
 
-    this._loading = false;
+    // let finished = false;
 
-    this._isMobile = this.getBoundingClientRect().width < 700;
+    // while (!finished) {
+    //   try {
+    //     await this._profilesStore.client.getAgentProfile(this._client.myPubKey);
+    //     finished = true;
+    //   } catch (e) {
+    //     console.warn(e);
+    //     await new Promise(r => setTimeout(() => r(undefined), 500));
+    //   }
+    // }
+
+    this._loading = false;
   }
 
   async initStores(appAgentClient: AppAgentClient) {
     this._profilesStore = new ProfilesStore(
       new ProfilesClient(appAgentClient, 'gather')
     );
+
     this._myProfile = new StoreSubscriber(
       this,
       () => this._profilesStore.myProfile
@@ -269,29 +298,15 @@ export class HolochainApp extends LitElement {
         <sl-tab slot="nav" panel="my_events">${msg('My Events')}</sl-tab>
         <sl-tab slot="nav" panel="calendar">${msg('Calendar')}</sl-tab>
 
-        <sl-tab-panel name="all_events">
-          <div class="flex-scrollable-parent">
-            <div class="flex-scrollable-container">
-              <div class="flex-scrollable-y">
-                <div
-                  class="column"
-                  style=${styleMap({
-                    'align-items': this._isMobile ? 'stretch' : 'center',
-                  })}
-                >
-                  ${this._isMobile
-                    ? html`<div
-                        style="position: absolute; bottom: 16px; right: 16px"
-                      >
-                        ${this.renderCreateEventButton()}
-                      </div>`
-                    : html``}
-                  <all-events style="margin: 16px" class="tab-content">
-                  </all-events>
+        <sl-tab-panel name="all_events" style="position: relative">
+          ${this._isMobile
+            ? html`
+                <div style="position: absolute; bottom: 16px; right: 16px">
+                  ${this.renderCreateEventButton()}
                 </div>
-              </div>
-            </div>
-          </div>
+              `
+            : html``}
+          <all-events class="tab-content"> </all-events>
         </sl-tab-panel>
         <sl-tab-panel name="my_events">
           <div class="flex-scrollable-parent">
@@ -346,7 +361,7 @@ export class HolochainApp extends LitElement {
         class=${classMap({
           column: true,
           fill: true,
-          mobile: this._isMobile,
+          mobile: !!this._isMobile,
           desktop: !this._isMobile,
         })}
         style="position: relative"
@@ -408,9 +423,9 @@ export class HolochainApp extends LitElement {
         background: #ffffff65;
         border-radius: 50%;
       }
-      .desktop .tab-content {
-        max-width: 80vw;
-        min-width: 60vw;
+      .tab-content {
+        width: 100%;
+        height: 100%;
       }
 
       .mobile sl-tab {

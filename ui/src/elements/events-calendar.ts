@@ -1,7 +1,7 @@
 import { sharedStyles } from '@holochain-open-dev/elements';
 import { css, html, LitElement } from 'lit';
-import { StoreSubscriber } from '@holochain-open-dev/stores';
-import { decodeHashFromBase64 } from '@holochain/client';
+import { sliceAndJoin, StoreSubscriber } from '@holochain-open-dev/stores';
+import { ActionHash, decodeHashFromBase64 } from '@holochain/client';
 import { customElement, property } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
 import { localized } from '@lit/localize';
@@ -23,22 +23,25 @@ export class GatherEventsCalendar extends LitElement {
   gatherStore!: GatherStore;
 
   @property()
-  allEvents = new StoreSubscriber(
+  events: ActionHash[] = [];
+
+  _events = new StoreSubscriber(
     this,
-    () => this.gatherStore.allEvents,
-    () => [this.gatherStore]
+    () => sliceAndJoin(this.gatherStore.events, this.events),
+    () => [this.gatherStore, this.events]
   );
 
   @property()
   view = 'dayGridMonth';
 
-  events(): EventCalendarEvent[] {
-    if (this.allEvents.value.status !== 'complete') return [];
+  get formattedevents(): EventCalendarEvent[] {
+    if (this._events.value.status !== 'complete') return [];
 
-    const gatherEvents = this.allEvents.value.value;
+    const gatherEvents = this._events.value.value;
     const filteredEvents = Array.from(gatherEvents.values());
-    const events: EventCalendarEvent[] =
-      filteredEvents.map(eventToEventCalendar);
+    const events: EventCalendarEvent[] = filteredEvents.map(e =>
+      eventToEventCalendar(e.record)
+    );
     return events;
   }
 
@@ -46,7 +49,7 @@ export class GatherEventsCalendar extends LitElement {
     return html`
       <event-calendar
         style="flex: 1"
-        .events=${this.events()}
+        .events=${this.formattedevents}
         .props=${{ view: this.view }}
         @event-clicked=${(e: CustomEvent) =>
           this.dispatchEvent(
