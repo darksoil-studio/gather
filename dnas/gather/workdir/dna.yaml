@@ -22,6 +22,10 @@ integrity:
       hash: ~
       bundled: "../../../target/wasm32-unknown-unknown/release/assemble_integrity.wasm"
       dependencies: ~
+    - name: alerts_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/alerts_integrity.wasm"
+      dependencies: ~
 coordinator:
   zomes:
     - name: profiles
@@ -44,3 +48,8 @@ coordinator:
       bundled: "../../../target/wasm32-unknown-unknown/release/assemble.wasm"
       dependencies:
         - name: assemble_integrity
+    - name: alerts
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/alerts.wasm"
+      dependencies:
+        - name: alerts_integrity

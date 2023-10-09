@@ -1,21 +1,20 @@
-import { notifyError, sharedStyles } from '@holochain-open-dev/elements';
+import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
-import { LitElement, html } from 'lit';
-import {
-  sliceAndJoin,
-  StoreSubscriber,
-  toPromise,
-} from '@holochain-open-dev/stores';
-import { customElement, state } from 'lit/decorators.js';
+import { LitElement, html, css } from 'lit';
+import { StoreSubscriber } from '@holochain-open-dev/stores';
+import { customElement, property, state } from 'lit/decorators.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
-import { gatherStoreContext } from '../context.js';
+import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import './event-summary.js';
+import { defaultFilter, Filter } from './events-filter.js';
+import { styleMap } from 'lit/directives/style-map.js';
+import { mdiInformationOutline } from '@mdi/js';
 
 @localized()
 @customElement('my-events')
@@ -26,60 +25,79 @@ export class MyEvents extends LitElement {
   @consume({ context: gatherStoreContext, subscribe: true })
   gatherStore!: GatherStore;
 
-  /**
-   * @internal
-   */
-  _events = new StoreSubscriber(
+  @state()
+  filter: Filter = defaultFilter();
+
+  _myEvents = new StoreSubscriber(
     this,
-    () => this.gatherStore.myEvents,
-    () => []
+    () => {
+      if (this.filter.status === 'upcoming_event')
+        return this.gatherStore.myUpcomingEvents;
+      if (this.filter.status === 'past_event')
+        return this.gatherStore.myPastEvents;
+      if (this.filter.status === 'cancelled_event')
+        return this.gatherStore.myCancelledEvents;
+      if (this.filter.status === 'open_event_proposal')
+        return this.gatherStore.myOpenEventProposals;
+      if (this.filter.status === 'expired_event_proposal')
+        return this.gatherStore.myExpiredEventProposals;
+      if (this.filter.status === 'cancelled_event_proposal')
+        return this.gatherStore.myCancelledEventProposals;
+    },
+    () => [this.filter]
   );
 
-  @state()
-  committing = false;
+  @consume({ context: isMobileContext, subscribe: true })
+  @property()
+  _isMobile!: boolean;
 
-  async clearCallsToAction(eventsHashes: ActionHash[]) {
-    if (this.committing) return;
-
-    this.committing = true;
-
-    try {
-      const events = await toPromise(
-        sliceAndJoin(this.gatherStore.events, eventsHashes)
-      );
-
-      const callsToActionHashes = Array.from(events.values()).map(
-        e => e.record.entry.call_to_action_hash
-      );
-      await this.gatherStore.assembleStore.client.clearCallsToAction(
-        callsToActionHashes
-      );
-    } catch (e: any) {
-      notifyError(msg('Error clearing the expired calls to action.'));
-      console.error(e);
-    }
-    this.committing = false;
+  renderCalendar(events: ActionHash[]) {
+    return html`
+      <gather-events-calendar
+        style="flex: 1"
+        .events=${events}
+      ></gather-events-calendar>
+    `;
   }
 
   renderList(hashes: Array<ActionHash>) {
     if (hashes.length === 0)
-      return html`<span class="placeholder">${msg('No events found.')}</span>`;
+      return html` <div
+        style="display: flex; align-items: center; flex-direction: column; margin: 48px; gap: 16px"
+      >
+        <sl-icon
+          .src=${wrapPathInSvg(mdiInformationOutline)}
+          style="font-size: 96px;"
+          class="placeholder"
+        ></sl-icon>
+        <span class="placeholder">${msg('No events found.')}</span>
+      </div>`;
 
     return html`
-      <div style="display: flex; flex-direction: column; flex: 1;">
-        ${hashes.map(
-          hash =>
-            html`<event-summary
-              .eventHash=${hash}
-              style="margin-bottom: 16px;"
-            ></event-summary>`
-        )}
+      <div class="flex-scrollable-parent">
+        <div class="flex-scrollable-container">
+          <div class="flex-scrollable-y">
+            <div
+              style="display: flex; flex-direction: column; flex: 1; gap: 16px; align-items: center; margin: 16px"
+            >
+              ${hashes.map(
+                hash =>
+                  html`<event-summary
+                    .eventHash=${hash}
+                    style=${styleMap({
+                      width: this._isMobile ? '' : '800px',
+                    })}
+                  ></event-summary>`
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  render() {
-    switch (this._events.value.status) {
+  renderContent() {
+    switch (this._myEvents.value.status) {
       case 'pending':
         return html`<div
           style="display: flex; flex: 1; align-items: center; justify-content: center"
@@ -87,37 +105,44 @@ export class MyEvents extends LitElement {
           <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
       case 'complete':
-        const upcoming = this._events.value.value.upcoming;
-        const cancelled = this._events.value.value.cancelled;
-        const past = this._events.value.value.past;
-        return html`
-          <div class="column">
-            <span class="title" style="margin-bottom: 16px"
-              >${msg('Upcoming')}</span
-            >
-            ${this.renderList(upcoming)}
-            <sl-divider></sl-divider>
-            <div class="row" style="margin-bottom: 16px; align-items: center">
-              <span class="title" style="flex: 1">${msg('Cancelled')}</span>
-              <sl-button @click=${() => this.clearCallsToAction(cancelled)}
-                >${msg('Clear')}</sl-button
-              >
-            </div>
-            ${this.renderList(cancelled)}
-            <sl-divider></sl-divider>
-            <span class="title" style="margin-bottom: 16px;"
-              >${msg('Past')}</span
-            >
-            ${this.renderList(past)}
-          </div>
-        `;
+        return this.filter.view === 'list'
+          ? this.renderList(this._myEvents.value.value)
+          : this.renderCalendar(this._myEvents.value.value);
       case 'error':
         return html`<display-error
-          .headline=${msg('Error fetching the events for this agent')}
-          .error=${this._events.value.error}
+          .headline=${msg('Error fetching events')}
+          .error=${this._myEvents.value.error}
         ></display-error>`;
     }
   }
 
-  static styles = [sharedStyles];
+  render() {
+    return html`
+      <div class="column" style="flex: 1">
+        <events-filter
+          category="my_events"
+          .filter=${this.filter}
+          @filter-changed=${(e: any) => {
+            this.filter = e.detail;
+          }}
+        ></events-filter>
+
+        ${this._isMobile
+          ? html``
+          : html`
+              <sl-divider style="margin: 0 8px; --spacing: 0"></sl-divider>
+            `}
+        ${this.renderContent()}
+      </div>
+    `;
+  }
+
+  static styles = [
+    sharedStyles,
+    css`
+      :host {
+        display: flex;
+      }
+    `,
+  ];
 }

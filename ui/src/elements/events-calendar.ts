@@ -40,7 +40,7 @@ export class GatherEventsCalendar extends LitElement {
     const gatherEvents = this._events.value.value;
     const filteredEvents = Array.from(gatherEvents.values());
     const events: EventCalendarEvent[] = filteredEvents.map(e =>
-      eventToEventCalendar(e.record)
+      eventToEventCalendar(e.currentEvent)
     );
     return events;
   }
@@ -50,17 +50,20 @@ export class GatherEventsCalendar extends LitElement {
       <event-calendar
         style="flex: 1"
         .events=${this.formattedevents}
-        .props=${{ view: this.view }}
-        @event-clicked=${(e: CustomEvent) =>
-          this.dispatchEvent(
-            new CustomEvent('event-selected', {
-              bubbles: true,
-              composed: true,
-              detail: {
-                eventHash: decodeHashFromBase64(e.detail.event.id),
-              },
-            })
-          )}
+        .props=${{
+          view: this.view,
+          eventClick: (info: any) => {
+            this.dispatchEvent(
+              new CustomEvent('event-selected', {
+                bubbles: true,
+                composed: true,
+                detail: {
+                  eventHash: decodeHashFromBase64(info.event.id),
+                },
+              })
+            );
+          },
+        }}
       ></event-calendar>
     `;
   }

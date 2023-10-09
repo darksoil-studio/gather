@@ -3,13 +3,12 @@ import {
   ActionHash,
   AgentPubKey,
   AppAgentClient,
+  CreateLink,
   Record,
   SignedActionHashed,
 } from '@holochain/client';
 
-import { Event } from './types';
-
-type GatherSignal = {};
+import { Event, GatherSignal } from './types';
 
 export interface GetEventOutput {
   event: EntryRecord<Event>;
@@ -111,15 +110,9 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('get_all_expired_event_proposals', null);
   }
 
-  /** Events By Author */
+  /** My Events  */
 
-  async getEventsByAuthor(
-    author: AgentPubKey
-  ): Promise<Array<EntryRecord<Event>>> {
-    const records: Record[] = await this.callZome(
-      'get_events_by_author',
-      author
-    );
-    return records.map(r => new EntryRecord(r));
+  async getMyEvents(): Promise<Array<ActionHash>> {
+    return this.callZome('get_my_events', null);
   }
 }

@@ -15,6 +15,7 @@
     "rootDir": "./src",
     "incremental": true,
     "skipLibCheck": true,
+    "useDefineForClassFields": false,
     "types": ["node"]
   },
   "include": ["src/**/*.ts"]

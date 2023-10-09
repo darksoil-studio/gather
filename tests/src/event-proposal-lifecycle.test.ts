@@ -1,8 +1,8 @@
 import { test, assert } from 'vitest';
 
-import { dhtSync, pause, runScenario, Scenario } from '@holochain/tryorama';
-import { sampleCallToAction, sampleEvent, setup } from './utils';
+import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@holochain-open-dev/stores';
+import { sampleCallToAction, sampleEvent, setup } from './utils';
 
 test('event proposal: create and cancel', async t => {
   await runScenario(
@@ -10,8 +10,10 @@ test('event proposal: create and cancel', async t => {
       const { aliceGather, bobGather, alice, bob } = await setup(scenario);
 
       let openEventProposals = await toPromise(
-        aliceGather.allOpenEventsProposals
+        aliceGather.allOpenEventProposals
       );
+      assert.equal(openEventProposals.length, 0);
+      openEventProposals = await toPromise(bobGather.allOpenEventProposals);
       assert.equal(openEventProposals.length, 0);
       let cancelledEventProposals = await toPromise(
         aliceGather.allCancelledEventProposals
@@ -30,14 +32,22 @@ test('event proposal: create and cancel', async t => {
 
       await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-      openEventProposals = await toPromise(bobGather.allOpenEventsProposals);
+      let bobEventProposals = await toPromise(bobGather.myOpenEventProposals);
+      assert.equal(bobEventProposals.length, 0);
+
+      let aliceEventProposals = await toPromise(
+        aliceGather.myOpenEventProposals
+      );
+      assert.equal(aliceEventProposals.length, 1);
+
+      openEventProposals = await toPromise(bobGather.allOpenEventProposals);
       assert.equal(openEventProposals.length, 1);
 
       await aliceGather.client.cancelEvent(event.actionHash);
 
       await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-      openEventProposals = await toPromise(bobGather.allOpenEventsProposals);
+      openEventProposals = await toPromise(bobGather.allOpenEventProposals);
       assert.equal(openEventProposals.length, 0);
 
       cancelledEventProposals = await toPromise(
@@ -56,7 +66,7 @@ test('event proposal: create and expire', async t => {
       const { alice, bob, aliceGather, bobGather } = await setup(scenario);
 
       let openEventProposals = await toPromise(
-        aliceGather.allOpenEventsProposals
+        aliceGather.allOpenEventProposals
       );
       assert.equal(openEventProposals.length, 0);
       let expiredEventProposals = await toPromise(
@@ -78,12 +88,12 @@ test('event proposal: create and expire', async t => {
 
       await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-      openEventProposals = await toPromise(bobGather.allOpenEventsProposals);
+      openEventProposals = await toPromise(bobGather.allOpenEventProposals);
       assert.equal(openEventProposals.length, 1);
 
       await pause(30_000);
 
-      openEventProposals = await toPromise(bobGather.allOpenEventsProposals);
+      openEventProposals = await toPromise(bobGather.allOpenEventProposals);
       assert.equal(openEventProposals.length, 0);
 
       await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
@@ -104,7 +114,7 @@ test('event proposal: create and fulfill', async t => {
       const { alice, bob, aliceGather, bobGather } = await setup(scenario);
 
       let openEventProposals = await toPromise(
-        aliceGather.allOpenEventsProposals
+        aliceGather.allOpenEventProposals
       );
       assert.equal(openEventProposals.length, 0);
       let upcomingEvents = await toPromise(aliceGather.allUpcomingEvents);
@@ -122,7 +132,7 @@ test('event proposal: create and fulfill', async t => {
 
       await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-      openEventProposals = await toPromise(bobGather.allOpenEventsProposals);
+      openEventProposals = await toPromise(bobGather.allOpenEventProposals);
       assert.equal(openEventProposals.length, 1);
 
       await aliceGather.assembleStore.client.createAssembly({
@@ -133,7 +143,7 @@ test('event proposal: create and fulfill', async t => {
 
       await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-      openEventProposals = await toPromise(bobGather.allOpenEventsProposals);
+      openEventProposals = await toPromise(bobGather.allOpenEventProposals);
       assert.equal(openEventProposals.length, 0);
 
       upcomingEvents = await toPromise(aliceGather.allUpcomingEvents);

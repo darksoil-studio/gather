@@ -25,10 +25,9 @@ import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 
-import { gatherStoreContext } from '../context.js';
+import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event } from '../types.js';
-import { MOBILE_WIDTH_PX } from '../utils.js';
+import { Event, EventWithStatus } from '../types.js';
 
 @localized()
 @customElement('event-summary')
@@ -66,12 +65,9 @@ export class EventSummary extends LitElement {
     () => [this.eventHash]
   );
 
+  @consume({ context: isMobileContext, subscribe: true })
   @property()
-  simple = false;
-
-  firstUpdated() {
-    this.simple = this.getBoundingClientRect().width < MOBILE_WIDTH_PX;
-  }
+  _isMobile!: boolean;
 
   renderParticipants() {
     if (this._participants.value.status !== 'complete') return html``;
@@ -80,30 +76,27 @@ export class EventSummary extends LitElement {
     if (participants.length === 0)
       return html`<span>${msg('No participants yet')}</span>`;
 
-    return html`<div class="row" style="align-items: center;">
-      <span style="margin-right: 8px;">${msg('Participants')}</span>
-      <div class="row avatar-group">
-        ${participants
-          .slice(0, 3)
-          .map(a => html`<agent-avatar .agentPubKey=${a}></agent-avatar>`)}
-        ${participants.length > 3
-          ? html`<sl-avatar
-              .initials=${`+${participants.length - 3}`}
-              style="--size: 32px"
-            ></sl-avatar>`
-          : html``}
-      </div>
+    return html` <div class="row avatar-group">
+      ${participants
+        .slice(0, 3)
+        .map(a => html`<agent-avatar .agentPubKey=${a}></agent-avatar>`)}
+      ${participants.length > 3
+        ? html`<sl-avatar
+            .initials=${`+${participants.length - 3}`}
+            style="--size: 32px"
+          ></sl-avatar>`
+        : html``}
     </div>`;
   }
 
-  renderSummary(event: { record: EntryRecord<Event>; isCancelled: boolean }) {
+  renderSummary(event: EventWithStatus) {
     return html`
-      ${this.simple
+      ${this._isMobile
         ? html`
             <show-image
               slot="image"
               style="flex: 1; height: 200px"
-              .imageHash=${event.record.entry.image}
+              .imageHash=${event.currentEvent.entry.image}
             ></show-image>
           `
         : html``}
@@ -114,19 +107,15 @@ export class EventSummary extends LitElement {
             style="display: flex; flex-direction: row; flex: 1; align-items: center"
           >
             <span class="title" style="flex: 1"
-              >${event.record.entry.title}</span
+              >${event.currentEvent.entry.title}</span
             >
-            <span style="margin-right: 8px">${msg('Created by')}</span>
-            <agent-avatar
-              .agentPubKey=${event.record.action.author}
-            ></agent-avatar>
           </div>
 
           <span style="flex: 1"></span>
 
           <div style="display: flex; flex-direction: row; ">
             <div class="column" style="justify-content: end; gap: 8px">
-              ${this.simple
+              ${this._isMobile
                 ? html``
                 : html`
                     <div
@@ -137,7 +126,7 @@ export class EventSummary extends LitElement {
                         .src=${wrapPathInSvg(mdiMapMarker)}
                       ></sl-icon>
                       <span style="white-space: pre-line"
-                        >${event.record.entry.location}</span
+                        >${event.currentEvent.entry.location}</span
                       >
                     </div>
                   `}
@@ -147,7 +136,7 @@ export class EventSummary extends LitElement {
                 <sl-icon .src=${wrapPathInSvg(mdiCalendarClock)}></sl-icon>
                 <span style="white-space: pre-line"
                   >${new Date(
-                    event.record.entry.start_time / 1000
+                    event.currentEvent.entry.start_time / 1000
                   ).toLocaleString()}</span
                 >
               </div>
@@ -155,31 +144,30 @@ export class EventSummary extends LitElement {
 
             <span style="flex: 1"></span>
 
-            <div class="column">${this.renderParticipants()}</div>
+            <div class="column" style="justify-content: end">
+              ${this.renderParticipants()}
+            </div>
           </div>
 
-          ${!this.simple
+          ${event.status === 'open_event_proposal'
             ? html` <call-to-action-progress
-                .callToActionHash=${event.record.entry.call_to_action_hash}
+                .callToActionHash=${event.currentEvent.entry
+                  .call_to_action_hash}
               ></call-to-action-progress>`
             : html``}
         </div>
 
-        ${!this.simple
+        ${!this._isMobile
           ? html` <show-image
               style="width: 200px; height: 200px; margin-top: -20px; margin-bottom: -20px; margin-right: -20px; margin-left: 16px"
-              .imageHash=${event.record.entry.image}
+              .imageHash=${event.currentEvent.entry.image}
             ></show-image>`
           : html``}
       </div>
     `;
   }
 
-  renderEvent(
-    event: AsyncStatus<
-      { record: EntryRecord<Event>; isCancelled: boolean } | undefined
-    >
-  ) {
+  renderEvent(event: AsyncStatus<EventWithStatus>) {
     switch (event.status) {
       case 'pending':
         return html`<div
@@ -223,6 +211,10 @@ export class EventSummary extends LitElement {
     css`
       .avatar-group agent-avatar:not(:first-of-type) {
         margin-left: -0.5rem;
+      }
+
+      sl-icon {
+        font-size: 24px;
       }
 
       :host {

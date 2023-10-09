@@ -20,6 +20,9 @@ path = "dnas/gather/zomes/coordinator/assemble"
 [workspace.dependencies.assemble_integrity]
 path = "dnas/gather/zomes/integrity/assemble"
 
+[workspace.dependencies.alerts_integrity]
+path = "dnas/gather/zomes/integrity/alerts"
+
 [workspace.dependencies.file_storage]
 path = "dnas/gather/zomes/coordinator/file_storage"
 

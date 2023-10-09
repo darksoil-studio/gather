@@ -64,80 +64,6 @@ export class ParticipantsForEvent extends LitElement {
     () => [this.eventHash]
   );
 
-  @state()
-  committing = false;
-
-  async attendEvent(event: EntryRecord<Event>, participants: AgentPubKey[]) {
-    if (this.committing) return;
-
-    this.committing = true;
-
-    try {
-      const callToAction = await toPromise(
-        this.gatherStore.assembleStore.callToActions.get(
-          event.entry.call_to_action_hash
-        )
-      );
-      const commitmentsForCallToAction = await toPromise(
-        this.gatherStore.assembleStore.commitmentsForCallToAction.get(
-          event.entry.call_to_action_hash
-        )
-      );
-
-      if (!callToAction)
-        throw new Error(
-          msg('Error fetching the call to action for the event.')
-        );
-
-      const myCommitment =
-        await this.gatherStore.assembleStore.client.createCommitment({
-          amount: 1,
-          call_to_action_hash: event.entry.call_to_action_hash,
-          comment: '',
-          need_index: 0,
-        });
-
-      const minNecessaryParticipants =
-        callToAction.entry.needs[0].min_necessary;
-
-      if (
-        minNecessaryParticipants > 0 &&
-        participants.length + 1 === minNecessaryParticipants
-      ) {
-        const satisfaction =
-          await this.gatherStore.assembleStore.client.createSatisfaction({
-            call_to_action_hash: event.entry.call_to_action_hash,
-            need_index: 0,
-            commitments_hashes: [
-              myCommitment.actionHash,
-              ...commitmentsForCallToAction.map(c => c.actionHash),
-            ],
-          });
-
-        if (callToAction.entry.needs.length === 1) {
-          await this.gatherStore.assembleStore.client.createAssembly({
-            call_to_action_hash: event.entry.call_to_action_hash,
-            satisfactions_hashes: [satisfaction.actionHash],
-          });
-        }
-      }
-
-      this.dispatchEvent(
-        new CustomEvent('participant-added', {
-          bubbles: true,
-          composed: true,
-          detail: {
-            eventHash: this.eventHash,
-          },
-        })
-      );
-    } catch (e: any) {
-      notifyError(msg('Error adding participant.'));
-      console.error(e);
-    }
-    this.committing = false;
-  }
-
   renderParticipantsList(
     participants: ReadonlyMap<AgentPubKey, Profile | undefined>
   ) {
@@ -169,10 +95,8 @@ export class ParticipantsForEvent extends LitElement {
     participants: ReadonlyMap<AgentPubKey, Profile | undefined>
   ) {
     return html`
-      <div class="row" style="align-items: center" slot="header">
-        <span class="title" style="margin-right: 8px"
-          >${msg('Participants')}</span
-        >
+      <div class="row" style="align-items: center;" slot="header">
+        <span class="title" style="flex: 1">${msg('Participants')}</span>
 
         <call-to-action-need-progress
           .callToActionHash=${event.entry.call_to_action_hash}
@@ -183,31 +107,8 @@ export class ParticipantsForEvent extends LitElement {
 
       <div class="column" style="flex: 1">
         ${this.renderParticipantsList(participants)}
-        ${this.renderAttendButton(event, Array.from(participants.keys()))}
       </div>
     `;
-  }
-
-  renderAttendButton(event: EntryRecord<Event>, participants: AgentPubKey[]) {
-    if (
-      event.action.author.toString() ===
-      this.gatherStore.client.client.myPubKey.toString()
-    )
-      return html``;
-    if (
-      participants
-        .map(a => a.toString())
-        .includes(this.gatherStore.client.client.myPubKey.toString())
-    )
-      return html``;
-    return html`<sl-button
-      variant="primary"
-      .loading=${this.committing}
-      style="margin-top: 16px;"
-      @click=${() => this.attendEvent(event, participants)}
-    >
-      ${msg("I'll attend!")}
-    </sl-button>`;
   }
 
   render() {
@@ -222,7 +123,7 @@ export class ParticipantsForEvent extends LitElement {
         return html`
           <sl-card style="flex: 1; display: flex;">
             ${this.renderParticipants(
-              this._participants.value.value[0]!.record,
+              this._participants.value.value[0]!.currentEvent,
               this._participants.value.value[1]
             )}
           </sl-card>

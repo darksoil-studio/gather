@@ -3,7 +3,6 @@ import {
   onSubmit,
   sharedStyles,
 } from '@holochain-open-dev/elements';
-import { Record } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
@@ -24,13 +23,14 @@ import '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event as GatherEvent } from '../types.js';
+import { Event } from '../types.js';
 import { CallToAction, Need } from '@darksoil/assemble';
 import { encode } from '@msgpack/msgpack';
 import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
 import { SlSwitch } from '@shoelace-style/shoelace';
 import { CallToActionNeedForm } from '@darksoil/assemble/dist/elements/call-to-action-need-form.js';
 import { CallToActionNeedsForm } from '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
+import { EntryRecord } from '@holochain-open-dev/utils';
 
 @localized()
 @customElement('create-event')
@@ -94,20 +94,27 @@ export class CreateEvent extends LitElement {
         });
       }
 
-      const event: GatherEvent = {
+      const event: Event = {
         ...fields,
         start_time: new Date(fields.start_time).valueOf() * 1000,
         end_time: new Date(fields.end_time).valueOf() * 1000,
         call_to_action_hash: callToActionEntryRecord.actionHash,
       };
-      const record: Record = await this.gatherStore.client.createEvent(event);
+      let eventRecord: EntryRecord<Event>;
+      if (isProposal) {
+        eventRecord = await this.gatherStore.client.createEventProposal(event);
+      } else {
+        eventRecord = await this.gatherStore.client.createEvent(event);
+      }
+
+      await this.gatherStore.commitToParticipate(eventRecord);
 
       this.dispatchEvent(
         new CustomEvent('event-created', {
           composed: true,
           bubbles: true,
           detail: {
-            eventHash: record.signed_action.hashed.hash,
+            eventHash: eventRecord.actionHash,
             isProposal,
           },
         })

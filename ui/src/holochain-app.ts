@@ -28,7 +28,13 @@ import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { classMap } from 'lit/directives/class-map.js';
-import { mdiArrowLeft } from '@mdi/js';
+import {
+  mdiAlertCircleOutline,
+  mdiArrowLeft,
+  mdiCalendar,
+  mdiCalendarAccount,
+  mdiCalendarPlus,
+} from '@mdi/js';
 import { decode } from '@msgpack/msgpack';
 
 import { localized, msg } from '@lit/localize';
@@ -49,11 +55,14 @@ import './elements/all-events.js';
 import './elements/events-filter.js';
 import './elements/events-calendar.js';
 import './elements/my-events.js';
+import './elements/my-alerts.js';
 import { gatherStoreContext, isMobileContext } from './context.js';
 import { GatherStore } from './gather-store.js';
 import { GatherClient } from './gather-client.js';
 import { ResizeController } from '@lit-labs/observers/resize-controller.js';
-import { MOBILE_WIDTH_PX } from './utils.js';
+import { installLogger, MOBILE_WIDTH_PX } from './utils.js';
+import { AlertsClient } from './alerts/alerts-client.js';
+import { AlertsStore } from './alerts/alerts-store.js';
 
 export async function sendRequest(request: any) {
   return new Promise((resolve, reject) => {
@@ -91,9 +100,11 @@ export class HolochainApp extends LitElement {
   @property()
   _assembleStore!: AssembleStore;
 
-  @state() _loading = true;
+  @state()
+  _loading = true;
 
-  @state() _view: View = { view: 'main' };
+  @state()
+  _view: View = { view: 'main' };
 
   @provide({ context: profilesStoreContext })
   @property()
@@ -146,6 +157,7 @@ export class HolochainApp extends LitElement {
         60000
       );
     }
+    // installLogger(this._client as any);
 
     await this.initStores(this._client);
 
@@ -178,7 +190,8 @@ export class HolochainApp extends LitElement {
     );
     this._gatherStore = new GatherStore(
       new GatherClient(appAgentClient, 'gather'),
-      this._assembleStore
+      this._assembleStore,
+      new AlertsStore(new AlertsClient(appAgentClient, 'gather'))
     );
     this._fileStorageClient = new FileStorageClient(appAgentClient, 'gather');
   }
@@ -216,17 +229,9 @@ export class HolochainApp extends LitElement {
             <create-event
               @event-created=${async (e: CustomEvent) => {
                 this._view = {
-                  view: 'main',
+                  view: 'event_detail',
+                  selectedEventHash: e.detail.eventHash,
                 };
-
-                setTimeout(() => {
-                  const panel = e.detail.isProposal
-                    ? 'all_event_proposals'
-                    : 'all_events';
-                  (this.shadowRoot?.getElementById('tabs') as SlTabGroup).show(
-                    panel
-                  );
-                }, 10);
               }}
               style="max-width: 600px"
             ></create-event>
@@ -262,12 +267,13 @@ export class HolochainApp extends LitElement {
     return html`
       <sl-button
         variant="primary"
+        pill
         @click=${() => {
           this._view = { view: 'create_event' };
         }}
-        slot="nav"
-        style="margin: 8px; margin-top: 8px"
+        style="z-index: 1000"
       >
+        <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCalendarPlus)}></sl-icon>
         ${msg('Create Event')}
       </sl-button>
     `;
@@ -293,10 +299,47 @@ export class HolochainApp extends LitElement {
           };
         }}
       >
-        ${this._isMobile ? html`` : this.renderCreateEventButton()}
-        <sl-tab slot="nav" panel="all_events">${msg('All Events')}</sl-tab>
-        <sl-tab slot="nav" panel="my_events">${msg('My Events')}</sl-tab>
-        <sl-tab slot="nav" panel="calendar">${msg('Calendar')}</sl-tab>
+        ${this._isMobile
+          ? html``
+          : html` <div slot="nav" style="margin: 8px; margin-top: 8px; ">
+              ${this.renderCreateEventButton()}
+            </div>`}
+        <sl-tab slot="nav" panel="all_events"
+          ><div
+            class=${classMap({
+              row: !this._isMobile,
+              column: this._isMobile,
+            })}
+            style="gap: 8px; align-items: center"
+          >
+            <sl-icon .src=${wrapPathInSvg(mdiCalendar)}></sl-icon>
+            <span>${msg('All Events')}</span>
+          </div>
+        </sl-tab>
+        <sl-tab slot="nav" panel="my_events">
+          <div
+            class=${classMap({
+              row: !this._isMobile,
+              column: this._isMobile,
+            })}
+            style="gap: 8px; align-items: center"
+          >
+            <sl-icon .src=${wrapPathInSvg(mdiCalendarAccount)}></sl-icon
+            ><span> ${msg('My Events')}</span>
+          </div></sl-tab
+        >
+        <sl-tab slot="nav" panel="alerts">
+          <div
+            class=${classMap({
+              row: !this._isMobile,
+              column: this._isMobile,
+            })}
+            style="gap: 8px; align-items: center"
+          >
+            <sl-icon .src=${wrapPathInSvg(mdiAlertCircleOutline)}></sl-icon
+            ><span> ${msg('Alerts')}</span>
+          </div></sl-tab
+        >
 
         <sl-tab-panel name="all_events" style="position: relative">
           ${this._isMobile
@@ -308,24 +351,18 @@ export class HolochainApp extends LitElement {
             : html``}
           <all-events class="tab-content"> </all-events>
         </sl-tab-panel>
-        <sl-tab-panel name="my_events">
-          <div class="flex-scrollable-parent">
-            <div class="flex-scrollable-container">
-              <div class="flex-scrollable-y">
-                <div class="column" style="align-items: center">
-                  <my-events
-                    class="tab-content"
-                    style="900px; margin: 16px"
-                  ></my-events>
+        <sl-tab-panel name="my_events" style="position: relative">
+          ${this._isMobile
+            ? html`
+                <div style="position: absolute; bottom: 16px; right: 16px">
+                  ${this.renderCreateEventButton()}
                 </div>
-              </div>
-            </div>
-          </div>
+              `
+            : html``}
+          <my-events class="tab-content"> </my-events>
         </sl-tab-panel>
-        <sl-tab-panel name="calendar">
-          <sl-card style="flex: 1" class="row">
-            <gather-events-calendar style="flex: 1"></gather-events-calendar
-          ></sl-card>
+        <sl-tab-panel name="alerts">
+          <my-alerts class="tab-content"></my-alerts>
         </sl-tab-panel>
       </sl-tab-group>
     `;
@@ -404,16 +441,16 @@ export class HolochainApp extends LitElement {
         width: 100%;
         height: 100%;
       }
+      sl-tab-panel {
+        width: 100%;
+        --padding: 0;
+      }
       sl-card::part(base) {
         flex: 1;
       }
       .flex-scrollable-parent {
         width: 100%;
         height: 100%;
-      }
-      sl-tab-panel {
-        width: 100%;
-        --padding: 0;
       }
       .back-button {
         color: white;
@@ -433,9 +470,13 @@ export class HolochainApp extends LitElement {
         display: flex;
         flex-direction: column;
         align-items: center;
+        background-color: white;
       }
       .desktop create-event {
         margin-top: 16px;
+      }
+      sl-tab sl-icon {
+        font-size: 24px;
       }
     `,
     sharedStyles,

@@ -5,11 +5,15 @@ import {
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
 import { EntryRecord } from '@holochain-open-dev/utils';
-import { ActionHash } from '@holochain/client';
+import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
-import { StoreSubscriber } from '@holochain-open-dev/stores';
+import {
+  joinAsync,
+  StoreSubscriber,
+  toPromise,
+} from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
@@ -27,17 +31,21 @@ import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
+import '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
+import '@shoelace-style/shoelace/dist/components/radio-button/radio-button.js';
 
-import '@darksoil/assemble/dist/elements/call-to-action-needs.js';
+import '@darksoil/assemble/dist/elements/call-to-action-unsatisfied-needs.js';
+import '@darksoil/assemble/dist/elements/call-to-action-satisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
 
 import './participants-for-event.js';
 import './edit-event.js';
 
-import { gatherStoreContext } from '../context.js';
+import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event } from '../types.js';
+import { Event, EventStatus, EventWithStatus } from '../types.js';
 import {
+  mdiAccountPlus,
   mdiCalendarClock,
   mdiCancel,
   mdiCash,
@@ -67,17 +75,12 @@ export class EventDetail extends LitElement {
    */
   _event = new StoreSubscriber(
     this,
-    () => this.gatherStore.eventsCallToActionsAndAssemblies.get(this.eventHash),
+    () =>
+      joinAsync([
+        this.gatherStore.events.get(this.eventHash),
+        this.gatherStore.participantsForEvent.get(this.eventHash),
+      ]),
     () => [this.eventHash]
-  );
-
-  /**
-   * @internal
-   */
-  _participants = new StoreSubscriber(
-    this,
-    () => this.gatherStore.participantsForEvent.get(this.eventHash),
-    () => []
   );
 
   /**
@@ -102,18 +105,48 @@ export class EventDetail extends LitElement {
    * @internal
    */
   @state()
-  small = false;
+  _activePanel: 'unsatisfied_needs' | 'satisfied_needs' = 'unsatisfied_needs';
 
-  firstUpdated() {
-    this.small = this.getBoundingClientRect().width < 600;
+  /**
+   * @internal
+   */
+  @consume({ context: isMobileContext, subscribe: true })
+  @property()
+  _isMobile!: boolean;
+
+  @state()
+  committing = false;
+
+  async commitToParticipate(event: EventWithStatus) {
+    if (this.committing) return;
+
+    this.committing = true;
+
+    try {
+      await this.gatherStore.commitToParticipate(event.currentEvent);
+
+      this.dispatchEvent(
+        new CustomEvent('participant-added', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            eventHash: this.eventHash,
+          },
+        })
+      );
+    } catch (e: any) {
+      notifyError(msg('Error adding participant.'));
+      console.error(e);
+    }
+    this.committing = false;
   }
 
-  async deleteEvent(event: EntryRecord<Event>) {
+  async cancelEvent() {
     if (this._cancelling) return;
 
     this._cancelling = true;
     try {
-      await this.gatherStore.client.deleteEvent(this.eventHash);
+      await this.gatherStore.client.cancelEvent(this.eventHash);
 
       this.dispatchEvent(
         new CustomEvent('event-deleted', {
@@ -135,13 +168,13 @@ export class EventDetail extends LitElement {
     this._cancelling = false;
   }
 
-  async approveProposal(event: EntryRecord<Event>) {
+  async approveProposal(event: EventWithStatus) {
     if (this._approving) return;
 
     this._approving = true;
     try {
       await this.gatherStore.assembleStore.client.createAssembly({
-        call_to_action_hash: event.entry.call_to_action_hash,
+        call_to_action_hash: event.currentEvent.entry.call_to_action_hash,
         satisfactions_hashes: [],
       });
 
@@ -155,7 +188,7 @@ export class EventDetail extends LitElement {
     this._cancelling = false;
   }
 
-  renderApproveProposalDialog(entryRecord: EntryRecord<Event>) {
+  renderApproveProposalDialog(event: EventWithStatus) {
     return html`
       <sl-dialog id="approve-proposal-dialog" .label=${msg('Approve Proposal')}>
         <span
@@ -168,14 +201,14 @@ export class EventDetail extends LitElement {
           slot="footer"
           variant="primary"
           .loading=${this._approving}
-          @click=${() => this.approveProposal(entryRecord)}
+          @click=${() => this.approveProposal(event)}
           >${msg('Approve Proposal')}</sl-button
         >
       </sl-dialog>
     `;
   }
 
-  renderCancelEventDialog(entryRecord: EntryRecord<Event>) {
+  renderCancelEventDialog() {
     return html`
       <sl-dialog id="cancel-event-dialog" .label=${msg('Cancel Event')}>
         <span>${msg('Are you sure you want to cancel this event?')}</span>
@@ -184,110 +217,122 @@ export class EventDetail extends LitElement {
           slot="footer"
           variant="danger"
           .loading=${this._cancelling}
-          @click=${() => this.deleteEvent(entryRecord)}
+          @click=${() => this.cancelEvent()}
           >${msg('Cancel Event')}</sl-button
         >
       </sl-dialog>
     `;
   }
 
-  renderStatus(
-    isCancelled: boolean,
-    callToAction: EntryRecord<CallToAction>,
-    assemblies: ActionHash[]
-  ) {
-    if (isCancelled)
+  renderStatus(event: EventWithStatus) {
+    const eventStatus = event.status;
+    if (
+      eventStatus === 'cancelled_event' ||
+      eventStatus === 'cancelled_event_proposal'
+    )
       return html`<sl-tag variant="warning">${msg('Cancelled')}</sl-tag>`;
-    if (isExpired(callToAction.entry) && assemblies.length === 0)
+    if (eventStatus === 'expired_event_proposal')
       return html`<sl-tag variant="warning">${msg('Expired')}</sl-tag>`;
-    if (assemblies.length > 0)
-      return html`<sl-tag variant="success">${msg('Event')}</sl-tag>`;
+    if (eventStatus === 'upcoming_event')
+      return html`<sl-tag variant="success">${msg('Upcoming Event')}</sl-tag>`;
+    if (eventStatus === 'past_event')
+      return html`<sl-tag variant="success">${msg('Past Event')}</sl-tag>`;
 
     return html`<sl-tag
-      >${msg('Proposal')}${callToAction.entry.expiration_time
+      >${msg('Open Proposal')}${event.callToAction.entry.expiration_time
         ? html`${msg(': expires')}&nbsp;
             <sl-relative-time
-              .date=${callToAction.entry.expiration_time / 1000}
+              .date=${event.callToAction.entry.expiration_time / 1000}
             ></sl-relative-time>`
         : html``}</sl-tag
     >`;
   }
 
-  renderActions(
-    event: EntryRecord<Event>,
-    isCancelled: boolean,
-    callToAction: EntryRecord<CallToAction>,
-    assemblies: ActionHash[]
-  ) {
+  renderActions(event: EventWithStatus, participants: AgentPubKey[]) {
     const amIAuthor =
-      event.action.author.toString() ===
+      event.currentEvent.action.author.toString() ===
       this.gatherStore.client.client.myPubKey.toString();
+    const eventStatus = event.status;
+    // if (
+    //   !(
+    //     amIAuthor &&
+    //     eventStatus !== 'upcoming_event' &&
+    //     eventStatus !== 'open_event_proposal'
+    //   )
+    // )
+    //   return html``;
     if (
-      isCancelled ||
-      (isExpired(callToAction.entry) && assemblies.length === 0) ||
-      !amIAuthor
+      eventStatus !== 'open_event_proposal' &&
+      eventStatus !== 'upcoming_event'
     )
       return html``;
 
-    return html`
-      <sl-icon-button
-        title=${msg('Edit event')}
+    return html`<div
+      class="column"
+      style="position:absolute; right: 16px; bottom: 16px; gap: 8px"
+    >
+      <sl-button
+        variant="default"
+        pill
         @click=${() => {
           this._editing = true;
         }}
-        .src=${wrapPathInSvg(mdiPencil)}
-      ></sl-icon-button>
-      <sl-icon-button
-        title=${msg('Cancel event')}
-        style="margin-left: 8px"
-        .src=${wrapPathInSvg(mdiCancel)}
-        @click=${() =>
+      >
+        <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
+        ${msg('Edit event')}
+      </sl-button>
+      <sl-button
+        variant="warning"
+        pill
+        @click=${() => {
           (
             this.shadowRoot?.getElementById('cancel-event-dialog') as SlDialog
-          ).show()}
-      ></sl-icon-button>
-      ${assemblies.length === 0
-        ? html`
-            <sl-icon-button
-              title=${msg('Approve proposal')}
-              style="margin-left: 8px"
-              .src=${wrapPathInSvg(mdiCheckDecagram)}
-              @click=${() =>
-                (
-                  this.shadowRoot?.getElementById(
-                    'approve-proposal-dialog'
-                  ) as SlDialog
-                ).show()}
-            ></sl-icon-button>
-          `
-        : html``}
-    `;
+          ).show();
+        }}
+      >
+        <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
+        ${msg('Cancel Event')}
+      </sl-button>
+      ${participants
+        .map(a => a.toString())
+        .includes(this.gatherStore.client.client.myPubKey.toString())
+        ? html``
+        : html`
+            <sl-button
+              variant="primary"
+              pill
+              .loading=${this.committing}
+              @click=${() => this.commitToParticipate(event)}
+            >
+              <sl-icon
+                slot="prefix"
+                .src=${wrapPathInSvg(mdiAccountPlus)}
+              ></sl-icon>
+              ${msg('Participate')}
+            </sl-button>
+          `}
+    </div> `;
   }
 
-  renderDetail(
-    event: EntryRecord<Event>,
-    isCancelled: boolean,
-    callToAction: EntryRecord<CallToAction>,
-    assemblies: ActionHash[]
-  ) {
+  renderDetail(event: EventWithStatus) {
     return html`
       ${this.renderApproveProposalDialog(event)}
-      ${this.renderCancelEventDialog(event)}
+      ${this.renderCancelEventDialog()}
       <sl-card class="column">
         <show-image
           slot="image"
-          .imageHash=${event.entry.image}
+          .imageHash=${event.currentEvent.entry.image}
           style="height: 300px; flex: 1"
         ></show-image>
 
         <div class="row" style="flex: 1">
           <div style="display: flex; flex-direction: column; flex: 1;">
             <span class="title" style="margin-bottom: 16px"
-              >${event.entry.title}</span
+              >${event.currentEvent.entry.title}</span
             >
 
             <span style="white-space: pre-line; margin-bottom: 16px"
-              >${event.entry.description}</span
+              >${event.currentEvent.entry.description}</span
             >
 
             <div class="column" style="justify-content: end; flex: 1">
@@ -300,7 +345,7 @@ export class EventDetail extends LitElement {
                   .src=${wrapPathInSvg(mdiMapMarker)}
                 ></sl-icon>
                 <span style="white-space: pre-line"
-                  >${event.entry.location}</span
+                  >${event.currentEvent.entry.location}</span
                 >
               </div>
 
@@ -313,14 +358,17 @@ export class EventDetail extends LitElement {
                   .src=${wrapPathInSvg(mdiCalendarClock)}
                 ></sl-icon>
                 <span
-                  >${new Date(event.entry.start_time / 1000).toLocaleString()} -
+                  >${new Date(
+                    event.currentEvent.entry.start_time / 1000
+                  ).toLocaleString()}
+                  -
                   ${new Date(
-                    event.entry.end_time / 1000
+                    event.currentEvent.entry.end_time / 1000
                   ).toLocaleString()}</span
                 >
               </div>
 
-              ${event.entry.cost
+              ${event.currentEvent.entry.cost
                 ? html` <div
                     style="display: flex; flex-direction: row; align-items: center; margin-top: 16px"
                   >
@@ -330,7 +378,7 @@ export class EventDetail extends LitElement {
                       .src=${wrapPathInSvg(mdiCash)}
                     ></sl-icon>
                     <span style="white-space: pre-line"
-                      >${event.entry.cost}</span
+                      >${event.currentEvent.entry.cost}</span
                     >
                   </div>`
                 : html``}
@@ -338,35 +386,18 @@ export class EventDetail extends LitElement {
           </div>
 
           <div class="column" style="align-items: end">
-            ${this.renderStatus(isCancelled, callToAction, assemblies)}
+            ${this.renderStatus(event)}
             <div
               class="row"
               style="justify-content:end; flex: 1; margin-top: 8px"
-            >
-              ${this.renderActions(
-                event,
-                isCancelled,
-                callToAction,
-                assemblies
-              )}
-              <slot name="action"></slot>
-            </div>
-            <div class="row" style="align-items: center;">
-              <span style="margin-right: 8px">${msg('Hosted by')}</span>
-              <agent-avatar .agentPubKey=${event.action.author}></agent-avatar>
-            </div>
+            ></div>
           </div>
         </div>
       </sl-card>
     `;
   }
 
-  renderEvent(
-    event: EntryRecord<Event>,
-    isCancelled: boolean,
-    callToAction: EntryRecord<CallToAction>,
-    assemblies: ActionHash[]
-  ) {
+  renderEvent(event: EventWithStatus, participants: AgentPubKey[]) {
     if (this._editing) {
       return html`<edit-event
         .originalEventHash=${this.eventHash}
@@ -381,49 +412,95 @@ export class EventDetail extends LitElement {
       ></edit-event>`;
     }
 
-    if (this.small)
+    if (this._isMobile)
       return html`
-        <sl-tab-group placement="bottom" style="flex: 1; width: 100%">
+        <sl-tab-group placement="bottom" style="flex: 1; width: 100%;">
           <sl-tab slot="nav" panel="event">${msg('Event')}</sl-tab>
           <sl-tab slot="nav" panel="participants"
             >${msg('Participants')}</sl-tab
           >
           <sl-tab slot="nav" panel="needs">${msg('Needs')} </sl-tab>
-          <sl-tab-panel name="event">
-            ${this.renderDetail(event, isCancelled, callToAction, assemblies)}
+          <sl-tab-panel name="event" style="position: relative">
+            ${this.renderDetail(event)}
+            ${this.renderActions(event, participants)}
           </sl-tab-panel>
-          <sl-tab-panel name="participants">
+          <sl-tab-panel name="participants" style="position: relative">
             <participants-for-event
               style="margin-bottom: 16px;"
               .eventHash=${this.eventHash}
             ></participants-for-event>
+            ${this.renderActions(event, participants)}
           </sl-tab-panel>
-          <sl-tab-panel name="needs">
-            <call-to-action-needs
-              .callToActionHash=${event.entry.call_to_action_hash}
-              .hideNeeds=${[0]}
-            ></call-to-action-needs>
+          <sl-tab-panel name="needs" style="position: relative">
+            <div class="column" style="gap: 16px;">
+              <div class="column" style="align-items: center;">
+                <sl-radio-group
+                  value="unsatisfied_needs"
+                  @sl-change=${(e: any) => {
+                    this._activePanel = e.target.value;
+                  }}
+                >
+                  <sl-radio-button value="unsatisfied_needs"
+                    >${msg('Unsatisfied Needs')}</sl-radio-button
+                  >
+                  <sl-radio-button value="satisfied_needs"
+                    >${msg('Satisfied Needs')}</sl-radio-button
+                  >
+                </sl-radio-group>
+              </div>
+              ${this._activePanel === 'unsatisfied_needs'
+                ? html`
+                    <call-to-action-unsatisfied-needs
+                      .callToActionHash=${event.currentEvent.entry
+                        .call_to_action_hash}
+                      .hideNeeds=${[0]}
+                    ></call-to-action-unsatisfied-needs>
+                  `
+                : html`
+                    <call-to-action-satisfied-needs
+                      .callToActionHash=${event.currentEvent.entry
+                        .call_to_action_hash}
+                      .hideNeeds=${[0]}
+                    ></call-to-action-satisfied-needs>
+                  `}
+            </div>
+            ${this.renderActions(event, participants)}
           </sl-tab-panel>
         </sl-tab-group>
       `;
 
     return html`<div class="row" style="justify-content: center">
-      <div class="column" style="margin-right: 16px;">
-        ${this.renderDetail(event, isCancelled, callToAction, assemblies)}
+        <div class="column" style="margin-right: 16px;">
+          ${this.renderDetail(event)}
 
-        <call-to-action-needs
-          .callToActionHash=${event.entry.call_to_action_hash}
-          .hideNeeds=${[0]}
-        ></call-to-action-needs>
+          <div class="row" style="gap: 16px">
+            <div class="column" style="gap: 16px">
+              <span class="title">${msg('Unsatisfied needs')}</span>
+              <call-to-action-unsatisfied-needs
+                .callToActionHash=${event.currentEvent.entry
+                  .call_to_action_hash}
+                .hideNeeds=${[0]}
+              ></call-to-action-unsatisfied-needs>
+            </div>
+            <div class="column" style="gap: 16px">
+              <span class="title">${msg('Satisfied needs')}</span>
+              <call-to-action-needs
+                .callToActionHash=${event.currentEvent.entry
+                  .call_to_action_hash}
+                .hideNeeds=${[0]}
+              ></call-to-action-needs>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <participants-for-event
+            style="margin-bottom: 16px;"
+            .eventHash=${this.eventHash}
+          ></participants-for-event>
+          <slot name="attachments"></slot>
+        </div>
       </div>
-      <div class="column">
-        <participants-for-event
-          style="margin-bottom: 16px;"
-          .eventHash=${this.eventHash}
-        ></participants-for-event>
-        <slot name="attachments"></slot>
-      </div>
-    </div> `;
+      ${this.renderActions(event, participants)} `;
   }
 
   render() {
@@ -435,20 +512,9 @@ export class EventDetail extends LitElement {
           <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
       case 'complete':
-        const event = this._event.value.value[0];
-        const maybeCallToAction = this._event.value.value[1];
+        const event = this._event.value.value;
 
-        if (!event || !maybeCallToAction || !maybeCallToAction[0])
-          return html`<span
-            >${msg('The requested event was not found.')}</span
-          >`;
-
-        return this.renderEvent(
-          event.record,
-          event.isCancelled,
-          maybeCallToAction[0],
-          maybeCallToAction[1]
-        );
+        return this.renderEvent(event[0], event[1]);
       case 'error':
         return html`<display-error
           .error=${this._event.value.error}
@@ -473,6 +539,7 @@ export class EventDetail extends LitElement {
         display: flex;
         flex-direction: column;
         align-items: center;
+        background-color: white;
       }
       sl-tab-group {
         display: flex;
@@ -480,6 +547,14 @@ export class EventDetail extends LitElement {
       sl-tab-group::part(base) {
         display: flex;
         flex: 1;
+      }
+      sl-tab-panel {
+        width: 100%;
+        --padding: 0;
+      }
+      sl-tab-panel {
+        --padding: 0;
+        padding: 16px;
       }
     `,
   ];

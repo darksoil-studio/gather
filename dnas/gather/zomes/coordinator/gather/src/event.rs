@@ -26,9 +26,10 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
     create_link(
         my_agent_pub_key,
         event_hash.clone(),
-        LinkTypes::EventsByAuthor,
+        LinkTypes::MyEvents,
         (),
     )?;
+
     Ok(record)
 }
 
@@ -52,7 +53,7 @@ pub fn create_event_proposal(event: Event) -> ExternResult<Record> {
     create_link(
         my_agent_pub_key,
         event_hash.clone(),
-        LinkTypes::EventsByAuthor,
+        LinkTypes::MyEvents,
         (),
     )?;
     Ok(record)

@@ -1,4 +1,8 @@
-import { ActionHash } from '@holochain/client';
+import {
+  ActionHash,
+  AppAgentCallZomeRequest,
+  AppAgentWebsocket,
+} from '@holochain/client';
 import { encode } from '@msgpack/msgpack';
 import { CallToAction, Assembly } from '@darksoil/assemble';
 import { Scenario } from '@holochain/tryorama';
@@ -62,6 +66,10 @@ export async function setup(scenario: Scenario) {
   // Shortcut peer discovery through gossip and register all agents in every
   // conductor of the scenario.
   await scenario.shareAllAgents();
+
+  // console.log(alice.appAgentWs);
+  // installLogger(alice.appAgentWs as any);
+  // installLogger(bob.appAgentWs as any);
 
   const aliceAssemble = new AssembleStore(
     new AssembleClient(alice.appAgentWs as any, 'gather', 'assemble')

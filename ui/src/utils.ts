@@ -1,6 +1,12 @@
 import { CallToAction } from '@darksoil/assemble';
 import { EntryRecord } from '@holochain-open-dev/utils';
-import { encodeHashToBase64 } from '@holochain/client';
+import {
+  AppAgentCallZomeRequest,
+  AppAgentWebsocket,
+  CallZomeRequest,
+  encodeHashToBase64,
+  HoloHash,
+} from '@holochain/client';
 import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar/dist/types.js';
 import { Event } from './types.js';
 
@@ -35,3 +41,26 @@ export function eventToEventCalendar(
 }
 
 export const MOBILE_WIDTH_PX = 600;
+
+export function intersection(
+  array1: HoloHash[],
+  array2: HoloHash[]
+): Array<HoloHash> {
+  return array1.filter(
+    hash => !!array2.find(h => h.toString() === hash.toString())
+  );
+}
+
+export function installLogger(appAgentWebsocket: AppAgentWebsocket) {
+  const nativeCallZome = appAgentWebsocket.appWebsocket.callZome;
+  // eslint-disable-next-line
+  appAgentWebsocket.appWebsocket.callZome = async (
+    request: CallZomeRequest,
+    timeout?: number
+  ) => {
+    console.log('Request', request);
+    const result = await nativeCallZome(request, timeout);
+    console.log('Request result', request, result);
+    return result;
+  };
+}
