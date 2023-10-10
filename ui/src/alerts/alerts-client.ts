@@ -1,5 +1,6 @@
 import { ZomeClient } from '@holochain-open-dev/utils';
 import {
+  ActionHash,
   AgentPubKey,
   AppAgentClient,
   CreateLink,
@@ -25,6 +26,10 @@ export class AlertsClient<T> extends ZomeClient<void> {
   async getReadAlerts(): Promise<Array<Alert<T>>> {
     const alerts = await this.callZome('get_read_alerts', null);
     return alerts.map(createLinkToAlert);
+  }
+
+  async markAlertsAsRead(actionHashes: ActionHash[]): Promise<void> {
+    await this.callZome('mark_alerts_as_read', actionHashes);
   }
 
   notifyAlert(

@@ -59,43 +59,43 @@ pub fn create_event_proposal(event: Event) -> ExternResult<Record> {
     Ok(record)
 }
 
-#[hdk_extern]
-pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>> {
-    let links = get_links(original_event_hash.clone(), LinkTypes::EventUpdates, None)?;
-    let latest_link = links
-        .into_iter()
-        .max_by(|link_a, link_b| link_a.timestamp.cmp(&link_b.timestamp));
-    let latest_event_hash = match latest_link {
-        Some(link) => ActionHash::try_from(link.target.clone()).map_err(|err| wasm_error!(err))?,
-        None => original_event_hash.clone(),
-    };
-    let Some(details) =     get_details(latest_event_hash, GetOptions::default())? else {return Ok(None);};
-    let record = match details {
-        Details::Record(details) => Ok(details.record),
-        _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(
-            "Malformed get details response"
-        )))),
-    }?;
+// #[hdk_extern]
+// pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>> {
+//     let links = get_links(original_event_hash.clone(), LinkTypes::EventUpdates, None)?;
+//     let latest_link = links
+//         .into_iter()
+//         .max_by(|link_a, link_b| link_a.timestamp.cmp(&link_b.timestamp));
+//     let latest_event_hash = match latest_link {
+//         Some(link) => ActionHash::try_from(link.target.clone()).map_err(|err| wasm_error!(err))?,
+//         None => original_event_hash.clone(),
+//     };
+//     let Some(details) =     get_details(latest_event_hash, GetOptions::default())? else {return Ok(None);};
+//     let record = match details {
+//         Details::Record(details) => Ok(details.record),
+//         _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(
+//             "Malformed get details response"
+//         )))),
+//     }?;
 
-    Ok(Some(record))
-}
+//     Ok(Some(record))
+// }
 
-#[hdk_extern]
-pub fn get_event_cancellations(
-    event_hash: ActionHash,
-) -> ExternResult<Option<Vec<SignedHashed<Action>>>> {
-    let Some(details) = get_details(event_hash.clone(), GetOptions::default())? else {
-        return Ok(None);
-    };
-    let deletes = match details {
-        Details::Record(details) => Ok(details.deletes),
-        _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(
-            "Malformed get details response"
-        )))),
-    }?;
+// #[hdk_extern]
+// pub fn get_event_cancellations(
+//     event_hash: ActionHash,
+// ) -> ExternResult<Option<Vec<SignedHashed<Action>>>> {
+//     let Some(details) = get_details(event_hash.clone(), GetOptions::default())? else {
+//         return Ok(None);
+//     };
+//     let deletes = match details {
+//         Details::Record(details) => Ok(details.deletes),
+//         _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(
+//             "Malformed get details response"
+//         )))),
+//     }?;
 
-    Ok(Some(deletes))
-}
+//     Ok(Some(deletes))
+// }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateEventInput {

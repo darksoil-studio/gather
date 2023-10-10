@@ -1,0 +1,2 @@
+<sl-input name="{{snake_case field_name}}" .label=${msg("{{label}}")} type="datetime-local" @click=${(e: Event) => e.preventDefault()} {{#if required}} required{{/if}}{{#if edit}} .defaultValue=${new Date({{default_value}}/1000).toLocaleString()} {{/if}}></sl-input>
+
