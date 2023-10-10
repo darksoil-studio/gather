@@ -152,7 +152,7 @@ export class EventDetail extends LitElement {
 
     this._cancelling = true;
     try {
-      await this.gatherStore.client.cancelEvent(this.eventHash);
+      await this.gatherStore.client.cancelEvent(this.eventHash, 'TODO');
 
       this.dispatchEvent(
         new CustomEvent('event-deleted', {

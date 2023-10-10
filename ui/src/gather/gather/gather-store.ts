@@ -1,3 +1,5 @@
+import { Cancellation } from './types';
+
 import {
   AssembleStore,
   Assembly,
@@ -33,9 +35,13 @@ import { intersection, isExpired, isPast } from './utils.js';
 import { AlertsStore } from '../../alerts/alerts-store.js';
 import { msg } from '@lit/localize';
 
-export type EventActivity = Array<
+export type EventAction =
   | {
-      type: 'create_event';
+      type: 'event_created';
+      record: EntryRecord<Event>;
+    }
+  | {
+      type: 'event_updated';
       record: EntryRecord<Event>;
     }
   | {
@@ -52,8 +58,9 @@ export type EventActivity = Array<
     }
   | {
       type: 'event_cancelled';
-    }
->;
+      record: EntryRecord<Cancellation>;
+    };
+export type EventActivity = Array<EventAction>;
 
 export function filterFutureEvents(
   events: HoloHashMap<ActionHash, EntryRecord<Event>>
@@ -81,12 +88,12 @@ export function filterPastEvents(
 
 export function deriveStatus(
   event: EntryRecord<Event>,
-  cancellations: Array<SignedActionHashed> | undefined,
+  cancellations: Array<ActionHash>,
   callToAction: EntryRecord<CallToAction> | undefined,
   assemblies: ActionHash[]
 ): EventStatus {
   const isEventProposal = assemblies.length === 0;
-  const isCancelled = cancellations && cancellations.length > 0;
+  const isCancelled = cancellations.length > 0;
 
   if (isEventProposal && isCancelled) return 'cancelled_event_proposal';
   if (!isEventProposal && isCancelled) return 'cancelled_event';
@@ -164,61 +171,110 @@ export class GatherStore {
       )
   );
 
-  eventsActivity = new LazyHoloHashMap<
-    ActionHash,
-    AsyncReadable<Array<Record>>
-  >((eventHash: ActionHash) =>
-    pipe(
-      lazyLoadAndPoll(async () => this.client.getEvent(eventHash), 4000),
-      event => {
-        if (!event) throw new Error('Event not found');
+  eventRevisions = new LazyHoloHashMap((eventHash: ActionHash) =>
+    lazyLoadAndPoll(
+      async () => this.client.getAllEventRevisions(eventHash),
+      10000
+    )
+  );
 
-        return joinAsync([
-          completed(event),
-          this.eventCancellations.get(eventHash),
-          this.assembleStore.commitmentsForCallToAction.get(
-            event.entry.call_to_action_hash
-          ),
-          this.assembleStore.satisfactionsForCallToAction.get(
-            event.entry.call_to_action_hash
-          ),
-          this.assembleStore.assembliesForCallToAction.get(
-            event.entry.call_to_action_hash
-          ),
-        ]);
-      },
-      ([event, cancellations, commitments, satisfactions, assemblies]) => {
-        let records: Record[] = [
-          event.record,
-          ...commitments.map(c => c.record),
-          ...satisfactions.map(c => c.record),
-        ];
-        if (cancellations) {
-          records = [
-            ...records,
-            ...cancellations.map(a => ({
-              signed_action: a,
-              entry: {
-                NotApplicable: undefined,
-              },
-            })),
+  eventActivity = new LazyHoloHashMap<ActionHash, AsyncReadable<EventActivity>>(
+    (eventHash: ActionHash) =>
+      pipe(
+        lazyLoadAndPoll(async () => this.client.getEvent(eventHash), 4000),
+        event => {
+          if (!event) throw new Error('Event not found');
+
+          return joinAsync([
+            completed(event),
+            this.eventRevisions.get(eventHash),
+            pipe(this.eventCancellations.get(eventHash), hashes =>
+              sliceAndJoin(this.cancellations, hashes)
+            ),
+            this.assembleStore.commitmentsForCallToAction.get(
+              event.entry.call_to_action_hash
+            ),
+            this.assembleStore.satisfactionsForCallToAction.get(
+              event.entry.call_to_action_hash
+            ),
+            pipe(
+              this.assembleStore.assembliesForCallToAction.get(
+                event.entry.call_to_action_hash
+              ),
+              hashes => sliceAndJoin(this.assembleStore.assemblies, hashes)
+            ),
+          ]);
+        },
+        ([
+          event,
+          revisions,
+          cancellations,
+          commitments,
+          satisfactions,
+          assemblies,
+        ]) => {
+          let activity: EventActivity = [
+            { type: 'event_created', record: event },
           ];
+          const revisionsActivity: EventActivity = revisions
+            .slice(1)
+            .map(c => ({
+              type: 'event_updated',
+              record: c,
+            }));
+          const commitmentActivity: EventActivity = commitments.map(c => ({
+            type: 'commitment_created',
+            record: c,
+          }));
+          const cancellationsActivity: EventActivity = Array.from(
+            cancellations.values()
+          ).map(c => ({
+            type: 'event_cancelled',
+            record: c,
+          }));
+          const satisfactionsActivity: EventActivity = satisfactions.map(c => ({
+            type: 'satisfaction_created',
+            record: c,
+          }));
+          const assembliesActivity: EventActivity = Array.from(
+            assemblies.values()
+          ).map(c => ({
+            type: 'assembly_created',
+            record: c,
+          }));
+          activity = [
+            ...activity,
+            ...revisionsActivity,
+            ...commitmentActivity,
+            ...cancellationsActivity,
+            ...satisfactionsActivity,
+            ...assembliesActivity,
+          ];
+
+          activity = activity.sort(
+            (r1, r2) =>
+              r1.record.record.signed_action.hashed.content.timestamp -
+              r2.record.record.signed_action.hashed.content.timestamp
+          );
+          return activity;
         }
-        records.sort(
-          (r1, r2) =>
-            r1.signed_action.hashed.content.timestamp -
-            r2.signed_action.hashed.content.timestamp
-        );
-        return records;
-      }
+      )
+  );
+
+  /** Cancellation */
+
+  cancellations = new LazyHoloHashMap((cancellationHash: ActionHash) =>
+    lazyLoadAndPoll(
+      async () => this.client.getCancellation(cancellationHash),
+      4000
     )
   );
 
   eventCancellations = new LazyHoloHashMap((eventHash: ActionHash) =>
-    lazyLoadAndPoll(
-      async () => this.client.getEventCancellations(eventHash),
-      4000
-    )
+    lazyLoadAndPoll(async () => {
+      const records = await this.client.getCancellationsForEvent(eventHash);
+      return records.map(r => r.actionHash);
+    }, 4000)
   );
 
   /** Participants for Event */

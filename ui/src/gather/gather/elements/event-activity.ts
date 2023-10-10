@@ -42,26 +42,16 @@ import './participants-for-event.js';
 import './edit-event.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
-import { GatherStore } from '../gather-store.js';
-import { Event, EventStatus, EventWithStatus } from '../types.js';
+import { EventAction, GatherStore } from '../gather-store.js';
 import {
-  mdiAccountGroup,
-  mdiAccountPlus,
-  mdiCalendar,
-  mdiCalendarClock,
   mdiCancel,
-  mdiCash,
-  mdiCheckDecagram,
-  mdiDelete,
-  mdiFormatListChecks,
-  mdiMapMarker,
-  mdiPencil,
-  mdiTimeline,
+  mdiCheckBold,
+  mdiCreation,
+  mdiHandshake,
+  mdiPartyPopper,
+  mdiUpdate,
 } from '@mdi/js';
-import { SlDialog } from '@shoelace-style/shoelace';
-import { CallToAction } from '@darksoil/assemble';
-import { isExpired } from '../utils.js';
-import { classMap } from 'lit/directives/class-map.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 @localized()
 @customElement('event-activity')
@@ -80,7 +70,7 @@ export class EventActivity extends LitElement {
    */
   _eventActivity = new StoreSubscriber(
     this,
-    () => this.gatherStore.eventsActivity.get(this.eventHash),
+    () => this.gatherStore.eventActivity.get(this.eventHash),
     () => [this.eventHash]
   );
 
@@ -91,8 +81,84 @@ export class EventActivity extends LitElement {
   @property()
   _isMobile!: boolean;
 
-  renderAction(record: Record) {
-    return html`<sl-card>Someone did something</sl-card>`;
+  messageAndIcon(action: EventAction) {
+    switch (action.type) {
+      case 'event_created':
+        return {
+          message: msg('Event was created.'),
+          icon: wrapPathInSvg(mdiCreation),
+        };
+      case 'event_cancelled':
+        return {
+          message: msg('Event was cancelled.'),
+          icon: wrapPathInSvg(mdiCancel),
+        };
+      case 'event_updated':
+        return {
+          message: msg('Event was updated.'),
+          icon: wrapPathInSvg(mdiUpdate),
+        };
+      case 'commitment_created':
+        return {
+          message: msg('New contribution.'),
+          icon: wrapPathInSvg(mdiHandshake),
+        };
+      case 'satisfaction_created':
+        return {
+          message: msg('A need was satisfied.'),
+          icon: wrapPathInSvg(mdiCheckBold),
+        };
+      case 'assembly_created':
+        return {
+          message: msg('The proposal succeeded! It is now an event.'),
+          icon: wrapPathInSvg(mdiPartyPopper),
+        };
+    }
+  }
+
+  renderAction(action: EventAction, first: boolean, last: boolean) {
+    const { message, icon } = this.messageAndIcon(action)!;
+    return html`
+      <div class="row">
+        <div class="column" style="align-items: center">
+          <sl-divider
+            vertical
+            style=${styleMap({
+              '--width': '2px',
+              '--color': 'grey',
+              opacity: first ? 0 : 1,
+            })}
+          ></sl-divider>
+          <sl-icon .src=${icon}></sl-icon>
+          <sl-divider
+            vertical
+            style=${styleMap({
+              '--width': '2px',
+              '--color': 'grey',
+              opacity: last ? 0 : 1,
+            })}
+          ></sl-divider>
+        </div>
+        <sl-card style="flex: 1; margin-bottom: 8px; margin-top: 8px">
+          <div class="column" style="gap: 8px; flex: 1">
+            <div class="row" style="gap: 8px">
+              <span>${message}</span>
+            </div>
+            <div class="row placeholder" style="align-items: center">
+              <span style="flex: 1"></span>
+              <span>${msg('By')}&nbsp;</span>
+              <agent-avatar
+                .agentPubKey=${action.record.action.author}
+              ></agent-avatar>
+              <span>&nbsp;</span>
+              <sl-relative-time
+                .date=${new Date(Math.floor(action.record.action.timestamp))}
+              ></sl-relative-time>
+            </div>
+          </div>
+        </sl-card>
+      </div>
+    `;
   }
 
   render() {
@@ -104,9 +170,12 @@ export class EventActivity extends LitElement {
           <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
       case 'complete':
+        const activity = this._eventActivity.value.value;
         return html`
-          <div class="column" style="gap: 16px">
-            ${this._eventActivity.value.value.map(r => this.renderAction(r))}
+          <div class="column">
+            ${activity.map((r, i) =>
+              this.renderAction(r, i === 0, i === activity.length - 1)
+            )}
           </div>
         `;
       case 'error':

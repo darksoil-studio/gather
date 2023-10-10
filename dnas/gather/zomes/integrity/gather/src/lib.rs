@@ -1,3 +1,5 @@
+pub mod cancellation;
+pub use cancellation::*;
 pub mod event;
 pub use event::*;
 use hdi::prelude::*;
@@ -5,19 +7,19 @@ use hdi::prelude::*;
 pub fn validate(_op: Op) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }
-
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[hdk_entry_defs]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
     Event(Event),
+    Cancellation(Cancellation),
 }
-
 #[derive(Serialize, Deserialize)]
 #[hdk_link_types]
 pub enum LinkTypes {
     EventUpdates,
     AllEvents,
     MyEvents,
+    EventToCancellations,
 }

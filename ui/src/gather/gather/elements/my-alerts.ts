@@ -13,7 +13,7 @@ import { gatherStoreContext, isMobileContext } from '../context.js';
 import { EventAlert, GatherStore } from '../gather-store.js';
 import './event-summary.js';
 import { mdiCancel, mdiInformationOutline } from '@mdi/js';
-import { Alert } from '../alerts/alerts-client.js';
+import { Alert } from '../../../alerts/alerts-client.js';
 import { EventWithStatus } from '../types.js';
 import { styleMap } from 'lit/directives/style-map.js';
 

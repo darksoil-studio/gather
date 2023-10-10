@@ -1,3 +1,5 @@
+import { Cancellation } from './types';
+
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 import {
   ActionHash,
@@ -46,14 +48,15 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return new EntryRecord(output);
   }
 
-  getEventCancellations(
+  async getAllEventRevisions(
     eventHash: ActionHash
-  ): Promise<Array<SignedActionHashed> | undefined> {
-    return this.callZome('get_event_cancellations', eventHash);
-  }
+  ): Promise<Array<EntryRecord<Event>>> {
+    const records: Record[] = await this.callZome(
+      'get_all_event_revisions',
+      eventHash
+    );
 
-  cancelEvent(originalEventHash: ActionHash): Promise<void> {
-    return this.callZome('cancel_event', originalEventHash);
+    return records.map(r => new EntryRecord(r));
   }
 
   updateEvent(
@@ -114,5 +117,55 @@ export class GatherClient extends ZomeClient<GatherSignal> {
 
   async getMyEvents(): Promise<Array<ActionHash>> {
     return this.callZome('get_my_events', null);
+  }
+
+  /** Cancellation */
+
+  async cancelEvent(
+    eventHash: ActionHash,
+    reason: string
+  ): Promise<EntryRecord<Cancellation>> {
+    const record: Record = await this.callZome('cancel_event', {
+      event_hash: eventHash,
+      reason,
+    });
+    return new EntryRecord(record);
+  }
+
+  async getCancellation(
+    cancellationHash: ActionHash
+  ): Promise<EntryRecord<Cancellation> | undefined> {
+    const record: Record = await this.callZome(
+      'get_cancellation',
+      cancellationHash
+    );
+    return record ? new EntryRecord(record) : undefined;
+  }
+
+  deleteCancellation(
+    originalCancellationHash: ActionHash
+  ): Promise<ActionHash> {
+    return this.callZome('delete_cancellation', originalCancellationHash);
+  }
+
+  async updateCancellation(
+    previousCancellationHash: ActionHash,
+    updatedCancellation: Cancellation
+  ): Promise<EntryRecord<Cancellation>> {
+    const record: Record = await this.callZome('update_cancellation', {
+      previous_cancellation_hash: previousCancellationHash,
+      updated_cancellation: updatedCancellation,
+    });
+    return new EntryRecord(record);
+  }
+
+  async getCancellationsForEvent(
+    eventHash: ActionHash
+  ): Promise<Array<EntryRecord<Cancellation>>> {
+    const records: Record[] = await this.callZome(
+      'get_cancellations_for_event',
+      eventHash
+    );
+    return records.map(r => new EntryRecord(r));
   }
 }

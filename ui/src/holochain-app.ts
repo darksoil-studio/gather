@@ -49,18 +49,21 @@ import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 
-import './elements/event-detail.js';
-import './elements/create-event.js';
-import './elements/all-events.js';
-import './elements/events-filter.js';
-import './elements/events-calendar.js';
-import './elements/my-events.js';
-import './elements/my-alerts.js';
-import { gatherStoreContext, isMobileContext } from './context.js';
-import { GatherStore } from './gather-store.js';
-import { GatherClient } from './gather-client.js';
+import './gather/gather/elements/event-detail.js';
+import './gather/gather/elements/create-event.js';
+import './gather/gather/elements/all-events.js';
+import './gather/gather/elements/events-filter.js';
+import './gather/gather/elements/events-calendar.js';
+import './gather/gather/elements/my-events.js';
+import './gather/gather/elements/my-alerts.js';
+import {
+  gatherStoreContext,
+  isMobileContext,
+} from './gather/gather/context.js';
+import { GatherStore } from './gather/gather/gather-store.js';
+import { GatherClient } from './gather/gather/gather-client.js';
 import { ResizeController } from '@lit-labs/observers/resize-controller.js';
-import { installLogger, MOBILE_WIDTH_PX } from './utils.js';
+import { installLogger, MOBILE_WIDTH_PX } from './gather/gather/utils.js';
 import { AlertsClient } from './alerts/alerts-client.js';
 import { AlertsStore } from './alerts/alerts-store.js';
 

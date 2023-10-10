@@ -72,4 +72,12 @@ export type GatherSignal =
       link_type: string;
     };
 
-export type EntryTypes = { type: 'Event' } & Event;
+export type EntryTypes =
+  | ({ type: 'Cancellation' } & Cancellation)
+  | ({ type: 'Event' } & Event);
+
+export interface Cancellation {
+  reason: string;
+
+  event_hash: ActionHash;
+}
