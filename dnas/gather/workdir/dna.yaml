@@ -26,6 +26,10 @@ integrity:
       hash: ~
       bundled: "../../../target/wasm32-unknown-unknown/release/alerts_integrity.wasm"
       dependencies: ~
+    - name: cancellations_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/cancellations_integrity.wasm"
+      dependencies: ~
 coordinator:
   zomes:
     - name: profiles
@@ -53,3 +57,8 @@ coordinator:
       bundled: "../../../target/wasm32-unknown-unknown/release/alerts.wasm"
       dependencies:
         - name: alerts_integrity
+    - name: cancellations
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/cancellations.wasm"
+      dependencies:
+        - name: cancellations_integrity

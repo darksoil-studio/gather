@@ -38,11 +38,11 @@ export class MyEvents extends LitElement {
       if (this.filter.status === 'cancelled_event')
         return this.gatherStore.myCancelledEvents;
       if (this.filter.status === 'open_event_proposal')
-        return this.gatherStore.myOpenEventProposals;
+        return this.gatherStore.myOpenProposals;
       if (this.filter.status === 'expired_event_proposal')
-        return this.gatherStore.myExpiredEventProposals;
+        return this.gatherStore.myExpiredProposals;
       if (this.filter.status === 'cancelled_event_proposal')
-        return this.gatherStore.myCancelledEventProposals;
+        return this.gatherStore.myCancelledProposals;
     },
     () => [this.filter]
   );

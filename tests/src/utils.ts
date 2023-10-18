@@ -4,34 +4,28 @@ import {
   AppAgentWebsocket,
 } from '@holochain/client';
 import { encode } from '@msgpack/msgpack';
-import { CallToAction, Assembly } from '@darksoil/assemble';
 import { Scenario } from '@holochain/tryorama';
-import { encodeHashToBase64, Record } from '@holochain/client';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { AssembleClient } from '@darksoil/assemble/dist/assemble-client.js';
-import { AssembleStore } from '@darksoil/assemble/dist/assemble-store.js';
-import { GatherClient } from '../../ui/src/gather-client.js';
-import { Event } from '../../ui/src/types.js';
-import { GatherStore } from '../../ui/src/gather-store.js';
+import { AssembleClient, AssembleStore } from '@darksoil/assemble';
+import {
+  CancellationsClient,
+  CancellationsStore,
+} from '@holochain-open-dev/cancellations';
+import { sampleCallToAction } from '@darksoil/assemble/dist/mocks.js';
 
-export function sampleCallToAction(
-  partialCallToAction: Partial<CallToAction> = {}
-): CallToAction {
-  return {
-    custom_content: encode({}),
-    expiration_time: undefined,
-    needs: [],
-    parent_call_to_action_hash: undefined,
-    ...partialCallToAction,
-  };
-}
+import { GatherClient } from '../../ui/src/gather/gather/gather-client.js';
+import { Event, Proposal } from '../../ui/src/gather/gather/types.js';
+import { GatherStore } from '../../ui/src/gather/gather/gather-store.js';
+import { AlertsStore } from '../../ui/src/alerts/alerts-store.js';
+import { AlertsClient } from '../../ui/src/alerts/alerts-client.js';
 
-export function sampleEvent(
-  callToActionHash: ActionHash,
-  partialEvent: Partial<Event> = {}
-): Event {
+export async function sampleProposal(
+  gatherStore: GatherStore,
+  partialProposal: Partial<Proposal> = {}
+): Promise<Proposal> {
   return {
+    hosts: [],
     title:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
     description:
@@ -44,10 +38,51 @@ export function sampleEvent(
     ),
     location:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
-    start_time: Date.now() * 1000 + 60 * 60 * 1000 * 1000,
-    end_time: Date.now() * 1000 + 2 * 60 * 60 * 1000 * 1000,
+    time: {
+      type: 'Unique',
+      start_time: Date.now() * 1000 + 60 * 60 * 1000 * 1000,
+      end_time: Date.now() * 1000 + 2 * 60 * 60 * 1000 * 1000,
+    },
     cost: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
-    call_to_action_hash: callToActionHash,
+    call_to_action_hash: (
+      await gatherStore.assembleStore.client.createCallToAction(
+        await sampleCallToAction(gatherStore.assembleStore.client)
+      )
+    ).actionHash,
+    ...partialProposal,
+  };
+}
+
+export async function sampleEvent(
+  gatherStore: GatherStore,
+  partialEvent: Partial<Event> = {}
+): Promise<Event> {
+  return {
+    hosts: [],
+    title:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
+    description:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
+    image: Buffer.from(
+      new Uint8Array([
+        132, 33, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ])
+    ),
+    location:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
+    time: {
+      type: 'Unique',
+      start_time: Date.now() * 1000 + 60 * 60 * 1000 * 1000,
+      end_time: Date.now() * 1000 + 2 * 60 * 60 * 1000 * 1000,
+    },
+    cost: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
+    call_to_action_hash: (
+      await gatherStore.assembleStore.client.createCallToAction(
+        await sampleCallToAction(gatherStore.assembleStore.client)
+      )
+    ).actionHash,
+    from_proposal: undefined,
     ...partialEvent,
   };
 }
@@ -71,26 +106,46 @@ export async function setup(scenario: Scenario) {
   // installLogger(alice.appAgentWs as any);
   // installLogger(bob.appAgentWs as any);
 
-  const aliceAssemble = new AssembleStore(
-    new AssembleClient(alice.appAgentWs as any, 'gather', 'assemble')
-  );
-  const aliceGather = new GatherStore(
-    new GatherClient(alice.appAgentWs as any, 'gather', 'gather'),
-    aliceAssemble
+  const aliceCancellations = new CancellationsStore(
+    new CancellationsClient(alice.appAgentWs as any, 'gather', 'cancellations')
   );
 
-  const bobAssemble = new AssembleStore(
-    new AssembleClient(bob.appAgentWs as any, 'gather', 'assemble')
+  const aliceGather = new GatherStore(
+    new GatherClient(alice.appAgentWs as any, 'gather', 'gather'),
+    new AssembleStore(
+      new AssembleClient(alice.appAgentWs as any, 'gather', 'assemble'),
+      aliceCancellations
+    ),
+    new AlertsStore(
+      new AlertsClient(alice.appAgentWs as any, 'gather', 'alerts')
+    ),
+
+    aliceCancellations
+  );
+
+  const bobCancellations = new CancellationsStore(
+    new CancellationsClient(bob.appAgentWs as any, 'gather', 'cancellations')
   );
   const bobGather = new GatherStore(
     new GatherClient(bob.appAgentWs as any, 'gather', 'gather'),
-    bobAssemble
+    new AssembleStore(
+      new AssembleClient(bob.appAgentWs as any, 'gather', 'assemble'),
+      bobCancellations
+    ),
+    new AlertsStore(
+      new AlertsClient(bob.appAgentWs as any, 'gather', 'alerts')
+    ),
+    bobCancellations
   );
 
   return {
-    alice,
-    bob,
-    aliceGather,
-    bobGather,
+    alice: {
+      player: alice,
+      store: aliceGather,
+    },
+    bob: {
+      player: bob,
+      store: bobGather,
+    },
   };
 }

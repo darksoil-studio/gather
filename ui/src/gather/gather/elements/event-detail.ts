@@ -4,21 +4,27 @@ import {
   sharedStyles,
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
-import { EntryRecord } from '@holochain-open-dev/utils';
 import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
-import {
-  joinAsync,
-  StoreSubscriber,
-  toPromise,
-} from '@holochain-open-dev/stores';
+import { joinAsync, StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
+import {
+  mdiAccountGroup,
+  mdiAccountPlus,
+  mdiCalendar,
+  mdiCalendarClock,
+  mdiCancel,
+  mdiCash,
+  mdiFormatListChecks,
+  mdiMapMarker,
+  mdiPencil,
+  mdiTimeline,
+} from '@mdi/js';
+import { SlDialog } from '@shoelace-style/shoelace';
 
-import '@holochain-open-dev/elements/dist/elements/display-error.js';
-import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
-import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/icon-button/icon-button.js';
@@ -34,6 +40,10 @@ import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 import '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
 import '@shoelace-style/shoelace/dist/components/radio-button/radio-button.js';
 
+import '@holochain-open-dev/elements/dist/elements/display-error.js';
+import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
+import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
+
 import '@darksoil/assemble/dist/elements/call-to-action-unsatisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-satisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
@@ -44,25 +54,7 @@ import './edit-event.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event, EventStatus, EventWithStatus } from '../types.js';
-import {
-  mdiAccountGroup,
-  mdiAccountPlus,
-  mdiCalendar,
-  mdiCalendarClock,
-  mdiCancel,
-  mdiCash,
-  mdiCheckDecagram,
-  mdiDelete,
-  mdiFormatListChecks,
-  mdiMapMarker,
-  mdiPencil,
-  mdiTimeline,
-} from '@mdi/js';
-import { SlDialog } from '@shoelace-style/shoelace';
-import { CallToAction } from '@darksoil/assemble';
-import { isExpired } from '../utils.js';
-import { classMap } from 'lit/directives/class-map.js';
+import { EventWithStatus } from '../types.js';
 
 @localized()
 @customElement('event-detail')
@@ -267,10 +259,7 @@ export class EventDetail extends LitElement {
     //   )
     // )
     //   return html``;
-    if (
-      eventStatus !== 'open_event_proposal' &&
-      eventStatus !== 'upcoming_event'
-    )
+    if (eventStatus !== 'open_proposal' && eventStatus !== 'upcoming_event')
       return html``;
 
     return html`<div

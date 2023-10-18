@@ -6,7 +6,7 @@ import {
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import '@shoelace-style/shoelace/dist/components/checkbox/checkbox.js';
@@ -17,20 +17,22 @@ import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
+import '@holochain-open-dev/profiles/dist/elements/search-agent.js';
 
 import '@darksoil/assemble/dist/elements/call-to-action-need-form.js';
 import '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
 
-import { gatherStoreContext } from '../context.js';
-import { GatherStore } from '../gather-store.js';
-import { Event } from '../types.js';
 import { CallToAction, Need } from '@darksoil/assemble';
-import { encode } from '@msgpack/msgpack';
 import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
 import { SlSwitch } from '@shoelace-style/shoelace';
 import { CallToActionNeedForm } from '@darksoil/assemble/dist/elements/call-to-action-need-form.js';
 import { CallToActionNeedsForm } from '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
 import { EntryRecord } from '@holochain-open-dev/utils';
+
+import { gatherStoreContext, isMobileContext } from '../context.js';
+import { GatherStore } from '../gather-store.js';
+import { Event, Proposal } from '../types.js';
+import { AgentPubKey } from '@holochain/client';
 
 @localized()
 @customElement('create-event')
@@ -42,7 +44,17 @@ export class CreateEvent extends LitElement {
   committing = false;
 
   @state()
-  page: 'event-form' | 'needs-form' = 'event-form';
+  isProposal = false;
+
+  @state()
+  hosts: Array<AgentPubKey> = [];
+
+  @state()
+  currentPage = 0;
+
+  @consume({ context: isMobileContext, subscribe: true })
+  @property()
+  _isMobile!: boolean;
 
   async createEvent(fields: any) {
     if (this.committing) return;
@@ -61,7 +73,7 @@ export class CreateEvent extends LitElement {
     this.committing = true;
     try {
       const callToAction: CallToAction = {
-        custom_content: encode({}),
+        admins: fields.hosts,
         expiration_time: fields.expiration_time
           ? new Date(fields.expiration_time).valueOf() * 1000
           : undefined,
@@ -74,64 +86,179 @@ export class CreateEvent extends LitElement {
           callToAction
         );
 
-      const isProposal = fields.proposal === 'on';
-
-      if (isProposal) {
-        if (participantsNeeds.min_necessary === 0) {
-          await this.gatherStore.assembleStore.client.createSatisfaction({
-            call_to_action_hash: callToActionEntryRecord.actionHash,
-            commitments_hashes: [],
-            need_index: 0,
-          });
-        }
-      } else {
-        await this.gatherStore.assembleStore.client.closeCallToAction(
-          callToActionEntryRecord.actionHash
-        );
-        await this.gatherStore.assembleStore.client.createAssembly({
+      let eventRecord: EntryRecord<Event | Proposal>;
+      if (this.isProposal) {
+        const time = fields.start_time
+          ? {
+              type: 'Unique',
+              start_time: new Date(fields.start_time).valueOf() * 1000,
+              end_time: new Date(fields.end_time).valueOf() * 1000,
+            }
+          : undefined;
+        const proposal: Proposal = {
+          ...fields,
+          time,
           call_to_action_hash: callToActionEntryRecord.actionHash,
-          satisfactions_hashes: [],
-        });
-      }
-
-      const event: Event = {
-        ...fields,
-        start_time: new Date(fields.start_time).valueOf() * 1000,
-        end_time: new Date(fields.end_time).valueOf() * 1000,
-        call_to_action_hash: callToActionEntryRecord.actionHash,
-      };
-      let eventRecord: EntryRecord<Event>;
-      if (isProposal) {
-        eventRecord = await this.gatherStore.client.createEventProposal(event);
+        };
+        eventRecord = await this.gatherStore.client.createProposal(proposal);
       } else {
+        const event: Event = {
+          ...fields,
+          time: {
+            type: 'Unique',
+            start_time: new Date(fields.start_time).valueOf() * 1000,
+            end_time: new Date(fields.end_time).valueOf() * 1000,
+          },
+          from_proposal: undefined,
+          call_to_action_hash: callToActionEntryRecord.actionHash,
+        };
         eventRecord = await this.gatherStore.client.createEvent(event);
       }
 
-      await this.gatherStore.commitToParticipate(eventRecord);
+      await this.gatherStore.assembleStore.client.createCommitment({
+        amount: 1,
+        call_to_action_hash: eventRecord.entry.call_to_action_hash,
+        comment: '',
+        need_index: 0,
+      });
 
-      this.dispatchEvent(
-        new CustomEvent('event-created', {
-          composed: true,
-          bubbles: true,
-          detail: {
-            eventHash: eventRecord.actionHash,
-            isProposal,
-          },
-        })
-      );
+      if (this.isProposal) {
+        this.dispatchEvent(
+          new CustomEvent('proposal-created', {
+            composed: true,
+            bubbles: true,
+            detail: {
+              proposalHash: eventRecord.actionHash,
+            },
+          })
+        );
+      } else {
+        this.dispatchEvent(
+          new CustomEvent('event-created', {
+            composed: true,
+            bubbles: true,
+            detail: {
+              eventHash: eventRecord.actionHash,
+            },
+          })
+        );
+      }
     } catch (e: any) {
-      notifyError(msg('Error creating the event'));
+      notifyError(
+        this.isProposal
+          ? msg('Error creating the proposal')
+          : msg('Error creating the event')
+      );
       console.error(e);
     }
     this.committing = false;
   }
 
-  renderEventFields() {
+  renderBackButton() {
+    return html`
+      <sl-button
+        @click=${() => {
+          this.currentPage -= 1;
+        }}
+      >
+        ${msg('Back')}
+      </sl-button>
+    `;
+  }
+
+  renderNextButton() {
+    return html`
+      <sl-button
+        @click=${() => {
+          const form = this.shadowRoot?.getElementById('form') as
+            | HTMLFormElement
+            | undefined;
+          if (form) {
+            if (form.reportValidity()) {
+              this.currentPage += 1;
+            }
+          }
+        }}
+      >
+        ${msg('Next')}
+      </sl-button>
+    `;
+  }
+
+  renderIsProposal(pageIndex: number) {
     return html`
       <div
         class="column"
         style=${styleMap({
-          display: this.page === 'event-form' ? 'flex' : 'none',
+          display: this.currentPage === pageIndex ? 'flex' : 'none',
+          gap: '16px',
+        })}
+      >
+        <span
+          >${msg(
+            'Do you want to create an actual event, or do you want to propose an event?'
+          )}</span
+        >
+
+        <span class="placeholder"
+          >${msg(
+            "Proposals will only become actual events if the minimum required needs for the events are fulfilled by other people's commitments, and when a specific time and place for the event has been decided."
+          )}</span
+        >
+        <div class="row" style="gap: 16px;">
+          <sl-button
+            style="flex: 1"
+            @click=${() => {
+              this.isProposal = true;
+              this.currentPage += 1;
+            }}
+          >
+            ${msg('Propose Event')}
+          </sl-button>
+          <sl-button
+            style="flex: 1"
+            @click=${() => {
+              this.isProposal = false;
+              this.currentPage += 1;
+            }}
+          >
+            ${msg('Create Event')}
+          </sl-button>
+        </div>
+      </div>
+    `;
+  }
+
+  renderHostsFields(pageIndex: number) {
+    return html`
+      <div
+        class="column"
+        style=${styleMap({
+          display: this.currentPage === pageIndex ? 'flex' : 'none',
+          gap: '16px',
+        })}
+      >
+        <span class="title">${msg('Hosts')}</span>
+        <span
+          >${msg(
+            'Who hosts this event? Hosts are able to update the event details (time, location, etc.), and accept needs that require host approval.'
+          )}</span
+        >
+        <search-agents name="hosts"></search-agents>
+
+        <div class="row" style="gap: 16px; justify-content: end">
+          ${this.renderBackButton()} ${this.renderNextButton()}
+        </div>
+      </div>
+    `;
+  }
+
+  renderEventFields(pageIndex: number) {
+    return html`
+      <div
+        class="column"
+        style=${styleMap({
+          display: this.currentPage === pageIndex ? 'flex' : 'none',
           gap: '16px',
         })}
       >
@@ -155,7 +282,7 @@ export class CreateEvent extends LitElement {
           <sl-datetime-input
             name="start_time"
             .min=${new Date().toISOString().slice(0, 16)}
-            required
+            .required=${!this.isProposal}
             .label=${msg('Start Time')}
             style="flex: 1"
             id="start-time"
@@ -163,7 +290,7 @@ export class CreateEvent extends LitElement {
           ></sl-datetime-input>
           <sl-datetime-input
             name="end_time"
-            required
+            .required=${!this.isProposal}
             .label=${msg('End Time')}
             style="flex: 1"
             .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
@@ -174,7 +301,7 @@ export class CreateEvent extends LitElement {
         <div class="row" style="gap: 16px; flex-wrap: wrap;">
           <sl-input
             name="location"
-            required
+            .required=${!this.isProposal}
             .label=${msg('Location')}
             style="flex: 1"
           ></sl-input>
@@ -185,106 +312,69 @@ export class CreateEvent extends LitElement {
           ></sl-input>
         </div>
         <div class="row" style="justify-content: end">
-          <sl-button
-            @click=${() => {
-              const form = this.shadowRoot?.getElementById('form') as
-                | HTMLFormElement
-                | undefined;
-              if (form) {
-                if (form.reportValidity()) {
-                  this.page = 'needs-form';
-                }
-              }
-            }}
-            >${msg('Next')}</sl-button
-          >
+          ${this.renderBackButton()} ${this.renderNextButton()}
         </div>
       </div>
     `;
   }
 
-  renderNeedsFields() {
-    let proposalFieldRequired = false;
-
-    const participantsNeedForm = this.shadowRoot?.getElementById(
-      'participants-need'
-    ) as CallToActionNeedForm | undefined;
-    const otherNeedsForms = this.shadowRoot?.getElementById('other-needs') as
-      | CallToActionNeedsForm
-      | undefined;
-
-    if (participantsNeedForm && otherNeedsForms) {
-      const needs: Need[] = [
-        participantsNeedForm.value,
-        ...otherNeedsForms.needForms().map(f => f.value),
-      ].map(s => JSON.parse(s));
-      if (needs.some(n => n.min_necessary > 0)) {
-        proposalFieldRequired = true;
-      }
-    }
-
+  renderNeedsFields(pageIndex: number) {
     return html`
       <div
         class="column"
         style=${styleMap({
-          display: this.page === 'needs-form' ? 'flex' : 'none',
+          display: this.currentPage === pageIndex ? 'flex' : 'none',
         })}
       >
-        <div class="column">
-          <sl-switch
-            id="proposal-field"
-            name="proposal"
-            .required=${proposalFieldRequired}
-            style="margin-bottom: 16px;"
-            @input=${() => this.requestUpdate()}
-            >${msg('This an event proposal')}</sl-switch
-          >
+        <div class="column" style="gap: 16px">
+          <span class="title">${msg('Needs')}</span>
+          ${this.isProposal
+            ? html`
+                <span class="title" style="margin-bottom: 16px"
+                  >${msg('Expiration Date')}</span
+                >
+                <span style="margin-bottom: 16px" class="placeholder"
+                  >${msg(
+                    'Event proposals that have an expiration date will not become actual events if the minimum required participants and needs are not satisfied by the expiration date.'
+                  )}</span
+                >
+                <div
+                  class="row"
+                  style="margin-bottom: 24px; align-items: center"
+                >
+                  <sl-switch
+                    id="expiration-switch"
+                    style="margin-right: 16px;"
+                    @input=${() => this.requestUpdate()}
+                    >${msg('Set an expiration time')}</sl-switch
+                  >
 
-          <span style="margin-bottom: 24px" class="placeholder"
-            >${msg(
-              "Event proposals will only actually happen if the minimum required needs for the events are fulfilled by other people's commitments."
-            )}</span
-          >
-
-          <span class="title" style="margin-bottom: 16px"
-            >${msg('Expiration Date')}</span
-          >
-          <span style="margin-bottom: 16px" class="placeholder"
-            >${msg(
-              'Event proposals that have an expiration date will not happen if the minimum required participants ands needs are not satisfied by the expiration date.'
-            )}</span
-          >
-          <div class="row" style="margin-bottom: 24px; align-items: center">
-            <sl-switch
-              id="expiration-switch"
-              style="margin-right: 16px;"
-              @input=${() => this.requestUpdate()}
-              .disabled=${!(
-                this.shadowRoot?.getElementById('proposal-field') as SlSwitch
-              )?.checked}
-              >${msg('Set an expiration time')}</sl-switch
-            >
-
-            <sl-datetime-input
-              name="expiration_time"
-              .label=${msg('Expiration Date')}
-              .required=${(
-                this.shadowRoot?.getElementById('expiration-switch') as SlSwitch
-              )?.checked}
-              .disabled=${!(
-                this.shadowRoot?.getElementById('expiration-switch') as SlSwitch
-              )?.checked ||
-              !(this.shadowRoot?.getElementById('proposal-field') as SlSwitch)
-                ?.checked}
-              .min=${new Date().toISOString().slice(0, 16)}
-              .max=${(this.shadowRoot?.getElementById('start-time') as SlInput)
-                ?.value}
-            ></sl-datetime-input>
-          </div>
+                  <sl-datetime-input
+                    name="expiration_time"
+                    .label=${msg('Expiration Date')}
+                    .required=${(
+                      this.shadowRoot?.getElementById(
+                        'expiration-switch'
+                      ) as SlSwitch
+                    )?.checked}
+                    .disabled=${!(
+                      this.shadowRoot?.getElementById(
+                        'expiration-switch'
+                      ) as SlSwitch
+                    )?.checked}
+                    .min=${new Date().toISOString().slice(0, 16)}
+                    .max=${(
+                      this.shadowRoot?.getElementById('start-time') as SlInput
+                    )?.value}
+                  ></sl-datetime-input>
+                </div>
+              `
+            : html``}
 
           <span class="title">${msg('Participants')}</span>
           <call-to-action-need-form
             name="participants"
+            .hideRequestAdminApproval=${true}
             id="participants-need"
             .description=${msg('Participants')}
             style="margin-bottom: 24px"
@@ -295,25 +385,19 @@ export class CreateEvent extends LitElement {
             id="other-needs"
             .defaultValue=${[]}
             .allowEmpty=${true}
+            .requestAdminApprovalLabel=${msg('Requires hosts approval')}
             @sl-change=${() => this.requestUpdate()}
           ></call-to-action-needs-form>
         </div>
 
-        <div class="row" style="margin-top: 16px; justify-content: end">
-          <sl-button
-            @click=${() => {
-              this.page = 'event-form';
-            }}
-            style="margin-right: 16px"
-          >
-            ${msg('Back')}
-          </sl-button>
+        <div class="row" style="gap: 16px; justify-content: end">
+          ${this.renderBackButton()}
           <sl-button
             variant="primary"
             type="submit"
             .loading=${this.committing}
           >
-            ${msg('Create Event')}
+            ${this.isProposal ? msg('Create Proposal') : msg('Create Event')}
           </sl-button>
         </div>
       </div>
@@ -328,7 +412,8 @@ export class CreateEvent extends LitElement {
         >
 
         <form id="form" ${onSubmit(f => this.createEvent(f))} class="column">
-          ${this.renderEventFields()} ${this.renderNeedsFields()}
+          ${this.renderIsProposal(0)} ${this.renderHostsFields(1)}
+          ${this.renderEventFields(2)} ${this.renderNeedsFields(3)}
         </form>
       </sl-card>
     `;

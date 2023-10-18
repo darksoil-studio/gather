@@ -16,14 +16,17 @@ import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { mdiCalendarClock, mdiMapMarker } from '@mdi/js';
 
-import '@darksoil/assemble/dist/elements/call-to-action-progress.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/icon/icon.js';
+import '@shoelace-style/shoelace/dist/components/card/card.js';
+
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
+
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
-import '@shoelace-style/shoelace/dist/components/card/card.js';
+
+import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
@@ -149,11 +152,11 @@ export class EventSummary extends LitElement {
             </div>
           </div>
 
-          ${event.status === 'open_event_proposal'
-            ? html` <call-to-action-progress
+          ${event.status === 'open_proposal'
+            ? html` <call-to-action-need-progress
                 .callToActionHash=${event.currentEvent.entry
                   .call_to_action_hash}
-              ></call-to-action-progress>`
+              ></call-to-action-need-progress>`
             : html``}
         </div>
 

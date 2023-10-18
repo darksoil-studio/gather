@@ -1,0 +1,15 @@
+[package]
+name = "cancellations"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "cancellations"
+
+[dependencies]
+hdk = { workspace = true }
+
+serde = { workspace = true }
+
+hc_zome_cancellations_coordinator = { git = "https://github.com/holochain-open-dev/cancellations", branch = "main" }

@@ -1,10 +1,7 @@
 use gather_integrity::*;
 use hdk::prelude::*;
 
-use crate::global_collections::{
-    all_cancelled_event_proposals, all_cancelled_events, all_open_event_proposals,
-    all_upcoming_events, remove_from_collection,
-};
+use crate::global_collections::all_upcoming_events;
 
 #[hdk_extern]
 pub fn create_event(event: Event) -> ExternResult<Record> {
@@ -13,7 +10,7 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
         WasmErrorInner::Guest(String::from("Could not find the newly created Event"))
     ))?;
 
-    let path = crate::global_collections::all_upcoming_events();
+    let path = all_upcoming_events();
 
     create_link(
         path.path_entry_hash()?,
@@ -30,38 +27,12 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
         (),
     )?;
 
-    Ok(record)
-}
-
-#[hdk_extern]
-pub fn create_event_proposal(event: Event) -> ExternResult<Record> {
-    let event_hash = create_entry(&EntryTypes::Event(event.clone()))?;
-    let record = get(event_hash.clone(), GetOptions::default())?.ok_or(wasm_error!(
-        WasmErrorInner::Guest(String::from("Could not find the newly created Event"))
-    ))?;
-
-    let path = crate::global_collections::all_open_event_proposals();
-
-    create_link(
-        path.path_entry_hash()?,
-        event_hash.clone(),
-        LinkTypes::AllEvents,
-        (),
-    )?;
-
-    let my_agent_pub_key = agent_info()?.agent_latest_pubkey;
-    create_link(
-        my_agent_pub_key,
-        event_hash.clone(),
-        LinkTypes::MyEvents,
-        (),
-    )?;
     Ok(record)
 }
 
 #[hdk_extern]
 pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>> {
-    let links = get_links(original_event_hash.clone(), LinkTypes::EventUpdates, None)?;
+    let links = get_links(original_event_hash.clone(), LinkTypes::Updates, None)?;
     let latest_link = links
         .into_iter()
         .max_by(|link_a, link_b| link_a.timestamp.cmp(&link_b.timestamp));
@@ -107,7 +78,7 @@ pub fn update_event(input: UpdateEventInput) -> ExternResult<Record> {
     create_link(
         input.original_event_hash.clone(),
         updated_event_hash.clone(),
-        LinkTypes::EventUpdates,
+        LinkTypes::Updates,
         (),
     )?;
     let record = get(updated_event_hash.clone(), GetOptions::default())?.ok_or(wasm_error!(

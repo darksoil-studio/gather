@@ -1,7 +1,14 @@
-import { CallToAction } from '@darksoil/assemble';
+import {
+  Assembly,
+  CallToAction,
+  Commitment,
+  Satisfaction,
+} from '@darksoil/assemble';
+import { Cancellation } from '@holochain-open-dev/cancellations';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import {
   ActionHash,
+  AgentPubKey,
   Create,
   CreateLink,
   Delete,
@@ -11,37 +18,72 @@ import {
   Update,
 } from '@holochain/client';
 
+export type EventTime =
+  | {
+      type: 'Periodic';
+      start_time: number;
+      event_duration: number;
+      period_duration: number;
+      ocurrences: number | undefined;
+    }
+  | {
+      type: 'Unique';
+      start_time: number;
+      end_time: number;
+    };
+
+export interface FromProposal {
+  proposal_hash: ActionHash;
+  assembly_hash: ActionHash;
+}
+
 export interface Event {
+  hosts: Array<AgentPubKey>;
   title: string;
-
   description: string;
-
   image: EntryHash;
-
   location: string;
-
-  start_time: number;
-
-  end_time: number;
-
+  time: EventTime;
   cost: string | undefined;
+  call_to_action_hash: ActionHash;
+  from_proposal: FromProposal | undefined;
+}
 
+export interface Proposal {
+  hosts: Array<AgentPubKey>;
+  title: string;
+  description: string;
+  image: EntryHash;
+  location: string | undefined;
+  time: EventTime | undefined;
+  cost: string | undefined;
   call_to_action_hash: ActionHash;
 }
 
-export type EventStatus =
-  | 'open_event_proposal'
-  | 'expired_event_proposal'
-  | 'cancelled_event_proposal'
-  | 'upcoming_event'
-  | 'past_event'
-  | 'cancelled_event';
+export type EventStatus = 'upcoming_event' | 'past_event' | 'cancelled_event';
+
+export type ProposalStatus =
+  | 'open_proposal'
+  | 'expired_proposal'
+  | 'cancelled_proposal';
+
+export interface ProposalWithStatus {
+  originalActionHash: ActionHash;
+  currentProposal: EntryRecord<Proposal>;
+  status: ProposalStatus;
+  callToAction: EntryRecord<CallToAction>;
+}
 
 export interface EventWithStatus {
   originalActionHash: ActionHash;
   currentEvent: EntryRecord<Event>;
   status: EventStatus;
-  callToAction: EntryRecord<CallToAction>;
+}
+
+export interface ProposalWithStatus {
+  originalActionHash: ActionHash;
+  currentProposal: EntryRecord<Proposal>;
+  status: ProposalStatus;
 }
 
 export type GatherSignal =
@@ -73,11 +115,45 @@ export type GatherSignal =
     };
 
 export type EntryTypes =
-  | ({ type: 'Cancellation' } & Cancellation)
+  | ({ type: 'Proposal' } & Proposal)
   | ({ type: 'Event' } & Event);
 
-export interface Cancellation {
-  reason: string;
-
-  event_hash: ActionHash;
-}
+export type EventAction =
+  | {
+      type: 'proposal_created';
+      record: EntryRecord<Proposal>;
+    }
+  | {
+      type: 'proposal_updated';
+      record: EntryRecord<Proposal>;
+    }
+  | {
+      type: 'event_created';
+      record: EntryRecord<Event>;
+    }
+  | {
+      type: 'event_updated';
+      record: EntryRecord<Event>;
+    }
+  | {
+      type: 'commitment_created';
+      record: EntryRecord<Commitment>;
+    }
+  | {
+      type: 'satisfaction_created';
+      record: EntryRecord<Satisfaction>;
+    }
+  | {
+      type: 'assembly_created';
+      record: EntryRecord<Assembly>;
+    }
+  | {
+      type: 'commitment_cancelled';
+      record: EntryRecord<Cancellation>;
+      commitment: EntryRecord<Commitment>;
+    }
+  | {
+      type: 'event_cancelled';
+      record: EntryRecord<Cancellation>;
+    };
+export type EventActivity = Array<EventAction>;

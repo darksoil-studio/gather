@@ -18,7 +18,7 @@ export function isExpired(callToAction: CallToAction) {
 }
 
 export function isPast(event: Event) {
-  return event.start_time < Date.now() * 1000;
+  return event.time.start_time < Date.now() * 1000;
 }
 
 export function eventToEventCalendar(

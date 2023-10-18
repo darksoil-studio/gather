@@ -8,10 +8,42 @@ pub fn get_all_upcoming_events(_: ()) -> ExternResult<Vec<ActionHash>> {
     get_from_path(all_upcoming_events())
 }
 #[hdk_extern]
-pub fn mark_event_past(event_hash: ActionHash) -> ExternResult<()> {
+pub fn mark_event_as_past(event_hash: ActionHash) -> ExternResult<()> {
     remove_from_collection(&event_hash, all_upcoming_events())?;
     let path = all_past_events();
-    create_link(path.path_entry_hash()?, event_hash.clone(), LinkTypes::AllEvents, ())?;
+    create_link(
+        path.path_entry_hash()?,
+        event_hash.clone(),
+        LinkTypes::AllEvents,
+        (),
+    )?;
+    Ok(())
+}
+#[hdk_extern]
+pub fn mark_event_as_cancelled(event_hash: ActionHash) -> ExternResult<()> {
+    remove_from_collection(&event_hash, all_upcoming_events())?;
+    let path = all_cancelled_events();
+    create_link(
+        path.path_entry_hash()?,
+        event_hash.clone(),
+        LinkTypes::AllEvents,
+        (),
+    )?;
+    Ok(())
+}
+#[hdk_extern]
+pub fn mark_event_as_upcoming(event_hash: ActionHash) -> ExternResult<()> {
+    // No reason why the event can go from past to upcoming,
+    // Only remove from cancelled
+
+    remove_from_collection(&event_hash, all_cancelled_events())?;
+    let path = all_upcoming_events();
+    create_link(
+        path.path_entry_hash()?,
+        event_hash.clone(),
+        LinkTypes::AllEvents,
+        (),
+    )?;
     Ok(())
 }
 pub fn all_cancelled_events() -> Path {
@@ -29,39 +61,49 @@ pub fn get_all_past_events(_: ()) -> ExternResult<Vec<ActionHash>> {
     get_from_path(all_past_events())
 }
 #[hdk_extern]
-pub fn mark_event_proposal_expired(event_hash: ActionHash) -> ExternResult<()> {
-    remove_from_collection(&event_hash, all_open_event_proposals())?;
-    let path = all_expired_event_proposals();
-    create_link(path.path_entry_hash()?, event_hash.clone(), LinkTypes::AllEvents, ())?;
+pub fn mark_proposal_as_expired(proposal_hash: ActionHash) -> ExternResult<()> {
+    remove_from_collection(&proposal_hash, all_open_proposals())?;
+    let path = all_expired_proposals();
+    create_link(
+        path.path_entry_hash()?,
+        proposal_hash.clone(),
+        LinkTypes::AllProposals,
+        (),
+    )?;
     Ok(())
 }
 #[hdk_extern]
-pub fn mark_event_proposal_fulfilled(event_hash: ActionHash) -> ExternResult<()> {
-    remove_from_collection(&event_hash, all_open_event_proposals())?;
+pub fn mark_proposal_as_fulfilled(proposal_hash: ActionHash) -> ExternResult<()> {
+    remove_from_collection(&proposal_hash, all_open_proposals())?;
     let path = all_upcoming_events();
-    create_link(path.path_entry_hash()?, event_hash.clone(), LinkTypes::AllEvents, ())?;
+    create_link(
+        path.path_entry_hash()?,
+        proposal_hash.clone(),
+        LinkTypes::AllProposals,
+        (),
+    )?;
     Ok(())
 }
-pub fn all_open_event_proposals() -> Path {
-    Path::from("all_open_event_proposals")
+pub fn all_open_proposals() -> Path {
+    Path::from("all_open_proposals")
 }
 #[hdk_extern]
-pub fn get_all_open_event_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
-    get_from_path(all_open_event_proposals())
+pub fn get_all_open_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
+    get_from_path(all_open_proposals())
 }
-pub fn all_expired_event_proposals() -> Path {
+pub fn all_expired_proposals() -> Path {
     Path::from("all_expired_events")
 }
 #[hdk_extern]
-pub fn get_all_expired_event_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
-    get_from_path(all_expired_event_proposals())
+pub fn get_all_expired_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
+    get_from_path(all_expired_proposals())
 }
-pub fn all_cancelled_event_proposals() -> Path {
-    Path::from("all_cancelled_event_proposals")
+pub fn all_cancelled_proposals() -> Path {
+    Path::from("all_cancelled_proposals")
 }
 #[hdk_extern]
-pub fn get_all_cancelled_event_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
-    get_from_path(all_cancelled_event_proposals())
+pub fn get_all_cancelled_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
+    get_from_path(all_cancelled_proposals())
 }
 fn get_from_path(path: Path) -> ExternResult<Vec<ActionHash>> {
     let links = get_links(path.path_entry_hash()?, LinkTypes::AllEvents, None)?;
@@ -72,7 +114,11 @@ fn get_from_path(path: Path) -> ExternResult<Vec<ActionHash>> {
     Ok(hashes)
 }
 pub fn remove_from_collection(hash: &ActionHash, path: Path) -> ExternResult<()> {
-    let links = get_links(path.path_entry_hash()?, LinkTypes::AllEvents, None)?;
+    let links = get_links(
+        path.path_entry_hash()?,
+        vec![LinkTypes::AllEvents, LinkTypes::AllProposals],
+        None,
+    )?;
     for link in links {
         if let Some(action_hash) = link.target.into_action_hash() {
             if action_hash.eq(&hash) {

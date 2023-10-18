@@ -27,7 +27,7 @@ export function defaultFilter(): Filter {
 export function statusToTime(
   status: EventStatus
 ): 'upcoming' | 'past' | 'cancelled' {
-  if (status === 'open_event_proposal' || status === 'upcoming_event')
+  if (status === 'open_proposal' || status === 'upcoming_event')
     return 'upcoming';
   if (status === 'past_event' || status === 'expired_event_proposal')
     return 'past';
@@ -38,7 +38,7 @@ export function statusToType(
   status: EventStatus
 ): 'events' | 'event_proposals' {
   if (
-    status === 'open_event_proposal' ||
+    status === 'open_proposal' ||
     status === 'expired_event_proposal' ||
     status === 'cancelled_event_proposal'
   )
@@ -53,11 +53,9 @@ export function typeAndTimeToStatus(
   if (type === 'events' && time === 'upcoming') return 'upcoming_event';
   if (type === 'events' && time === 'past') return 'past_event';
   if (type === 'events' && time === 'cancelled') return 'cancelled_event';
-  if (type === 'event_proposals' && time === 'upcoming')
-    return 'open_event_proposal';
-  if (type === 'event_proposals' && time === 'past')
-    return 'expired_event_proposal';
-  return 'cancelled_event_proposal';
+  if (type === 'event_proposals' && time === 'upcoming') return 'open_proposal';
+  if (type === 'event_proposals' && time === 'past') return 'expired_proposal';
+  return 'cancelled_proposal';
 }
 
 @customElement('events-filter')

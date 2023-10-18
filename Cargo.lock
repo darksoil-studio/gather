@@ -681,6 +681,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "cancellations"
+version = "0.0.1"
+dependencies = [
+ "hc_zome_cancellations_coordinator",
+ "hdk",
+ "serde",
+]
+
+[[package]]
+name = "cancellations_integrity"
+version = "0.0.1"
+dependencies = [
+ "hc_zome_cancellations_integrity",
+ "hdi",
+ "serde",
+]
+
+[[package]]
 name = "cargo-platform"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2110,7 +2128,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_assemble_coordinator"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/assemble?branch=main#562b0a1a9e711d98ccf46870a254661339538042"
+source = "git+https://github.com/darksoil-studio/assemble?branch=main#522180aae38aaab95be34e34eb7585137139fc6d"
 dependencies = [
  "hc_zome_assemble_integrity",
  "hdk",
@@ -2120,7 +2138,26 @@ dependencies = [
 [[package]]
 name = "hc_zome_assemble_integrity"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/assemble?branch=main#562b0a1a9e711d98ccf46870a254661339538042"
+source = "git+https://github.com/darksoil-studio/assemble?branch=main#522180aae38aaab95be34e34eb7585137139fc6d"
+dependencies = [
+ "hdi",
+ "serde",
+]
+
+[[package]]
+name = "hc_zome_cancellations_coordinator"
+version = "0.0.1"
+source = "git+https://github.com/holochain-open-dev/cancellations?branch=main#16662d8ecdce03450aeea71bcc98ad26184031d5"
+dependencies = [
+ "hc_zome_cancellations_integrity",
+ "hdk",
+ "serde",
+]
+
+[[package]]
+name = "hc_zome_cancellations_integrity"
+version = "0.0.1"
+source = "git+https://github.com/holochain-open-dev/cancellations?branch=main#16662d8ecdce03450aeea71bcc98ad26184031d5"
 dependencies = [
  "hdi",
  "serde",

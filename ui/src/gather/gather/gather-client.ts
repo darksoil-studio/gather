@@ -1,5 +1,3 @@
-import { Cancellation } from './types';
-
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 import {
   ActionHash,
@@ -10,7 +8,7 @@ import {
   SignedActionHashed,
 } from '@holochain/client';
 
-import { Event, GatherSignal } from './types';
+import { Proposal, Event, GatherSignal } from './types';
 
 export interface GetEventOutput {
   event: EntryRecord<Event>;
@@ -29,13 +27,6 @@ export class GatherClient extends ZomeClient<GatherSignal> {
 
   async createEvent(event: Event): Promise<EntryRecord<Event>> {
     const record = await this.callZome('create_event', event);
-
-    return new EntryRecord(record);
-  }
-
-  async createEventProposal(event: Event): Promise<EntryRecord<Event>> {
-    const record = await this.callZome('create_event_proposal', event);
-
     return new EntryRecord(record);
   }
 
@@ -71,12 +62,64 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     });
   }
 
+  /** Proposal */
+
+  async createProposal(proposal: Proposal): Promise<EntryRecord<Proposal>> {
+    const record = await this.callZome('create_proposal', proposal);
+
+    return new EntryRecord(record);
+  }
+
+  async getProposal(
+    proposalHash: ActionHash
+  ): Promise<EntryRecord<Proposal> | undefined> {
+    const output: any | undefined = await this.callZome(
+      'get_proposal',
+      proposalHash
+    );
+    if (!output) return undefined;
+
+    return new EntryRecord(output);
+  }
+
+  async getAllProposalRevisions(
+    proposalHash: ActionHash
+  ): Promise<Array<EntryRecord<Proposal>>> {
+    const records: Record[] = await this.callZome(
+      'get_all_proposal_revisions',
+      proposalHash
+    );
+
+    return records.map(r => new EntryRecord(r));
+  }
+
+  async updateProposal(
+    originalProposalHash: ActionHash,
+    previousProposalHash: ActionHash,
+    updatedProposal: Proposal
+  ): Promise<EntryRecord<Proposal>> {
+    const record = await this.callZome('update_proposal', {
+      original_proposal_hash: originalProposalHash,
+      previous_proposal_hash: previousProposalHash,
+      updated_proposal: updatedProposal,
+    });
+    return new EntryRecord(record);
+  }
+
   /** Participants for Event */
 
   /** All Events */
 
-  markEventPast(eventHash: ActionHash): Promise<void> {
-    return this.callZome('mark_event_past', eventHash);
+  markEventAsUpcoming(eventHash: ActionHash): Promise<void> {
+    return this.callZome('mark_event_as_upcoming', eventHash);
+  }
+
+  markEventAsCancelled(eventHash: ActionHash): Promise<void> {
+    return this.callZome('mark_event_as_cancelled', eventHash);
+  }
+
+  markEventAsPast(eventHash: ActionHash): Promise<void> {
+    return this.callZome('mark_event_as_past', eventHash);
   }
 
   getAllUpcomingEvents(): Promise<Array<ActionHash>> {
@@ -91,26 +134,26 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('get_all_past_events', null);
   }
 
-  /** All Events */
+  /** All Proposals */
 
-  markEventProposalExpired(eventHash: ActionHash): Promise<void> {
-    return this.callZome('mark_event_proposal_expired', eventHash);
+  markProposalAsExpired(eventHash: ActionHash): Promise<void> {
+    return this.callZome('mark_proposal_as_expired', eventHash);
   }
 
-  markEventProposalFulfilled(eventHash: ActionHash): Promise<void> {
-    return this.callZome('mark_event_proposal_fulfilled', eventHash);
+  markProposalAsFulfilled(eventHash: ActionHash): Promise<void> {
+    return this.callZome('mark_proposal_as_fulfilled', eventHash);
   }
 
-  async getAllOpenEventProposals(): Promise<Array<ActionHash>> {
-    return this.callZome('get_all_open_event_proposals', null);
+  async getAllOpenProposals(): Promise<Array<ActionHash>> {
+    return this.callZome('get_all_open_proposals', null);
   }
 
-  getAllCancelledEventProposals(): Promise<Array<ActionHash>> {
-    return this.callZome('get_all_cancelled_event_proposals', null);
+  getAllCancelledProposals(): Promise<Array<ActionHash>> {
+    return this.callZome('get_all_cancelled_proposals', null);
   }
 
-  getAllExpiredEventProposals(): Promise<Array<ActionHash>> {
-    return this.callZome('get_all_expired_event_proposals', null);
+  getAllExpiredProposals(): Promise<Array<ActionHash>> {
+    return this.callZome('get_all_expired_proposals', null);
   }
 
   /** My Events  */
@@ -119,53 +162,37 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('get_my_events', null);
   }
 
-  /** Cancellation */
-
-  async cancelEvent(
-    eventHash: ActionHash,
-    reason: string
-  ): Promise<EntryRecord<Cancellation>> {
-    const record: Record = await this.callZome('cancel_event', {
-      event_hash: eventHash,
-      reason,
-    });
-    return new EntryRecord(record);
+  async addToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
+    return this.callZome('add_to_my_events', eventOrProposalHash);
   }
 
-  async getCancellation(
-    cancellationHash: ActionHash
-  ): Promise<EntryRecord<Cancellation> | undefined> {
-    const record: Record = await this.callZome(
-      'get_cancellation',
-      cancellationHash
+  async removeToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
+    return this.callZome('remove_to_my_events', eventOrProposalHash);
+  }
+
+  /** Possible Participants */
+
+  async getPossibleParticipants(
+    eventOrProposalHash: ActionHash
+  ): Promise<Array<AgentPubKey>> {
+    return this.callZome('get_possible_participants', eventOrProposalHash);
+  }
+
+  async addMyselfAsPossibleParticipant(
+    eventOrProposalHash: ActionHash
+  ): Promise<void> {
+    return this.callZome(
+      'add_myself_as_possible_participant',
+      eventOrProposalHash
     );
-    return record ? new EntryRecord(record) : undefined;
   }
 
-  deleteCancellation(
-    originalCancellationHash: ActionHash
-  ): Promise<ActionHash> {
-    return this.callZome('delete_cancellation', originalCancellationHash);
-  }
-
-  async updateCancellation(
-    previousCancellationHash: ActionHash,
-    updatedCancellation: Cancellation
-  ): Promise<EntryRecord<Cancellation>> {
-    const record: Record = await this.callZome('update_cancellation', {
-      previous_cancellation_hash: previousCancellationHash,
-      updated_cancellation: updatedCancellation,
-    });
-    return new EntryRecord(record);
-  }
-
-  async getCancellationsForEvent(
-    eventHash: ActionHash
-  ): Promise<Array<EntryRecord<Cancellation>>> {
-    const records: Record[] = await this.callZome(
-      'get_cancellations_for_event',
-      eventHash
+  async removeMyselfAsPossibleParticipant(
+    eventOrProposalHash: ActionHash
+  ): Promise<void> {
+    return this.callZome(
+      'remove_myself_as_possible_participant',
+      eventOrProposalHash
     );
-    return records.map(r => new EntryRecord(r));
   }
 }

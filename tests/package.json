@@ -12,6 +12,7 @@
     "@holochain/client": "^0.16.1",
     "@holochain/tryorama": "^0.15.0",
     "@holochain-open-dev/stores": "^0.7.1",
+    "@holochain-open-dev/utils": "^0.16.0",
     "@msgpack/msgpack": "^2.7.0",
     "vitest": "^0.34.5"
   },
