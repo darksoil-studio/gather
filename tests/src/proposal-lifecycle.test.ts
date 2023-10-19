@@ -52,6 +52,11 @@ test('proposal: create and cancel', async t => {
 
       cancelledProposals = await toPromise(bob.store.allCancelledProposals);
       assert.equal(cancelledProposals.length, 1);
+
+      let aliceCancelledProposals = await toPromise(
+        alice.store.myCancelledProposals
+      );
+      assert.equal(aliceCancelledProposals.length, 1);
     },
     true,
     { timeout: 30_000 }
@@ -69,7 +74,7 @@ test('proposal: create and expire', async t => {
       assert.equal(expiredProposals.length, 0);
 
       const proposal = await alice.store.client.createProposal(
-        await sampleProposal(alice.store)
+        await sampleProposal(alice.store, {}, (Date.now() + 30_000) * 1000)
       );
       assert.ok(proposal);
 
@@ -110,6 +115,8 @@ test('proposal: create and fulfill', async t => {
       assert.equal(upcomingEvents.length, 0);
       let myEvents = await toPromise(alice.store.myEvents);
       assert.equal(myEvents.length, 0);
+      let myOpenProposals = await toPromise(alice.store.myOpenProposals);
+      assert.equal(myOpenProposals.length, 0);
 
       const proposal = await alice.store.client.createProposal(
         await sampleProposal(alice.store)
@@ -123,8 +130,8 @@ test('proposal: create and fulfill', async t => {
 
       openProposals = await toPromise(bob.store.allOpenProposals);
       assert.equal(openProposals.length, 1);
-      myEvents = await toPromise(alice.store.myEvents);
-      assert.equal(myEvents.length, 0);
+      myOpenProposals = await toPromise(alice.store.myOpenProposals);
+      assert.equal(myOpenProposals.length, 1);
 
       const assembly = await alice.store.assembleStore.client.createAssembly({
         call_to_action_hash: proposal.entry.call_to_action_hash,
@@ -132,24 +139,26 @@ test('proposal: create and fulfill', async t => {
       });
 
       const event = await alice.store.client.createEvent({
-        fromProposal: {
+        from_proposal: {
           proposal_hash: proposal.actionHash,
           assembly_hash: assembly.actionHash,
         },
         ...(proposal.entry as any),
       });
-      await alice.store.client.markProposalAsFulfilled(proposal.actionHash);
 
       await dhtSync(
         [alice.player, bob.player],
         alice.player.cells[0].cell_id[0]
       );
 
+      myOpenProposals = await toPromise(alice.store.myOpenProposals);
+      assert.equal(myOpenProposals.length, 0);
       openProposals = await toPromise(bob.store.allOpenProposals);
       assert.equal(openProposals.length, 0);
-
-      upcomingEvents = await toPromise(alice.store.allUpcomingEvents);
+      upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 1);
+      let aliceUpcomingEvents = await toPromise(alice.store.myUpcomingEvents);
+      assert.equal(aliceUpcomingEvents.length, 1);
     },
     true,
     { timeout: 30_000 }

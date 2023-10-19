@@ -63,9 +63,10 @@ export interface Proposal {
 export type EventStatus = 'upcoming_event' | 'past_event' | 'cancelled_event';
 
 export type ProposalStatus =
-  | 'open_proposal'
-  | 'expired_proposal'
-  | 'cancelled_proposal';
+  | { type: 'open_proposal' }
+  | { type: 'expired_proposal' }
+  | { type: 'cancelled_proposal' }
+  | { type: 'fulfilled_proposal'; eventHash: ActionHash };
 
 export interface ProposalWithStatus {
   originalActionHash: ActionHash;

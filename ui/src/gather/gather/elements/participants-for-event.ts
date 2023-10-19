@@ -26,15 +26,20 @@ import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/profiles/dist/elements/profile-list-item-skeleton.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
+import './profile-list-item.js';
+
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event } from '../types.js';
+import { Event, Proposal } from '../types.js';
 
 @localized()
 @customElement('participants-for-event')
 export class ParticipantsForEvent extends LitElement {
   @property(hashProperty('event-hash'))
-  eventHash!: ActionHash;
+  eventHash: ActionHash | undefined;
+
+  @property(hashProperty('proposal-hash'))
+  proposalHash: ActionHash | undefined;
 
   /**
    * @internal
@@ -53,60 +58,72 @@ export class ParticipantsForEvent extends LitElement {
    */
   _participants = new StoreSubscriber(
     this,
-    () =>
-      joinAsync([
-        this.gatherStore.events.get(this.eventHash),
-        pipe(
+    () => {
+      if (this.eventHash)
+        return joinAsync([
+          this.gatherStore.events.get(this.eventHash),
           this.gatherStore.participantsForEvent.get(this.eventHash),
-          agentPubKeys => this.profilesStore.agentsProfiles(agentPubKeys)
-        ),
-      ]),
-    () => [this.eventHash]
+          this.gatherStore.interestedInEvent.get(this.eventHash),
+        ]);
+      return joinAsync([
+        this.gatherStore.proposals.get(this.proposalHash!),
+        this.gatherStore.participantsForProposal.get(this.proposalHash!),
+        this.gatherStore.interestedInProposal.get(this.proposalHash!),
+      ]);
+    },
+    () => [this.eventHash, this.proposalHash]
   );
 
   renderParticipantsList(
-    participants: ReadonlyMap<AgentPubKey, Profile | undefined>
+    participants: AgentPubKey[],
+    placeholderLabel: string
   ) {
-    if (participants.size === 0)
-      return html`<span class="placeholder"
-        >${msg('This event has no participants yet.')}</span
-      >`;
+    if (participants.length === 0)
+      return html`<span class="placeholder">${placeholderLabel}</span>`;
     return html`
-      <div class="column">
-        ${Array.from(participants.entries()).map(
-          ([pubkey, profile]) => html`<div
-            class="row"
-            style="align-items: center; margin-bottom: 8px"
-          >
-            <agent-avatar
-              size="40"
-              slot="start"
-              .agentPubKey=${pubkey}
-            ></agent-avatar>
-            <span style="margin-left:8px">${profile?.nickname}</span>
-          </div>`
+      <div class="column" style="gap: 8px">
+        ${participants.map(
+          pubkey => html`
+            <profile-list-item .agentPubKey=${pubkey}></profile-list-item>
+          `
         )}
       </div>
     `;
   }
 
   renderParticipants(
-    event: EntryRecord<Event>,
-    participants: ReadonlyMap<AgentPubKey, Profile | undefined>
+    event: EntryRecord<Event | Proposal>,
+    participants: AgentPubKey[],
+    interested: AgentPubKey[]
   ) {
     return html`
-      <div class="row" style="align-items: center;" slot="header">
-        <span class="title" style="flex: 1">${msg('Participants')}</span>
+      <div class="column" style="gap: 16px">
+        <div class="row" style="align-items: center;">
+          <span class="title" style="flex: 1">${msg('Participants')}</span>
 
-        <call-to-action-need-progress
-          .callToActionHash=${event.entry.call_to_action_hash}
-          .needIndex=${0}
-          style="width: 150px"
-        ></call-to-action-need-progress>
-      </div>
+          <call-to-action-need-progress
+            .callToActionHash=${event.entry.call_to_action_hash}
+            .needIndex=${0}
+            style="width: 150px"
+          ></call-to-action-need-progress>
+        </div>
 
-      <div class="column" style="flex: 1">
-        ${this.renderParticipantsList(participants)}
+        <div class="column" style="flex: 1">
+          ${this.renderParticipantsList(
+            participants,
+
+            this.eventHash
+              ? msg('This event has no participants yet.')
+              : msg('This proposal has no participants yet.')
+          )}
+          ${this.renderParticipantsList(
+            interested,
+
+            this.eventHash
+              ? msg('No one is interested in this event yet.')
+              : msg('No one is interested in this proposal yet.')
+          )}
+        </div>
       </div>
     `;
   }
@@ -120,14 +137,11 @@ export class ParticipantsForEvent extends LitElement {
           <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
       case 'complete':
-        return html`
-          <sl-card style="flex: 1; display: flex;">
-            ${this.renderParticipants(
-              this._participants.value.value[0]!.currentEvent,
-              this._participants.value.value[1]
-            )}
-          </sl-card>
-        `;
+        return this.renderParticipants(
+          this._participants.value.value[0],
+          this._participants.value.value[1],
+          this._participants.value.value[2]
+        );
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching the participants for this event')}

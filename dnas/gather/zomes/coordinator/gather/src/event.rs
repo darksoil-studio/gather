@@ -1,7 +1,7 @@
 use gather_integrity::*;
 use hdk::prelude::*;
 
-use crate::global_collections::all_upcoming_events;
+use crate::global_collections::{all_open_proposals, all_upcoming_events, remove_from_collection};
 
 #[hdk_extern]
 pub fn create_event(event: Event) -> ExternResult<Record> {
@@ -26,6 +26,16 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
         LinkTypes::MyEvents,
         (),
     )?;
+
+    if let Some(from_proposal) = event.from_proposal {
+        remove_from_collection(&from_proposal.proposal_hash, all_open_proposals())?;
+        create_link(
+            from_proposal.proposal_hash,
+            event_hash,
+            LinkTypes::ProposalToEvent,
+            (),
+        )?;
+    }
 
     Ok(record)
 }

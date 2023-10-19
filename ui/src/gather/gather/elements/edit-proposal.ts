@@ -24,19 +24,18 @@ import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event as GatherEvent } from '../types.js';
-import { SlDialog } from '@shoelace-style/shoelace';
+import { Event as GatherEvent, Proposal } from '../types.js';
 import { mdiCancel } from '@mdi/js';
 import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
 
 @localized()
-@customElement('edit-event')
-export class EditEvent extends LitElement {
-  @property(hashProperty('original-event-hash'))
-  originalEventHash!: ActionHash;
+@customElement('edit-proposal')
+export class EditProposal extends LitElement {
+  @property(hashProperty('original-proposal-hash'))
+  originalProposalHash!: ActionHash;
 
   @property()
-  currentRecord!: EntryRecord<GatherEvent>;
+  currentRecord!: EntryRecord<Proposal>;
 
   @consume({ context: gatherStoreContext })
   gatherStore!: GatherStore;
@@ -48,13 +47,14 @@ export class EditEvent extends LitElement {
   @state()
   updating = false;
 
-  async updateEvent(fields: any) {
+  async updateProposal(fields: any) {
     if (this.updating) return;
     this.updating = true;
 
-    const event: GatherEvent = {
+    const proposal: Proposal = {
       ...fields,
       call_to_action_hash: this.currentRecord.entry.call_to_action_hash,
+
       time: {
         type: 'Unique',
         start_time: new Date(fields.start_time).valueOf() * 1000,
@@ -63,25 +63,25 @@ export class EditEvent extends LitElement {
     };
 
     try {
-      const updateRecord = await this.gatherStore.client.updateEvent(
-        this.originalEventHash,
+      const updateRecord = await this.gatherStore.client.updateProposal(
+        this.originalProposalHash,
         this.currentRecord.actionHash,
-        event
+        proposal
       );
 
       this.dispatchEvent(
-        new CustomEvent('event-updated', {
+        new CustomEvent('proposal-updated', {
           composed: true,
           bubbles: true,
           detail: {
-            originalEventHash: this.originalEventHash,
-            previousEventHash: this.currentRecord.actionHash,
-            updatedEventHash: updateRecord.actionHash,
+            originalProposalHash: this.originalProposalHash,
+            previousProposalHash: this.currentRecord.actionHash,
+            updatedProposalHash: updateRecord.actionHash,
           },
         })
       );
     } catch (e: any) {
-      notifyError(msg('Error updating the event'));
+      notifyError(msg('Error updating the proposal'));
       console.error(e);
     }
     this.updating = false;
@@ -89,17 +89,17 @@ export class EditEvent extends LitElement {
 
   render() {
     return html` <create-cancellation-dialog
-        .label=${msg('Cancel Event')}
+        .label=${msg('Cancel Proposal')}
         .warning=${msg(
-          'Are you sure you want to cancel this event? This cannot be reversed. All participants will be notified.'
+          'Are you sure you want to cancel this proposal? This cannot be reversed. All participants will be notified.'
         )}
-        .cancelledHash=${this.originalEventHash}
+        .cancelledHash=${this.originalProposalHash}
       ></create-cancellation-dialog>
       <sl-card style="display: flex;">
-        <span slot="header">${msg('Edit Event')}</span>
+        <span slot="header">${msg('Edit Proposal')}</span>
         <form
           style="display: flex; flex-direction: column; margin: 0;"
-          ${onSubmit(fields => this.updateEvent(fields))}
+          ${onSubmit(fields => this.updateProposal(fields))}
         >
           <upload-files
             name="image"
@@ -127,11 +127,10 @@ export class EditEvent extends LitElement {
           <div class="row" style="margin-bottom: 16px">
             <sl-datetime-input
               name="start_time"
-              required
               id="start-time"
-              .defaultValue=${new Date(
-                this.currentRecord.entry.time.start_time / 1000
-              )}
+              .defaultValue=${this.currentRecord.entry.time
+                ? new Date(this.currentRecord.entry.time.start_time / 1000)
+                : undefined}
               .label=${msg('Start Time')}
               style="flex: 1; margin-right: 16px"
               @input=${() => this.requestUpdate()}
@@ -141,9 +140,11 @@ export class EditEvent extends LitElement {
               .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
                 ?.value}
               name="end_time"
-              .defaultValue=${new Date(
-                (this.currentRecord.entry.time as any).end_time / 1000
-              )}
+              .defaultValue=${this.currentRecord.entry.time
+                ? new Date(
+                    (this.currentRecord.entry.time as any).end_time / 1000
+                  )
+                : undefined}
               .label=${msg('End Time')}
               style="flex: 1;"
             ></sl-datetime-input>
@@ -152,7 +153,6 @@ export class EditEvent extends LitElement {
           <div class="row" style="margin-bottom: 16px">
             <sl-input
               name="location"
-              required
               style="flex: 1; margin-right: 16px"
               .label=${msg('Location')}
               .defaultValue=${this.currentRecord.entry.location}
@@ -178,7 +178,7 @@ export class EditEvent extends LitElement {
               }}
             >
               <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
-              ${msg('Cancel Event')}
+              ${msg('Cancel Proposal')}
             </sl-button>
             <sl-button
               @click=${() =>

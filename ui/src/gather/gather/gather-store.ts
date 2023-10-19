@@ -15,7 +15,11 @@ import {
   sliceAndJoin,
   toPromise,
 } from '@holochain-open-dev/stores';
-import { EntryRecord, LazyHoloHashMap } from '@holochain-open-dev/utils';
+import {
+  EntryRecord,
+  LazyHoloHashMap,
+  HoloHashMap,
+} from '@holochain-open-dev/utils';
 import { CancellationsStore } from '@holochain-open-dev/cancellations';
 import { ActionHash, AgentPubKey } from '@holochain/client';
 import { msg } from '@lit/localize';
@@ -71,17 +75,21 @@ export function deriveStatus(
 export function deriveProposalStatus(
   proposal: EntryRecord<Proposal>,
   cancellations: Array<ActionHash>,
-  callToAction: EntryRecord<CallToAction>
+  callToAction: EntryRecord<CallToAction>,
+  events: ActionHash[]
 ): ProposalStatus {
-  const isCancelled = cancellations.length > 0;
-
-  if (isCancelled) return 'cancelled_proposal';
+  if (events.length > 0)
+    return {
+      type: 'fulfilled_proposal',
+      eventHash: events[0],
+    };
+  if (cancellations.length > 0) return { type: 'cancelled_proposal' };
   if (
-    callToAction.entry.expiration_time !== undefined &&
+    !!callToAction.entry.expiration_time &&
     callToAction.entry.expiration_time < Date.now() * 1000
   )
-    return 'expired_proposal';
-  return 'open_proposal';
+    return { type: 'expired_proposal' };
+  return { type: 'open_proposal' };
 }
 
 export type EventUpdate = {
@@ -105,6 +113,17 @@ export class GatherStore {
       if (signal.type === 'EntryCreated') {
         if (signal.app_entry.type === 'Cancellation') {
           // Something was cancelled
+          const cancelledHash = signal.app_entry.cancelled_hash;
+          try {
+            const proposal = await toPromise(this.proposals.get(cancelledHash));
+            await this.client.markProposalAsCancelled(cancelledHash);
+          } catch (e) {
+            console.log(e);
+          }
+          try {
+            const event = await toPromise(this.events.get(cancelledHash));
+            await this.client.markEventAsCancelled(cancelledHash);
+          } catch (e) {}
           // const eventHash = signal.action.hashed.content.deletes_address;
           // let participants = await toPromise(
           //   this.participantsForEvent.get(eventHash)
@@ -141,18 +160,20 @@ export class GatherStore {
     )
   );
 
-  eventStatus = new LazyHoloHashMap<ActionHash, AsyncReadable<EventWithStatus>>(
-    (eventHash: AgentPubKey) =>
-      pipe(
-        this.events.get(eventHash),
-        _ => this.cancellationsStore.cancellationsFor.get(eventHash),
+  eventsStatus = new LazyHoloHashMap<
+    ActionHash,
+    AsyncReadable<EventWithStatus>
+  >((eventHash: AgentPubKey) =>
+    pipe(
+      this.events.get(eventHash),
+      _ => this.cancellationsStore.cancellationsFor.get(eventHash),
 
-        (cancellations, event) => ({
-          originalActionHash: eventHash,
-          currentEvent: event,
-          status: deriveStatus(event, cancellations),
-        })
-      )
+      (cancellations, event) => ({
+        originalActionHash: eventHash,
+        currentEvent: event,
+        status: deriveStatus(event, cancellations),
+      })
+    )
   );
 
   proposals = new LazyHoloHashMap((proposalHash: ActionHash) =>
@@ -166,7 +187,7 @@ export class GatherStore {
     )
   );
 
-  proposalStatus = new LazyHoloHashMap<
+  proposalsStatus = new LazyHoloHashMap<
     ActionHash,
     AsyncReadable<ProposalWithStatus>
   >((proposalHash: ActionHash) =>
@@ -178,11 +199,17 @@ export class GatherStore {
           this.assembleStore.callToActions.get(
             proposal.entry.call_to_action_hash
           ),
+          this.eventsForProposal.get(proposalHash),
         ]),
-      ([cancellations, callToAction], proposal) => ({
+      ([cancellations, callToAction, events], proposal) => ({
         originalActionHash: proposalHash,
         currentProposal: proposal,
-        status: deriveProposalStatus(proposal, cancellations, callToAction),
+        status: deriveProposalStatus(
+          proposal,
+          cancellations,
+          callToAction,
+          events
+        ),
         callToAction,
       })
     )
@@ -198,6 +225,13 @@ export class GatherStore {
   proposalRevisions = new LazyHoloHashMap((proposalHash: ActionHash) =>
     lazyLoadAndPoll(
       async () => this.client.getAllProposalRevisions(proposalHash),
+      10000
+    )
+  );
+
+  eventsForProposal = new LazyHoloHashMap((proposalHash: ActionHash) =>
+    lazyLoadAndPoll(
+      async () => this.client.getEventsForProposal(proposalHash),
       10000
     )
   );
@@ -281,27 +315,82 @@ export class GatherStore {
 
   /** Participants for Event */
 
-  participantsForEvent = new LazyHoloHashMap((eventHash: ActionHash) =>
-    pipe(
-      this.events.get(eventHash),
-      event =>
-        this.assembleStore.commitmentsForCallToAction.get(
-          event.entry.call_to_action_hash
-        ),
-      commitmentsHashes =>
-        sliceAndJoin(this.assembleStore.commitments, commitmentsHashes),
-      commitments =>
-        Array.from(commitments.values())
-          .filter(c => c.entry.need_index === 0)
-          .map(c => c.action.author)
+  participantsForCallToAction = new LazyHoloHashMap(
+    (callToActionHash: ActionHash) =>
+      pipe(
+        this.assembleStore.commitmentsForCallToAction.get(callToActionHash),
+        commitmentsHashes =>
+          sliceAndJoin(this.assembleStore.commitments, commitmentsHashes),
+        commitments =>
+          Array.from(commitments.values())
+            .filter(c => c.entry.need_index === 0)
+            .map(c => c.action.author)
+      )
+  );
+
+  participantsForProposal = new LazyHoloHashMap((proposalHash: ActionHash) =>
+    pipe(this.proposals.get(proposalHash), proposal =>
+      this.participantsForCallToAction.get(proposal.entry.call_to_action_hash)
     )
+  );
+
+  participantsForEvent = new LazyHoloHashMap((eventHash: ActionHash) =>
+    pipe(this.events.get(eventHash), event =>
+      this.participantsForCallToAction.get(event.entry.call_to_action_hash)
+    )
+  );
+
+  interestedInEvent = new LazyHoloHashMap((eventHash: ActionHash) =>
+    pipe(
+      joinAsync([
+        lazyLoadAndPoll(() => this.client.getInterestedIn(eventHash), 4000),
+
+        this.events.get(eventHash),
+      ]),
+      ([_participants, event]) => {
+        const stores = [
+          this.participantsForCallToAction.get(event.entry.call_to_action_hash),
+        ];
+        if (event.entry.from_proposal) {
+          stores.push(
+            this.interestedInProposal.get(
+              event.entry.from_proposal.proposal_hash
+            )
+          );
+        }
+        return joinAsync(stores);
+      },
+      (p, [eventParticipants]) => {
+        const participants = new HoloHashMap<AgentPubKey, boolean>();
+
+        for (const eventParticipant of eventParticipants) {
+          participants.set(eventParticipant, true);
+        }
+
+        for (const proposalParticipant of p[0]) {
+          participants.set(proposalParticipant, true);
+        }
+        if (p[1]) {
+          // Remove all participants that have actually committed to go
+          for (const participant of p[1]) {
+            participants.delete(participant);
+          }
+        }
+
+        return Array.from(participants.keys());
+      }
+    )
+  );
+
+  interestedInProposal = new LazyHoloHashMap((proposalHash: ActionHash) =>
+    lazyLoadAndPoll(() => this.client.getInterestedIn(proposalHash), 4000)
   );
 
   // Will contain an ordered list of the original action hashes for the upcoming events
   allUpcomingEvents = pipe(
     lazyLoadAndPoll(() => this.client.getAllUpcomingEvents(), 4000),
     upcomingEventsHashes =>
-      sliceAndJoin(this.eventStatus, upcomingEventsHashes),
+      sliceAndJoin(this.eventsStatus, upcomingEventsHashes),
     upcomingEvents => {
       const events = [];
       for (const [eventHash, eventWithStatus] of upcomingEvents.entries()) {
@@ -334,16 +423,16 @@ export class GatherStore {
   allOpenProposals = pipe(
     lazyLoadAndPoll(() => this.client.getAllOpenProposals(), 1000),
     openProposalsHashes =>
-      sliceAndJoin(this.proposalStatus, openProposalsHashes),
-    openEventProposals => {
+      sliceAndJoin(this.proposalsStatus, openProposalsHashes),
+    openProposals => {
       const proposals = [];
       for (const [
         proposalHash,
         proposalWithStatus,
-      ] of openEventProposals.entries()) {
-        if (proposalWithStatus.status === 'expired_proposal') {
+      ] of openProposals.entries()) {
+        if (proposalWithStatus.status.type === 'expired_proposal') {
           this.client.markProposalAsExpired(proposalHash);
-        } else if (proposalWithStatus.status === 'open_proposal') {
+        } else if (proposalWithStatus.status.type === 'open_proposal') {
           proposals.push(proposalWithStatus);
         }
       }

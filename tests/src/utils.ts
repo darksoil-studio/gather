@@ -22,7 +22,8 @@ import { AlertsClient } from '../../ui/src/alerts/alerts-client.js';
 
 export async function sampleProposal(
   gatherStore: GatherStore,
-  partialProposal: Partial<Proposal> = {}
+  partialProposal: Partial<Proposal> = {},
+  expiration_time: number = undefined
 ): Promise<Proposal> {
   return {
     hosts: [],
@@ -46,7 +47,9 @@ export async function sampleProposal(
     cost: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
     call_to_action_hash: (
       await gatherStore.assembleStore.client.createCallToAction(
-        await sampleCallToAction(gatherStore.assembleStore.client)
+        await sampleCallToAction(gatherStore.assembleStore.client, {
+          expiration_time,
+        })
       )
     ).actionHash,
     ...partialProposal,

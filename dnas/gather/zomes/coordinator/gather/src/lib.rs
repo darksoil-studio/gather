@@ -1,7 +1,7 @@
 pub mod event;
 pub mod global_collections;
+pub mod interested;
 pub mod my_events;
-pub mod possible_participant;
 pub mod proposal;
 use gather_integrity::*;
 use hdk::prelude::*;

@@ -26,5 +26,6 @@ pub enum LinkTypes {
     AllEvents,
     AllProposals,
     MyEvents,
-    PossibleParticipants,
+    Interested,
+    ProposalToEvent,
 }

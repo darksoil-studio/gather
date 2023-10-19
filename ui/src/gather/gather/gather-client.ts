@@ -50,16 +50,17 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return records.map(r => new EntryRecord(r));
   }
 
-  updateEvent(
+  async updateEvent(
     originalEventHash: ActionHash,
     previousEventHash: ActionHash,
     updatedEvent: Event
-  ): Promise<Record> {
-    return this.callZome('update_event', {
+  ): Promise<EntryRecord<Event>> {
+    const record = await this.callZome('update_event', {
       original_event_hash: originalEventHash,
       previous_event_hash: previousEventHash,
       updated_event: updatedEvent,
     });
+    return new EntryRecord(record);
   }
 
   /** Proposal */
@@ -106,7 +107,9 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return new EntryRecord(record);
   }
 
-  /** Participants for Event */
+  getEventsForProposal(proposalHash: ActionHash): Promise<Array<ActionHash>> {
+    return this.callZome('get_events_for_proposal', proposalHash);
+  }
 
   /** All Events */
 
@@ -136,12 +139,12 @@ export class GatherClient extends ZomeClient<GatherSignal> {
 
   /** All Proposals */
 
-  markProposalAsExpired(eventHash: ActionHash): Promise<void> {
-    return this.callZome('mark_proposal_as_expired', eventHash);
+  markProposalAsExpired(proposalHash: ActionHash): Promise<void> {
+    return this.callZome('mark_proposal_as_expired', proposalHash);
   }
 
-  markProposalAsFulfilled(eventHash: ActionHash): Promise<void> {
-    return this.callZome('mark_proposal_as_fulfilled', eventHash);
+  markProposalAsCancelled(proposalHash: ActionHash): Promise<void> {
+    return this.callZome('mark_proposal_as_cancelled', proposalHash);
   }
 
   async getAllOpenProposals(): Promise<Array<ActionHash>> {
@@ -162,37 +165,29 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('get_my_events', null);
   }
 
-  async addToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
-    return this.callZome('add_to_my_events', eventOrProposalHash);
-  }
+  // async addToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
+  //   return this.callZome('add_to_my_events', eventOrProposalHash);
+  // }
 
-  async removeToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
-    return this.callZome('remove_to_my_events', eventOrProposalHash);
-  }
+  // async removeToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
+  //   return this.callZome('remove_to_my_events', eventOrProposalHash);
+  // }
 
-  /** Possible Participants */
+  /** Interested */
 
-  async getPossibleParticipants(
+  async getInterestedIn(
     eventOrProposalHash: ActionHash
   ): Promise<Array<AgentPubKey>> {
-    return this.callZome('get_possible_participants', eventOrProposalHash);
+    return this.callZome('get_interested_in', eventOrProposalHash);
   }
 
-  async addMyselfAsPossibleParticipant(
-    eventOrProposalHash: ActionHash
-  ): Promise<void> {
-    return this.callZome(
-      'add_myself_as_possible_participant',
-      eventOrProposalHash
-    );
+  async addMyselfAsInterested(eventOrProposalHash: ActionHash): Promise<void> {
+    return this.callZome('add_myself_as_interested', eventOrProposalHash);
   }
 
-  async removeMyselfAsPossibleParticipant(
+  async removeMyselfAsInterested(
     eventOrProposalHash: ActionHash
   ): Promise<void> {
-    return this.callZome(
-      'remove_myself_as_possible_participant',
-      eventOrProposalHash
-    );
+    return this.callZome('remove_myself_as_interested', eventOrProposalHash);
   }
 }

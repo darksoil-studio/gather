@@ -66,6 +66,11 @@ import { ResizeController } from '@lit-labs/observers/resize-controller.js';
 import { installLogger, MOBILE_WIDTH_PX } from './gather/gather/utils.js';
 import { AlertsClient } from './alerts/alerts-client.js';
 import { AlertsStore } from './alerts/alerts-store.js';
+import {
+  CancellationsClient,
+  CancellationsStore,
+  cancellationsStoreContext,
+} from '@holochain-open-dev/cancellations';
 
 export async function sendRequest(request: any) {
   return new Promise((resolve, reject) => {
@@ -112,6 +117,10 @@ export class HolochainApp extends LitElement {
   @provide({ context: profilesStoreContext })
   @property()
   _profilesStore!: ProfilesStore;
+
+  @provide({ context: cancellationsStoreContext })
+  @property()
+  _cancellationsStore!: CancellationsStore;
 
   @provide({ context: isMobileContext })
   @property()
@@ -188,13 +197,18 @@ export class HolochainApp extends LitElement {
       this,
       () => this._profilesStore.myProfile
     );
+    this._cancellationsStore = new CancellationsStore(
+      new CancellationsClient(appAgentClient, 'gather', 'cancellations')
+    );
     this._assembleStore = new AssembleStore(
-      new AssembleClient(appAgentClient, 'gather')
+      new AssembleClient(appAgentClient, 'gather'),
+      this._cancellationsStore
     );
     this._gatherStore = new GatherStore(
       new GatherClient(appAgentClient, 'gather'),
       this._assembleStore,
-      new AlertsStore(new AlertsClient(appAgentClient, 'gather'))
+      new AlertsStore(new AlertsClient(appAgentClient, 'gather')),
+      this._cancellationsStore
     );
     this._fileStorageClient = new FileStorageClient(appAgentClient, 'gather');
   }

@@ -29,18 +29,21 @@ export class AllEvents extends LitElement {
   _allEvents = new StoreSubscriber(
     this,
     () => {
-      if (this.filter.status === 'upcoming_event')
-        return this.gatherStore.allUpcomingEvents;
-      if (this.filter.status === 'past_event')
-        return this.gatherStore.allPastEvents;
-      if (this.filter.status === 'cancelled_event')
-        return this.gatherStore.allCancelledEvents;
-      if (this.filter.status === 'open_event_proposal')
-        return this.gatherStore.allOpenProposals;
-      if (this.filter.status === 'expired_event_proposal')
-        return this.gatherStore.allExpiredProposals;
-      if (this.filter.status === 'cancelled_event_proposal')
-        return this.gatherStore.allCancelledProposals;
+      if (this.filter.type === 'events') {
+        if (this.filter.status === 'upcoming')
+          return this.gatherStore.allUpcomingEvents;
+        if (this.filter.status === 'past')
+          return this.gatherStore.allPastEvents;
+        if (this.filter.status === 'cancelled')
+          return this.gatherStore.allCancelledEvents;
+      } else {
+        if (this.filter.status === 'upcoming')
+          return this.gatherStore.allOpenProposals;
+        if (this.filter.status === 'past')
+          return this.gatherStore.allExpiredProposals;
+        if (this.filter.status === 'cancelled')
+          return this.gatherStore.allCancelledProposals;
+      }
     },
     () => [this.filter]
   );
@@ -56,6 +59,23 @@ export class AllEvents extends LitElement {
         .events=${events}
       ></gather-events-calendar>
     `;
+  }
+
+  renderSummary(hash: ActionHash) {
+    if (this.filter.type === 'events')
+      return html` <event-summary
+        .eventHash=${hash}
+        style=${styleMap({
+          width: this._isMobile ? '' : '800px',
+        })}
+      ></event-summary>`;
+
+    return html` <proposal-summary
+      .proposalHash=${hash}
+      style=${styleMap({
+        width: this._isMobile ? '' : '800px',
+      })}
+    ></proposal-summary>`;
   }
 
   renderList(hashes: Array<ActionHash>) {
@@ -78,15 +98,7 @@ export class AllEvents extends LitElement {
             <div
               style="display: flex; flex-direction: column; flex: 1; gap: 16px; align-items: center; margin: 16px"
             >
-              ${hashes.map(
-                hash =>
-                  html`<event-summary
-                    .eventHash=${hash}
-                    style=${styleMap({
-                      width: this._isMobile ? '' : '800px',
-                    })}
-                  ></event-summary>`
-              )}
+              ${hashes.map(hash => this.renderSummary(hash))}
             </div>
           </div>
         </div>

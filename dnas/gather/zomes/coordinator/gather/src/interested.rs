@@ -4,13 +4,13 @@ use hdk::prelude::*;
 use crate::my_events::remove_from_my_events;
 
 #[hdk_extern]
-pub fn add_myself_as_possible_participant(event_or_proposal_hash: ActionHash) -> ExternResult<()> {
+pub fn add_myself_as_interested(event_or_proposal_hash: ActionHash) -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
 
     create_link(
         event_or_proposal_hash.clone(),
         my_pub_key.clone(),
-        LinkTypes::PossibleParticipants,
+        LinkTypes::Interested,
         (),
     )?;
 
@@ -25,16 +25,10 @@ pub fn add_myself_as_possible_participant(event_or_proposal_hash: ActionHash) ->
 }
 
 #[hdk_extern]
-pub fn remove_myself_as_a_possible_participant(
-    event_or_proposal_hash: ActionHash,
-) -> ExternResult<()> {
+pub fn remove_myself_as_interested(event_or_proposal_hash: ActionHash) -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
 
-    let links = get_links(
-        event_or_proposal_hash.clone(),
-        LinkTypes::PossibleParticipants,
-        None,
-    )?;
+    let links = get_links(event_or_proposal_hash.clone(), LinkTypes::Interested, None)?;
 
     for link in links {
         if let Some(pubkey) = link.target.into_agent_pub_key() {
@@ -50,14 +44,8 @@ pub fn remove_myself_as_a_possible_participant(
 }
 
 #[hdk_extern]
-pub fn get_possible_participants(
-    event_or_proposal_hash: ActionHash,
-) -> ExternResult<Vec<AgentPubKey>> {
-    let links = get_links(
-        event_or_proposal_hash.clone(),
-        LinkTypes::PossibleParticipants,
-        None,
-    )?;
+pub fn get_interesteds(event_or_proposal_hash: ActionHash) -> ExternResult<Vec<AgentPubKey>> {
+    let links = get_links(event_or_proposal_hash.clone(), LinkTypes::Interested, None)?;
 
     let agent_pub_keys = links
         .into_iter()

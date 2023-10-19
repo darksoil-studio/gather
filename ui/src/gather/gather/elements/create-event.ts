@@ -25,8 +25,6 @@ import '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
 import { CallToAction, Need } from '@darksoil/assemble';
 import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
 import { SlSwitch } from '@shoelace-style/shoelace';
-import { CallToActionNeedForm } from '@darksoil/assemble/dist/elements/call-to-action-need-form.js';
-import { CallToActionNeedsForm } from '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
 import { EntryRecord } from '@holochain-open-dev/utils';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';

@@ -59,6 +59,9 @@ export class EventActivity extends LitElement {
   @property(hashProperty('event-hash'))
   eventHash!: ActionHash;
 
+  @property(hashProperty('proposal-hash'))
+  proposalHash!: ActionHash;
+
   /**
    * @internal
    */

@@ -11,51 +11,18 @@ import '@shoelace-style/shoelace/dist/components/radio-button/radio-button.js';
 import SlRadioGroup from '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
 
 import { isMobileContext } from '../context.js';
-import { EventStatus } from '../types.js';
 
 export interface Filter {
-  status: EventStatus;
+  type: 'events' | 'proposals';
+  status: 'upcoming' | 'past' | 'cancelled';
   view: 'list' | 'calendar';
 }
 export function defaultFilter(): Filter {
   return {
-    status: 'upcoming_event',
+    type: 'events',
+    status: 'upcoming',
     view: 'list',
   };
-}
-
-export function statusToTime(
-  status: EventStatus
-): 'upcoming' | 'past' | 'cancelled' {
-  if (status === 'open_proposal' || status === 'upcoming_event')
-    return 'upcoming';
-  if (status === 'past_event' || status === 'expired_event_proposal')
-    return 'past';
-  return 'cancelled';
-}
-
-export function statusToType(
-  status: EventStatus
-): 'events' | 'event_proposals' {
-  if (
-    status === 'open_proposal' ||
-    status === 'expired_event_proposal' ||
-    status === 'cancelled_event_proposal'
-  )
-    return 'event_proposals';
-  return 'events';
-}
-
-export function typeAndTimeToStatus(
-  type: 'events' | 'event_proposals',
-  time: 'upcoming' | 'past' | 'cancelled'
-): EventStatus {
-  if (type === 'events' && time === 'upcoming') return 'upcoming_event';
-  if (type === 'events' && time === 'past') return 'past_event';
-  if (type === 'events' && time === 'cancelled') return 'cancelled_event';
-  if (type === 'event_proposals' && time === 'upcoming') return 'open_proposal';
-  if (type === 'event_proposals' && time === 'past') return 'expired_proposal';
-  return 'cancelled_proposal';
 }
 
 @customElement('events-filter')
@@ -70,19 +37,20 @@ export class EventsFilter extends LitElement {
   @property()
   category: 'all_events' | 'my_events' = 'all_events';
 
-  type(): 'events' | 'event_proposals' {
+  type(): 'events' | 'proposals' {
     return (this.shadowRoot!.getElementById('type')! as SlRadioGroup)
       .value as any;
   }
 
-  time() {
-    return (this.shadowRoot!.getElementById('time')! as SlRadioGroup)
+  status() {
+    return (this.shadowRoot!.getElementById('status')! as SlRadioGroup)
       .value as any;
   }
 
   dispathFilterChanged() {
     this.filter = {
-      status: typeAndTimeToStatus(this.type(), this.time()),
+      type: this.type(),
+      status: this.status(),
       view: (this.shadowRoot!.getElementById('view')! as SlRadioGroup).value,
     } as Filter;
     this.dispatchEvent(
@@ -96,29 +64,30 @@ export class EventsFilter extends LitElement {
 
   get title() {
     if (this.category === 'all_events') {
-      if (this.filter.status === 'upcoming_event')
-        return msg('All upcoming events');
-      if (this.filter.status === 'past_event') return msg('All past events');
-      if (this.filter.status === 'open_event_proposal')
-        return msg('All open event proposals');
-      if (this.filter.status === 'expired_event_proposal')
-        return msg('All expired event proposals');
-      if (this.filter.status === 'cancelled_event_proposal')
-        return msg('All cancelled event proposals');
-      if (this.filter.status === 'cancelled_event')
-        return msg('All cancelled events ');
+      if (this.filter.type === 'events') {
+        if (this.filter.status === 'upcoming')
+          return msg('All upcoming events');
+        if (this.filter.status === 'past') return msg('All past events');
+        if (this.filter.status === 'cancelled')
+          return msg('All cancelled events');
+      } else {
+        if (this.filter.status === 'upcoming') return msg('All open proposals');
+        if (this.filter.status === 'past') return msg('All expired proposals');
+        if (this.filter.status === 'cancelled')
+          return msg('All cancelled proposals');
+      }
     } else {
-      if (this.filter.status === 'upcoming_event')
-        return msg('My upcoming events');
-      if (this.filter.status === 'past_event') return msg('My past events');
-      if (this.filter.status === 'open_event_proposal')
-        return msg('My open event proposals');
-      if (this.filter.status === 'expired_event_proposal')
-        return msg('My expired event proposals');
-      if (this.filter.status === 'cancelled_event_proposal')
-        return msg('My cancelled event proposals');
-      if (this.filter.status === 'cancelled_event')
-        return msg('My cancelled events ');
+      if (this.filter.type === 'events') {
+        if (this.filter.status === 'upcoming') return msg('My upcoming events');
+        if (this.filter.status === 'past') return msg('My past events');
+        if (this.filter.status === 'cancelled')
+          return msg('My cancelled events');
+      } else {
+        if (this.filter.status === 'upcoming') return msg('My open proposals');
+        if (this.filter.status === 'past') return msg('My expired proposals');
+        if (this.filter.status === 'cancelled')
+          return msg('My cancelled proposals');
+      }
     }
     return '';
   }
@@ -135,7 +104,7 @@ export class EventsFilter extends LitElement {
       >
         <sl-radio-group
           .label=${this._isMobile && msg('Type')}
-          .value=${statusToType(this.filter.status)}
+          .value=${this.filter.type}
           id="type"
           @sl-change=${() => this.requestUpdate()}
         >
@@ -146,16 +115,16 @@ export class EventsFilter extends LitElement {
         </sl-radio-group>
         <sl-radio-group
           .label=${this._isMobile && msg('Status')}
-          .value=${statusToTime(this.filter.status)}
-          id="time"
+          .value=${this.filter.status}
+          id="status"
         >
           <sl-radio-button value="upcoming"
-            >${statusToType(this.filter.status) === 'events'
+            >${this.filter.type === 'events'
               ? msg('Upcoming')
               : msg('Open')}</sl-radio-button
           >
           <sl-radio-button value="past"
-            >${statusToType(this.filter.status) === 'events'
+            >${this.filter.type === 'events'
               ? msg('Past')
               : msg('Expired')}</sl-radio-button
           >

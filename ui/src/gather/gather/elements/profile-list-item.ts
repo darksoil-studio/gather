@@ -42,7 +42,7 @@ export class ProfileListItem extends LitElement {
         return html`<profile-list-item-skeleton></profile-list-item-skeleton>`;
       case 'complete':
         return html`
-          <div class="row" style="gap: 8px">
+          <div class="row" style="align-items: center; gap: 8px">
             <agent-avatar .agentPubKey=${this.agentPubKey}></agent-avatar>
             <span>${this._profile.value.value?.nickname}</span>
           </div>

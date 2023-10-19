@@ -26,15 +26,17 @@ import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 
+import '@darksoil/assemble/dist/elements/call-to-action-progress.js';
+
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event } from '../types.js';
+import { Event, EventWithStatus, ProposalWithStatus } from '../types.js';
 
 @localized()
 @customElement('event-summary')
 export class EventSummary extends LitElement {
   @property(hashProperty('event-hash'))
-  eventHash!: ActionHash;
+  proposalHash!: ActionHash;
 
   /**
    * @internal
@@ -51,10 +53,10 @@ export class EventSummary extends LitElement {
   /**
    * @internal
    */
-  _event = new StoreSubscriber(
+  _proposal = new StoreSubscriber(
     this,
-    () => this.gatherStore.events.get(this.eventHash),
-    () => [this.eventHash]
+    () => this.gatherStore.proposalsStatus.get(this.proposalHash),
+    () => [this.proposalHash]
   );
 
   /**
@@ -62,8 +64,8 @@ export class EventSummary extends LitElement {
    */
   _participants = new StoreSubscriber(
     this,
-    () => this.gatherStore.participantsForEvent.get(this.eventHash),
-    () => [this.eventHash]
+    () => this.gatherStore.participantsForProposal.get(this.proposalHash),
+    () => [this.proposalHash]
   );
 
   @consume({ context: isMobileContext, subscribe: true })
@@ -90,14 +92,14 @@ export class EventSummary extends LitElement {
     </div>`;
   }
 
-  renderSummary(event: EntryRecord<Event>) {
+  renderSummary(proposal: ProposalWithStatus) {
     return html`
       ${this._isMobile
         ? html`
             <show-image
               slot="image"
               style="flex: 1; height: 200px"
-              .imageHash=${event.entry.image}
+              .imageHash=${proposal.currentProposal.entry.image}
             ></show-image>
           `
         : html``}
@@ -107,7 +109,9 @@ export class EventSummary extends LitElement {
           <div
             style="display: flex; flex-direction: row; flex: 1; align-items: center"
           >
-            <span class="title" style="flex: 1">${event.entry.title}</span>
+            <span class="title" style="flex: 1"
+              >${proposal.currentProposal.entry.title}</span
+            >
           </div>
 
           <span style="flex: 1"></span>
@@ -125,7 +129,7 @@ export class EventSummary extends LitElement {
                         .src=${wrapPathInSvg(mdiMapMarker)}
                       ></sl-icon>
                       <span style="white-space: pre-line"
-                        >${event.entry.location}</span
+                        >${proposal.currentProposal.entry.location}</span
                       >
                     </div>
                   `}
@@ -135,7 +139,7 @@ export class EventSummary extends LitElement {
                 <sl-icon .src=${wrapPathInSvg(mdiCalendarClock)}></sl-icon>
                 <span style="white-space: pre-line"
                   >${new Date(
-                    event.entry.time.start_time / 1000
+                    proposal.currentProposal.entry.time!.start_time / 1000
                   ).toLocaleString()}</span
                 >
               </div>
@@ -147,20 +151,27 @@ export class EventSummary extends LitElement {
               ${this.renderParticipants()}
             </div>
           </div>
+
+          ${proposal.status === 'open_proposal'
+            ? html` <call-to-action-progress
+                .callToActionHash=${proposal.currentProposal.entry
+                  .call_to_action_hash}
+              ></call-to-action-progress>`
+            : html``}
         </div>
 
         ${!this._isMobile
           ? html` <show-image
               style="width: 200px; height: 200px; margin-top: -20px; margin-bottom: -20px; margin-right: -20px; margin-left: 16px"
-              .imageHash=${event.entry.image}
+              .imageHash=${proposal.currentProposal.entry.image}
             ></show-image>`
           : html``}
       </div>
     `;
   }
 
-  renderEvent(event: AsyncStatus<EntryRecord<Event>>) {
-    switch (event.status) {
+  renderProposal(proposal: AsyncStatus<ProposalWithStatus>) {
+    switch (proposal.status) {
       case 'pending':
         return html`<div
           style="display: flex; flex: 1; align-items: center; justify-content: center"
@@ -168,11 +179,11 @@ export class EventSummary extends LitElement {
           <sl-spinner style="font-size: 2rem"></sl-spinner>
         </div>`;
       case 'complete':
-        return this.renderSummary(event.value);
+        return this.renderSummary(proposal.value);
       case 'error':
         return html`<display-error
-          .headline=${msg('Error fetching the event')}
-          .error=${event.error}
+          .headline=${msg('Error fetching the proposal')}
+          .error=${proposal.error}
         ></display-error>`;
     }
   }
@@ -182,16 +193,16 @@ export class EventSummary extends LitElement {
       style=" flex: 1; cursor: grab;"
       @click=${() =>
         this.dispatchEvent(
-          new CustomEvent('event-selected', {
+          new CustomEvent('proposal-selected', {
             bubbles: true,
             composed: true,
             detail: {
-              eventHash: this.eventHash,
+              proposalHash: this.proposalHash,
             },
           })
         )}
     >
-      ${this.renderEvent(this._event.value)}
+      ${this.renderProposal(this._proposal.value)}
     </sl-card>`;
   }
 
