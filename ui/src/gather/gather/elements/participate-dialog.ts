@@ -55,6 +55,9 @@ export class ParticipateDialog extends LitElement {
         comment: msg('I commit to participate'),
         need_index: 0,
       });
+      await this.gatherStore.client.addToMyEvents(
+        this.eventHash ? this.eventHash : this.proposalHash!
+      );
 
       this.dispatchEvent(
         new CustomEvent('participant-added', {

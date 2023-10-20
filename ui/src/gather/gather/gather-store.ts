@@ -169,6 +169,27 @@ export class GatherStore {
           } catch (e) {
             console.log(e);
           }
+          try {
+            const commitment = await toPromise(
+              this.assembleStore.commitments.get(cancelledHash)
+            );
+            if (!commitment.entry.amount) return;
+            if (commitment.entry.need_index === 0) {
+              const myEventsHashes = await toPromise(this.myEvents);
+
+              for (const eventHash of myEventsHashes) {
+                const event = await toPromise(this.events.get(eventHash));
+                if (
+                  event.entry.call_to_action_hash.toString() ===
+                  commitment.entry.call_to_action_hash.toString()
+                ) {
+                  await this.client.removeFromMyEvents(eventHash);
+                }
+              }
+            }
+          } catch (e) {
+            console.log(e);
+          }
           // const eventHash = signal.action.hashed.content.deletes_address;
           // let participants = await toPromise(
           //   this.participantsForEvent.get(eventHash)

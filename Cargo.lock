@@ -2128,7 +2128,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_assemble_coordinator"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/assemble?branch=main#480a6ef46f51f2f5e0f1f434f5779051203bcd0a"
+source = "git+https://github.com/darksoil-studio/assemble?branch=main#a1aefaf464e40e68f2f3ce77d7c8e97c278504ba"
 dependencies = [
  "hc_zome_assemble_integrity",
  "hdk",
@@ -2138,7 +2138,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_assemble_integrity"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/assemble?branch=main#480a6ef46f51f2f5e0f1f434f5779051203bcd0a"
+source = "git+https://github.com/darksoil-studio/assemble?branch=main#a1aefaf464e40e68f2f3ce77d7c8e97c278504ba"
 dependencies = [
  "hdi",
  "serde",

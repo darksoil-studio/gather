@@ -485,7 +485,7 @@ export class EventDetail extends LitElement {
         const event = this._event.value.value;
         const participants = event[1];
 
-        const myParticipationCommitment = participants.has(
+        const myParticipationCommitment = participants.get(
           this.gatherStore.client.client.myPubKey
         );
 

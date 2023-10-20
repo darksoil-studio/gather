@@ -165,13 +165,13 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('get_my_events', null);
   }
 
-  // async addToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
-  //   return this.callZome('add_to_my_events', eventOrProposalHash);
-  // }
+  async addToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
+    return this.callZome('add_to_my_events', eventOrProposalHash);
+  }
 
-  // async removeToMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
-  //   return this.callZome('remove_to_my_events', eventOrProposalHash);
-  // }
+  async removeFromMyEvents(eventOrProposalHash: ActionHash): Promise<void> {
+    return this.callZome('remove_from_my_events', eventOrProposalHash);
+  }
 
   /** Interested */
 
