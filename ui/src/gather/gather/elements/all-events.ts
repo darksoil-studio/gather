@@ -13,6 +13,7 @@ import '@shoelace-style/shoelace/dist/components/divider/divider.js';
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import './event-summary.js';
+import './proposal-summary.js';
 import { defaultFilter, Filter } from './events-filter.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { mdiInformationOutline } from '@mdi/js';
@@ -53,10 +54,17 @@ export class AllEvents extends LitElement {
   _isMobile!: boolean;
 
   renderCalendar(events: ActionHash[]) {
+    if (this.filter.type === 'events')
+      return html`
+        <gather-events-calendar
+          style="flex: 1"
+          .events=${events}
+        ></gather-events-calendar>
+      `;
     return html`
       <gather-events-calendar
         style="flex: 1"
-        .events=${events}
+        .proposals=${events}
       ></gather-events-calendar>
     `;
   }
@@ -85,10 +93,14 @@ export class AllEvents extends LitElement {
       >
         <sl-icon
           .src=${wrapPathInSvg(mdiInformationOutline)}
-          style="font-size: 96px;"
+          style="font-size: 96px; color: grey"
           class="placeholder"
         ></sl-icon>
-        <span class="placeholder">${msg('No events found.')}</span>
+        <span class="placeholder"
+          >${this.filter.type === 'proposals'
+            ? msg('No proposals found.')
+            : msg('No events found.')}</span
+        >
       </div>`;
 
     return html`

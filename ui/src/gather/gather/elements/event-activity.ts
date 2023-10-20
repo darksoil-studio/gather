@@ -1,20 +1,14 @@
 import {
   hashProperty,
-  notifyError,
   sharedStyles,
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
-import { EntryRecord } from '@holochain-open-dev/utils';
-import { ActionHash, AgentPubKey, Record } from '@holochain/client';
+import { ActionHash, Record } from '@holochain/client';
 import { consume } from '@lit-labs/context';
-import { localized, msg } from '@lit/localize';
+import { localized, msg, str } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
-import {
-  joinAsync,
-  StoreSubscriber,
-  toPromise,
-} from '@holochain-open-dev/stores';
-import { customElement, property, state } from 'lit/decorators.js';
+import { StoreSubscriber } from '@holochain-open-dev/stores';
+import { customElement, property } from 'lit/decorators.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
@@ -42,16 +36,18 @@ import './participants-for-event.js';
 import './edit-event.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
-import { EventAction, GatherStore } from '../gather-store.js';
+import { GatherStore } from '../gather-store.js';
 import {
   mdiCancel,
   mdiCheckBold,
   mdiCreation,
   mdiHandshake,
   mdiPartyPopper,
+  mdiUndo,
   mdiUpdate,
 } from '@mdi/js';
 import { styleMap } from 'lit/directives/style-map.js';
+import { EventAction } from '../types.js';
 
 @localized()
 @customElement('event-activity')
@@ -73,8 +69,11 @@ export class EventActivity extends LitElement {
    */
   _eventActivity = new StoreSubscriber(
     this,
-    () => this.gatherStore.eventActivity.get(this.eventHash),
-    () => [this.eventHash]
+    () =>
+      this.eventHash
+        ? this.gatherStore.eventActivity.get(this.eventHash)
+        : this.gatherStore.proposalActivity.get(this.proposalHash),
+    () => [this.eventHash, this.proposalHash]
   );
 
   /**
@@ -86,14 +85,33 @@ export class EventActivity extends LitElement {
 
   messageAndIcon(action: EventAction) {
     switch (action.type) {
+      case 'proposal_created':
+        return {
+          message: msg('Proposal was created.'),
+          icon: wrapPathInSvg(mdiCreation),
+        };
+      case 'proposal_cancelled':
+        return {
+          message: msg('Proposal was cancelled because:'),
+          secondary: action.record.entry.reason,
+          icon: wrapPathInSvg(mdiCancel),
+        };
+      case 'proposal_updated':
+        return {
+          message: msg('Proposal was updated.'),
+          icon: wrapPathInSvg(mdiUpdate),
+        };
       case 'event_created':
         return {
-          message: msg('Event was created.'),
+          message: action.record.entry.from_proposal
+            ? msg('The proposal succeeded! It is now an event.')
+            : msg('Event was created.'),
           icon: wrapPathInSvg(mdiCreation),
         };
       case 'event_cancelled':
         return {
-          message: msg('Event was cancelled.'),
+          message: msg('Event was cancelled because:'),
+          secondary: action.record.entry.reason,
           icon: wrapPathInSvg(mdiCancel),
         };
       case 'event_updated':
@@ -102,25 +120,73 @@ export class EventActivity extends LitElement {
           icon: wrapPathInSvg(mdiUpdate),
         };
       case 'commitment_created':
+        if (action.record.entry.need_index === 0) {
+          return {
+            message: msg('New commitment to participate in the event.'),
+            icon: wrapPathInSvg(mdiHandshake),
+          };
+        }
         return {
-          message: msg('New contribution.'),
+          message: msg('New contribution:'),
+          secondary: msg(
+            str`Commitment to contribute ${
+              action.record.entry.amount
+            } to need "${
+              action.callToAction.entry.needs[action.record.entry.need_index]
+                .description
+            }".`
+          ),
           icon: wrapPathInSvg(mdiHandshake),
         };
-      case 'satisfaction_created':
+      case 'commitment_cancelled':
         return {
-          message: msg('A need was satisfied.'),
+          message: msg(
+            str`Commitment to contribute to need "${
+              action.callToAction.entry.needs[
+                action.commitment.entry.need_index
+              ].description
+            }" was cancelled because:`
+          ),
+          secondary: action.record.entry.reason,
+          icon: wrapPathInSvg(mdiCancel),
+        };
+      case 'commitment_cancellation_undone':
+        return {
+          message: msg('Commitment was uncancelled.'),
+          icon: wrapPathInSvg(mdiUndo),
+        };
+      case 'satisfaction_created':
+        if (action.record.entry.need_index === 0) {
+          return {
+            message: msg(
+              'The minimum required participants for the event has been reached.'
+            ),
+            icon: wrapPathInSvg(mdiHandshake),
+          };
+        }
+        return {
+          message: msg(
+            str`Need "${
+              action.callToAction.entry.needs[action.record.entry.need_index]
+                .description
+            }" was satisfied.`
+          ),
           icon: wrapPathInSvg(mdiCheckBold),
         };
       case 'assembly_created':
         return {
-          message: msg('The proposal succeeded! It is now an event.'),
+          message: msg('All needs have been satisfied!'),
           icon: wrapPathInSvg(mdiPartyPopper),
         };
     }
   }
 
   renderAction(action: EventAction, first: boolean, last: boolean) {
-    const { message, icon } = this.messageAndIcon(action)!;
+    const info = this.messageAndIcon(action)!;
+    const message = info.message;
+    const icon = info.icon;
+    const secondary = info.secondary;
+
     return html`
       <div class="row">
         <div class="column" style="align-items: center">
@@ -144,9 +210,10 @@ export class EventActivity extends LitElement {
         </div>
         <sl-card style="flex: 1; margin-bottom: 8px; margin-top: 8px">
           <div class="column" style="gap: 8px; flex: 1">
-            <div class="row" style="gap: 8px">
-              <span>${message}</span>
-            </div>
+            <span>${message}</span>
+            ${secondary
+              ? html` <span class="placeholder">${secondary}</span> `
+              : html``}
             <div class="row placeholder" style="align-items: center">
               <span style="flex: 1"></span>
               <span>${msg('By')}&nbsp;</span>
@@ -175,7 +242,7 @@ export class EventActivity extends LitElement {
       case 'complete':
         const activity = this._eventActivity.value.value;
         return html`
-          <div class="column">
+          <div class="column" style="flex: 1">
             ${activity.map((r, i) =>
               this.renderAction(r, i === 0, i === activity.length - 1)
             )}
@@ -194,7 +261,6 @@ export class EventActivity extends LitElement {
       :host {
         display: flex;
         flex-direction: column;
-        align-items: center;
       }
       sl-tab-group::part(body) {
         display: flex;

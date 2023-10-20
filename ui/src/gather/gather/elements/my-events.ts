@@ -11,6 +11,7 @@ import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
+import './proposal-summary.js';
 import './event-summary.js';
 import { defaultFilter, Filter } from './events-filter.js';
 import { styleMap } from 'lit/directives/style-map.js';
@@ -31,18 +32,20 @@ export class MyEvents extends LitElement {
   _myEvents = new StoreSubscriber(
     this,
     () => {
-      if (this.filter.status === 'upcoming_event')
-        return this.gatherStore.myUpcomingEvents;
-      if (this.filter.status === 'past_event')
-        return this.gatherStore.myPastEvents;
-      if (this.filter.status === 'cancelled_event')
-        return this.gatherStore.myCancelledEvents;
-      if (this.filter.status === 'open_event_proposal')
-        return this.gatherStore.myOpenProposals;
-      if (this.filter.status === 'expired_event_proposal')
-        return this.gatherStore.myExpiredProposals;
-      if (this.filter.status === 'cancelled_event_proposal')
-        return this.gatherStore.myCancelledProposals;
+      if (this.filter.type === 'events') {
+        if (this.filter.status === 'upcoming')
+          return this.gatherStore.myUpcomingEvents;
+        if (this.filter.status === 'past') return this.gatherStore.myPastEvents;
+        if (this.filter.status === 'cancelled')
+          return this.gatherStore.myCancelledEvents;
+      } else {
+        if (this.filter.status === 'upcoming')
+          return this.gatherStore.myOpenProposals;
+        if (this.filter.status === 'past')
+          return this.gatherStore.myExpiredProposals;
+        if (this.filter.status === 'cancelled')
+          return this.gatherStore.myCancelledProposals;
+      }
     },
     () => [this.filter]
   );
@@ -52,12 +55,36 @@ export class MyEvents extends LitElement {
   _isMobile!: boolean;
 
   renderCalendar(events: ActionHash[]) {
+    if (this.filter.type === 'events')
+      return html`
+        <gather-events-calendar
+          style="flex: 1"
+          .events=${events}
+        ></gather-events-calendar>
+      `;
     return html`
       <gather-events-calendar
         style="flex: 1"
-        .events=${events}
+        .proposals=${events}
       ></gather-events-calendar>
     `;
+  }
+
+  renderSummary(hash: ActionHash) {
+    if (this.filter.type === 'events')
+      return html` <event-summary
+        .eventHash=${hash}
+        style=${styleMap({
+          width: this._isMobile ? '' : '800px',
+        })}
+      ></event-summary>`;
+
+    return html` <proposal-summary
+      .proposalHash=${hash}
+      style=${styleMap({
+        width: this._isMobile ? '' : '800px',
+      })}
+    ></proposal-summary>`;
   }
 
   renderList(hashes: Array<ActionHash>) {
@@ -67,10 +94,14 @@ export class MyEvents extends LitElement {
       >
         <sl-icon
           .src=${wrapPathInSvg(mdiInformationOutline)}
-          style="font-size: 96px;"
+          style="font-size: 96px; color: grey"
           class="placeholder"
         ></sl-icon>
-        <span class="placeholder">${msg('No events found.')}</span>
+        <span class="placeholder"
+          >${this.filter.type === 'proposals'
+            ? msg('No proposals found.')
+            : msg('No events found.')}</span
+        >
       </div>`;
 
     return html`
@@ -81,15 +112,7 @@ export class MyEvents extends LitElement {
               class="column"
               style="flex: 1; gap: 16px; align-items: center; margin: 16px"
             >
-              ${hashes.map(
-                hash =>
-                  html`<event-summary
-                    .eventHash=${hash}
-                    style=${styleMap({
-                      width: this._isMobile ? '' : '800px',
-                    })}
-                  ></event-summary>`
-              )}
+              ${hashes.map(hash => this.renderSummary(hash))}
             </div>
           </div>
         </div>

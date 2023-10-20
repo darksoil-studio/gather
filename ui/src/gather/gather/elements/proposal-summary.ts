@@ -30,11 +30,13 @@ import '@darksoil/assemble/dist/elements/call-to-action-progress.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import { Event, EventWithStatus, ProposalWithStatus } from '../types.js';
+import { ProposalWithStatus } from '../types.js';
+import './call-to-action-needs.js';
+import './agents-avatars.js';
 
 @localized()
-@customElement('event-summary')
-export class EventSummary extends LitElement {
+@customElement('proposal-summary')
+export class ProposalSummary extends LitElement {
   @property(hashProperty('event-hash'))
   proposalHash!: ActionHash;
 
@@ -74,22 +76,12 @@ export class EventSummary extends LitElement {
 
   renderParticipants() {
     if (this._participants.value.status !== 'complete') return html``;
-    const participants = this._participants.value.value;
+    const participants = Array.from(this._participants.value.value.keys());
 
     if (participants.length === 0)
       return html`<span>${msg('No participants yet')}</span>`;
 
-    return html` <div class="row avatar-group">
-      ${participants
-        .slice(0, 3)
-        .map(a => html`<agent-avatar .agentPubKey=${a}></agent-avatar>`)}
-      ${participants.length > 3
-        ? html`<sl-avatar
-            .initials=${`+${participants.length - 3}`}
-            style="--size: 32px"
-          ></sl-avatar>`
-        : html``}
-    </div>`;
+    return html`<agents-avatars .agents=${participants}></agents-avatars> `;
   }
 
   renderSummary(proposal: ProposalWithStatus) {
@@ -105,7 +97,7 @@ export class EventSummary extends LitElement {
         : html``}
 
       <div style="display: flex; flex-direction: row; flex: 1">
-        <div style="display: flex; flex-direction: column; flex: 1; gap: 8px">
+        <div style="display: flex; flex-direction: column; flex: 1; gap: 16px">
           <div
             style="display: flex; flex-direction: row; flex: 1; align-items: center"
           >
@@ -129,7 +121,9 @@ export class EventSummary extends LitElement {
                         .src=${wrapPathInSvg(mdiMapMarker)}
                       ></sl-icon>
                       <span style="white-space: pre-line"
-                        >${proposal.currentProposal.entry.location}</span
+                        >${proposal.currentProposal.entry.location
+                          ? proposal.currentProposal.entry.location
+                          : msg('TBD')}</span
                       >
                     </div>
                   `}
@@ -138,9 +132,11 @@ export class EventSummary extends LitElement {
               >
                 <sl-icon .src=${wrapPathInSvg(mdiCalendarClock)}></sl-icon>
                 <span style="white-space: pre-line"
-                  >${new Date(
-                    proposal.currentProposal.entry.time!.start_time / 1000
-                  ).toLocaleString()}</span
+                  >${proposal.currentProposal.entry.time
+                    ? new Date(
+                        proposal.currentProposal.entry.time.start_time / 1000
+                      ).toLocaleString()
+                    : msg('TBD')}</span
                 >
               </div>
             </div>
@@ -152,7 +148,7 @@ export class EventSummary extends LitElement {
             </div>
           </div>
 
-          ${proposal.status === 'open_proposal'
+          ${proposal.status.type === 'open_proposal'
             ? html` <call-to-action-progress
                 .callToActionHash=${proposal.currentProposal.entry
                   .call_to_action_hash}
@@ -209,10 +205,6 @@ export class EventSummary extends LitElement {
   static styles = [
     sharedStyles,
     css`
-      .avatar-group agent-avatar:not(:first-of-type) {
-        margin-left: -0.5rem;
-      }
-
       sl-icon {
         font-size: 24px;
       }

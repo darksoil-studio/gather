@@ -66,7 +66,8 @@ export type ProposalStatus =
   | { type: 'open_proposal' }
   | { type: 'expired_proposal' }
   | { type: 'cancelled_proposal' }
-  | { type: 'fulfilled_proposal'; eventHash: ActionHash };
+  | { type: 'fulfilled_proposal'; assemblyHash: ActionHash }
+  | { type: 'actual_event'; eventHash: ActionHash };
 
 export interface ProposalWithStatus {
   originalActionHash: ActionHash;
@@ -79,12 +80,6 @@ export interface EventWithStatus {
   originalActionHash: ActionHash;
   currentEvent: EntryRecord<Event>;
   status: EventStatus;
-}
-
-export interface ProposalWithStatus {
-  originalActionHash: ActionHash;
-  currentProposal: EntryRecord<Proposal>;
-  status: ProposalStatus;
 }
 
 export type GatherSignal =
@@ -129,6 +124,10 @@ export type EventAction =
       record: EntryRecord<Proposal>;
     }
   | {
+      type: 'proposal_cancelled';
+      record: EntryRecord<Cancellation>;
+    }
+  | {
       type: 'event_created';
       record: EntryRecord<Event>;
     }
@@ -139,22 +138,32 @@ export type EventAction =
   | {
       type: 'commitment_created';
       record: EntryRecord<Commitment>;
+      callToAction: EntryRecord<CallToAction>;
+    }
+  | {
+      type: 'commitment_cancelled';
+      record: EntryRecord<Cancellation>;
+      commitment: EntryRecord<Commitment>;
+      callToAction: EntryRecord<CallToAction>;
+    }
+  | {
+      type: 'commitment_cancellation_undone';
+      record: EntryRecord<void>;
+      cancellation: EntryRecord<Cancellation>;
+      commitment: EntryRecord<Commitment>;
     }
   | {
       type: 'satisfaction_created';
       record: EntryRecord<Satisfaction>;
+      callToAction: EntryRecord<CallToAction>;
     }
   | {
       type: 'assembly_created';
       record: EntryRecord<Assembly>;
     }
   | {
-      type: 'commitment_cancelled';
-      record: EntryRecord<Cancellation>;
-      commitment: EntryRecord<Commitment>;
-    }
-  | {
       type: 'event_cancelled';
       record: EntryRecord<Cancellation>;
     };
+
 export type EventActivity = Array<EventAction>;

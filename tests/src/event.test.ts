@@ -93,7 +93,7 @@ test('create and update event', async t => {
 
       updatedEvent = await alice.store.client.updateEvent(
         originalActionHash,
-        updatedEvent.signed_action.hashed.hash,
+        updatedEvent.actionHash,
         contentUpdate
       );
       assert.ok(updatedEvent);

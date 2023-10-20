@@ -1,14 +1,13 @@
 import { CallToAction } from '@darksoil/assemble';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import {
-  AppAgentCallZomeRequest,
   AppAgentWebsocket,
   CallZomeRequest,
   encodeHashToBase64,
   HoloHash,
 } from '@holochain/client';
 import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar/dist/types.js';
-import { Event } from './types.js';
+import { Event, Proposal } from './types.js';
 
 export function isExpired(callToAction: CallToAction) {
   return (
@@ -29,14 +28,37 @@ export function eventToEventCalendar(
     title: gatherEvent.entry.title,
     allDay: false,
     backgroundColor: 'blue',
-    extendedProps: {},
+    extendedProps: {
+      isProposal: false,
+    },
     resourceIds: [],
     display: 'auto',
     durationEditable: false,
     editable: false,
     startEditable: false,
-    start: new Date(Math.floor(gatherEvent.entry.start_time / 1000)),
-    end: new Date(Math.floor(gatherEvent.entry.end_time / 1000)),
+    start: new Date(Math.floor(gatherEvent.entry.time.start_time / 1000)),
+    end: new Date(Math.floor((gatherEvent.entry.time as any).end_time / 1000)),
+  };
+}
+
+export function proposalToEventCalendar(
+  proposal: EntryRecord<Proposal>
+): EventCalendarEvent {
+  return {
+    id: encodeHashToBase64(proposal.actionHash),
+    title: proposal.entry.title,
+    allDay: false,
+    backgroundColor: 'blue',
+    extendedProps: {
+      isProposal: true,
+    },
+    resourceIds: [],
+    display: 'auto',
+    durationEditable: false,
+    editable: false,
+    startEditable: false,
+    start: new Date(Math.floor(proposal.entry.time!.start_time / 1000)),
+    end: new Date(Math.floor((proposal.entry.time as any).end_time / 1000)),
   };
 }
 

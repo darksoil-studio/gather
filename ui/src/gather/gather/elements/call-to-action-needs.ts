@@ -59,19 +59,21 @@ export class CallToActionNeeds extends LitElement {
         </div>
       `;
     return html`
-      <div class="column" style="gap: 16px">
-        <span class="title">${msg('Unsatisfied needs')}</span>
-        <call-to-action-unsatisfied-needs
-          .callToActionHash=${this.callToActionHash}
-          .hideNeeds=${[0]}
-        ></call-to-action-unsatisfied-needs>
-      </div>
-      <div class="column" style="gap: 16px">
-        <span class="title">${msg('Satisfied needs')}</span>
-        <call-to-action-needs
-          .callToActionHash=${this.callToActionHash}
-          .hideNeeds=${[0]}
-        ></call-to-action-needs>
+      <div class="row" style="gap: 16px">
+        <div class="column" style="gap: 16px; width: 400px">
+          <span class="title">${msg('Unsatisfied needs')}</span>
+          <call-to-action-unsatisfied-needs
+            .callToActionHash=${this.callToActionHash}
+            .hideNeeds=${[0]}
+          ></call-to-action-unsatisfied-needs>
+        </div>
+        <div class="column" style="gap: 16px; width: 400px">
+          <span class="title">${msg('Satisfied needs')}</span>
+          <call-to-action-satisfied-needs
+            .callToActionHash=${this.callToActionHash}
+            .hideNeeds=${[0]}
+          ></call-to-action-satisfied-needs>
+        </div>
       </div>
     `;
   }

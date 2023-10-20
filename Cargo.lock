@@ -2128,7 +2128,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_assemble_coordinator"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/assemble?branch=main#522180aae38aaab95be34e34eb7585137139fc6d"
+source = "git+https://github.com/darksoil-studio/assemble?branch=main#480a6ef46f51f2f5e0f1f434f5779051203bcd0a"
 dependencies = [
  "hc_zome_assemble_integrity",
  "hdk",
@@ -2138,7 +2138,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_assemble_integrity"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/assemble?branch=main#522180aae38aaab95be34e34eb7585137139fc6d"
+source = "git+https://github.com/darksoil-studio/assemble?branch=main#480a6ef46f51f2f5e0f1f434f5779051203bcd0a"
 dependencies = [
  "hdi",
  "serde",
@@ -2147,7 +2147,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_cancellations_coordinator"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/cancellations?branch=main#b0ad75d243f1f0acf45543b57554afb3635edd1a"
+source = "git+https://github.com/holochain-open-dev/cancellations?branch=main#b6229980fb5a5451e7bec6df11905299963c1498"
 dependencies = [
  "hc_zome_cancellations_integrity",
  "hdk",
@@ -2157,7 +2157,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_cancellations_integrity"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/cancellations?branch=main#b0ad75d243f1f0acf45543b57554afb3635edd1a"
+source = "git+https://github.com/holochain-open-dev/cancellations?branch=main#b6229980fb5a5451e7bec6df11905299963c1498"
 dependencies = [
  "hdi",
  "serde",

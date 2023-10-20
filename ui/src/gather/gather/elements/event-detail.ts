@@ -23,7 +23,7 @@ import {
   mdiPencil,
   mdiTimeline,
 } from '@mdi/js';
-import { SlDialog } from '@shoelace-style/shoelace';
+import { SlDialog, SlDrawer } from '@shoelace-style/shoelace';
 
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
@@ -34,6 +34,7 @@ import '@shoelace-style/shoelace/dist/components/relative-time/relative-time.js'
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
+import '@shoelace-style/shoelace/dist/components/drawer/drawer.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
@@ -47,14 +48,20 @@ import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import '@darksoil/assemble/dist/elements/call-to-action-unsatisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-satisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
+import '@darksoil/assemble/dist/elements/my-commitments-for-call-to-action.js';
 
 import './participants-for-event.js';
+import './interested-button.js';
+import './participate-dialog.js';
 import './event-activity.js';
 import './edit-event.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { EventWithStatus } from '../types.js';
+import { ParticipateDialog } from './participate-dialog.js';
+import { styles } from '../../../styles.js';
+import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
 
 @localized()
 @customElement('event-detail')
@@ -75,7 +82,7 @@ export class EventDetail extends LitElement {
     this,
     () =>
       joinAsync([
-        this.gatherStore.events.get(this.eventHash),
+        this.gatherStore.eventsStatus.get(this.eventHash),
         this.gatherStore.participantsForEvent.get(this.eventHash),
         this.gatherStore.interestedInEvent.get(this.eventHash),
       ]),
@@ -138,52 +145,90 @@ export class EventDetail extends LitElement {
 
   renderActions(event: EventWithStatus, participants: AgentPubKey[]) {
     const myPubKeyStr = this.gatherStore.client.client.myPubKey.toString();
-    const amIHost =
+    const iAmHost =
       event.currentEvent.action.author.toString() === myPubKeyStr ||
       !!event.currentEvent.entry.hosts.find(h => h.toString() === myPubKeyStr);
+    const iAmParticipant = participants.find(i => i.toString() === myPubKeyStr);
     const eventStatus = event.status;
-    // if (
-    //   !(
-    //     amIAuthor &&
-    //     eventStatus !== 'upcoming_event' &&
-    //     eventStatus !== 'open_event_proposal'
-    //   )
-    // )
-    //   return html``;
-    if (eventStatus !== 'upcoming_event') return html``;
+
+    const buttons = !this._isMobile
+      ? [
+          html`
+            <sl-button
+              variant="default"
+              pill
+              @click=${() => {
+                (
+                  this.shadowRoot?.querySelector('sl-drawer') as SlDrawer
+                ).show();
+              }}
+            >
+              <sl-icon .src=${wrapPathInSvg(mdiTimeline)}></sl-icon>
+              ${msg('See Activity')}
+            </sl-button>
+          `,
+        ]
+      : [];
+
+    if (eventStatus === 'upcoming_event') {
+      if (iAmHost) {
+        buttons.push(html`
+          <sl-button
+            variant="default"
+            pill
+            @click=${() => {
+              this._editing = true;
+            }}
+          >
+            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
+            ${msg('Edit event')}
+          </sl-button>
+        `);
+      }
+      if (iAmParticipant) {
+        buttons.push(html`
+          <sl-button
+            variant="warning"
+            pill
+            @click=${() =>
+              (
+                this.shadowRoot?.querySelector(
+                  'create-cancellation-dialog'
+                ) as CreateCancellationDialog
+              ).show()}
+          >
+            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
+            ${msg('Cancel Participation')}
+          </sl-button>
+        `);
+      } else {
+        buttons.push(html`
+          <interested-button .eventHash=${this.eventHash}></interested-button>
+          <sl-button
+            variant="primary"
+            pill
+            @click=${() =>
+              (
+                this.shadowRoot?.querySelector(
+                  'participate-dialog'
+                ) as ParticipateDialog
+              ).show()}
+          >
+            <sl-icon
+              slot="prefix"
+              .src=${wrapPathInSvg(mdiAccountPlus)}
+            ></sl-icon>
+            ${msg('Participate')}
+          </sl-button>
+        `);
+      }
+    }
 
     return html`<div
       class="column"
       style="position:absolute; right: 16px; bottom: 16px; gap: 8px"
     >
-      <sl-button
-        variant="default"
-        pill
-        @click=${() => {
-          this._editing = true;
-        }}
-      >
-        <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
-        ${msg('Edit event')}
-      </sl-button>
-      ${participants
-        .map(a => a.toString())
-        .includes(this.gatherStore.client.client.myPubKey.toString())
-        ? html``
-        : html`
-            <sl-button
-              variant="primary"
-              pill
-              .loading=${this.committing}
-              @click=${() => this.commitToParticipate(event)}
-            >
-              <sl-icon
-                slot="prefix"
-                .src=${wrapPathInSvg(mdiAccountPlus)}
-              ></sl-icon>
-              ${msg('Participate')}
-            </sl-button>
-          `}
+      ${buttons.map(b => b)}
     </div> `;
   }
 
@@ -272,11 +317,14 @@ export class EventDetail extends LitElement {
     if (this._editing) {
       return html`<edit-event
         .originalEventHash=${this.eventHash}
-        .currentRecord=${event}
+        .currentRecord=${event.currentEvent}
         @event-updated=${async () => {
           this._editing = false;
         }}
         @edit-canceled=${() => {
+          this._editing = false;
+        }}
+        @cancellation-created=${() => {
           this._editing = false;
         }}
         style="display: flex;"
@@ -336,24 +384,67 @@ export class EventDetail extends LitElement {
           </sl-tab>
 
           <sl-tab-panel name="event" style="position: relative">
-            ${this.renderDetail(event)}
+            <div class="flex-scrollable-parent">
+              <div class="flex-scrollable-container">
+                <div class="flex-scrollable-y">
+                  <div class="column" style="padding: 16px; gap: 16px">
+                    ${this.renderDetail(event)}
+                    <span class="title">${msg('My Commitments')}</span>
+                    <sl-card>
+                      <my-commitments-for-call-to-action
+                        .hideNeeds=${[0]}
+                        .callToActionHash=${event.currentEvent.entry
+                          .call_to_action_hash}
+                        style="flex: 1"
+                      ></my-commitments-for-call-to-action>
+                    </sl-card>
+                  </div>
+                </div>
+              </div>
+            </div>
             ${this.renderActions(event, participants)}
           </sl-tab-panel>
           <sl-tab-panel name="participants" style="position: relative">
-            <participants-for-event
-              style="margin-bottom: 16px;"
-              .eventHash=${this.eventHash}
-            ></participants-for-event>
+            <div class="flex-scrollable-parent">
+              <div class="flex-scrollable-container">
+                <div class="flex-scrollable-y">
+                  <div class="column" style="padding: 16px; gap: 16px">
+                    <participants-for-event
+                      .eventHash=${this.eventHash}
+                    ></participants-for-event>
+                  </div>
+                </div>
+              </div>
+            </div>
             ${this.renderActions(event, participants)}
           </sl-tab-panel>
           <sl-tab-panel name="needs" style="position: relative">
-            <call-to-action-needs
-              .callToActionHash=${event.currentEvent.entry.call_to_action_hash}
-            ></call-to-action-needs>
+            <div class="flex-scrollable-parent">
+              <div class="flex-scrollable-container">
+                <div class="flex-scrollable-y">
+                  <div class="column" style="padding: 16px; gap: 16px">
+                    <call-to-action-needs
+                      .callToActionHash=${event.currentEvent.entry
+                        .call_to_action_hash}
+                    ></call-to-action-needs>
+                  </div>
+                </div>
+              </div>
+            </div>
             ${this.renderActions(event, participants)}
           </sl-tab-panel>
           <sl-tab-panel name="activity">
-            <event-activity .eventHash=${this.eventHash}></event-activity>
+            <div class="flex-scrollable-parent">
+              <div class="flex-scrollable-container">
+                <div class="flex-scrollable-y">
+                  <div class="column" style="padding: 16px; gap: 16px">
+                    <event-activity
+                      .eventHash=${this.eventHash}
+                    ></event-activity>
+                  </div>
+                </div>
+              </div>
+            </div>
           </sl-tab-panel>
         </sl-tab-group>
       `;
@@ -364,7 +455,7 @@ export class EventDetail extends LitElement {
 
         <div class="row" style="gap: 16px">
           <participants-for-event
-            style="margin-bottom: 16px;"
+            style="width: 400px"
             .eventHash=${this.eventHash}
           ></participants-for-event>
           <call-to-action-needs
@@ -372,6 +463,12 @@ export class EventDetail extends LitElement {
           ></call-to-action-needs>
         </div>
       </div>
+      <sl-drawer .label=${msg('Activity')}>
+        <event-activity
+          style="flex: 1"
+          .eventHash=${event.originalActionHash}
+        ></event-activity>
+      </sl-drawer>
       ${this.renderActions(event, participants)}
     `;
   }
@@ -386,8 +483,25 @@ export class EventDetail extends LitElement {
         </div>`;
       case 'complete':
         const event = this._event.value.value;
+        const participants = event[1];
 
-        return this.renderEvent(event[0], event[1]);
+        const myParticipationCommitment = participants.has(
+          this.gatherStore.client.client.myPubKey
+        );
+
+        return html` ${myParticipationCommitment
+            ? html`
+                <create-cancellation-dialog
+                  .label=${msg('Cancel My Participation')}
+                  .warning=${msg(
+                    'Are you sure? All event participants will be notified.'
+                  )}
+                  .cancelledHash=${myParticipationCommitment}
+                ></create-cancellation-dialog>
+              `
+            : html``}
+          <participate-dialog .eventHash=${this.eventHash}></participate-dialog>
+          ${this.renderEvent(event[0], Array.from(event[1].keys()))}`;
       case 'error':
         return html`<display-error
           .error=${this._event.value.error}
@@ -396,41 +510,20 @@ export class EventDetail extends LitElement {
   }
 
   static styles = [
-    sharedStyles,
+    styles,
     css`
       :host {
         display: flex;
         flex-direction: column;
-        align-items: center;
-      }
-      sl-tab-group::part(body) {
-        display: flex;
-        flex: 1;
       }
       sl-tab {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         background-color: white;
-      }
-      sl-tab-group {
-        display: flex;
-      }
-      sl-tab-group::part(base) {
-        display: flex;
-        flex: 1;
-      }
-      sl-tab-panel {
-        width: 100%;
-        --padding: 0;
-      }
-      sl-tab-panel {
-        --padding: 0;
-        padding: 16px;
       }
       sl-tab sl-icon {
         font-size: 24px;
+      }
+      sl-tab-panel {
+        --padding: 0;
       }
     `,
   ];

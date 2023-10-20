@@ -24,5 +24,6 @@ module.exports = {
     'no-console': 'off',
     'wc/guard-super-call': 'off',
     'no-new': 'off',
+    'no-lonely-if': 'off',
   },
 };

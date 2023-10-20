@@ -59,7 +59,7 @@ test('proposal: create and cancel', async t => {
       assert.equal(aliceCancelledProposals.length, 1);
     },
     true,
-    { timeout: 30_000 }
+    { timeout: 60_000 }
   );
 });
 
@@ -100,7 +100,7 @@ test('proposal: create and expire', async t => {
       assert.equal(expiredProposals.length, 1);
     },
     true,
-    { timeout: 30000 }
+    { timeout: 60000 }
   );
 });
 
@@ -161,6 +161,6 @@ test('proposal: create and fulfill', async t => {
       assert.equal(aliceUpcomingEvents.length, 1);
     },
     true,
-    { timeout: 30_000 }
+    { timeout: 60_000 }
   );
 });

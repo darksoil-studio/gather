@@ -29,6 +29,7 @@ import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { Event } from '../types.js';
+import './agents-avatars.js';
 
 @localized()
 @customElement('event-summary')
@@ -72,22 +73,12 @@ export class EventSummary extends LitElement {
 
   renderParticipants() {
     if (this._participants.value.status !== 'complete') return html``;
-    const participants = this._participants.value.value;
+    const participants = Array.from(this._participants.value.value.keys());
 
     if (participants.length === 0)
       return html`<span>${msg('No participants yet')}</span>`;
 
-    return html` <div class="row avatar-group">
-      ${participants
-        .slice(0, 3)
-        .map(a => html`<agent-avatar .agentPubKey=${a}></agent-avatar>`)}
-      ${participants.length > 3
-        ? html`<sl-avatar
-            .initials=${`+${participants.length - 3}`}
-            style="--size: 32px"
-          ></sl-avatar>`
-        : html``}
-    </div>`;
+    return html` <agents-avatars .agents=${participants}></agents-avatars>`;
   }
 
   renderSummary(event: EntryRecord<Event>) {
@@ -198,10 +189,6 @@ export class EventSummary extends LitElement {
   static styles = [
     sharedStyles,
     css`
-      .avatar-group agent-avatar:not(:first-of-type) {
-        margin-left: -0.5rem;
-      }
-
       sl-icon {
         font-size: 24px;
       }

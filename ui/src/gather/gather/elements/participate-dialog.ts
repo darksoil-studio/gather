@@ -52,7 +52,7 @@ export class ParticipateDialog extends LitElement {
       await this.gatherStore.assembleStore.client.createCommitment({
         amount: 1,
         call_to_action_hash: callToActionHash,
-        comment: '',
+        comment: msg('I commit to participate'),
         need_index: 0,
       });
 
@@ -80,27 +80,30 @@ export class ParticipateDialog extends LitElement {
       case 'complete':
         const callToActionHash =
           this._eventOrProposal.value.value.entry.call_to_action_hash;
-        return html`<sl-dialog
-          .label=${msg('Commit To Participate')}
-          class="column"
-          style="gap: 16px"
-        >
-          <span
-            >${msg(
-              "Participating in the event means committing yourself to going, if it actually happens. If you don't want to commit yourself yet, close this dialog and mark yourself as interested."
-            )}</span
-          >
-          <span
-            >${msg(
-              'Are you sure you want to commit yourself to participating in the event?'
-            )}</span
-          >
+        return html`
+          <div class="column" style="gap: 16px">
+            <span
+              >${this.eventHash
+                ? msg(
+                    "Participating in the proposal means committing yourself to going, if it actually happens. If you don't want to commit yourself yet, close this dialog and mark yourself as interested."
+                  )
+                : msg(
+                    "Participating in the event means committing yourself to going. If you don't want to commit yourself yet, close this dialog and mark yourself as interested."
+                  )}</span
+            >
+            <span
+              >${msg(
+                'Are you sure you want to commit yourself to participating in the event?'
+              )}</span
+            >
+          </div>
           <sl-button
             variant="primary"
             slot="footer"
             @click=${() => this.commitToParticipate(callToActionHash)}
-          ></sl-button>
-        </sl-dialog>`;
+            >${msg('Commit to Participate')}</sl-button
+          >
+        `;
       case 'error':
         return html`<display-error
           .error=${this._eventOrProposal.value.error}
@@ -109,7 +112,10 @@ export class ParticipateDialog extends LitElement {
   }
 
   render() {
-    return html`<sl-dialog>${this.renderContent()}</sl-dialog>`;
+    return html`<sl-dialog .label=${msg('Commit To Participate')}
+      >${this.renderContent()}</sl-dialog
+    >`;
   }
+
   static styles = [sharedStyles];
 }

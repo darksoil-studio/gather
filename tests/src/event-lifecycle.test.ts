@@ -33,6 +33,8 @@ test('event: create and cancel', async t => {
         "I can't make it"
       );
 
+      await pause(400);
+
       await dhtSync(
         [alice.player, bob.player],
         alice.player.cells[0].cell_id[0]
@@ -45,7 +47,7 @@ test('event: create and cancel', async t => {
       assert.equal(cancelledEvents.length, 1);
     },
     true,
-    { timeout: 30000 }
+    { timeout: 60_000 }
   );
 });
 
@@ -63,8 +65,8 @@ test('event: create and pass', async t => {
         await sampleEvent(alice.store, {
           time: {
             type: 'Unique',
-            start_time: Date.now() * 1000 + 1_000_000 * 15,
-            end_time: Date.now() * 1000 + 1_000_000 * 60,
+            start_time: (Date.now() + 25_000) * 1000,
+            end_time: (Date.now() + 60_000) * 1000,
           },
         })
       );
@@ -78,7 +80,7 @@ test('event: create and pass', async t => {
       upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 1);
 
-      await pause(15000);
+      await pause(30000);
 
       upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 0);
@@ -92,6 +94,6 @@ test('event: create and pass', async t => {
       assert.equal(pastEvents.length, 1);
     },
     true,
-    { timeout: 30000 }
+    { timeout: 60000 }
   );
 });

@@ -109,8 +109,8 @@ export class EventsFilter extends LitElement {
           @sl-change=${() => this.requestUpdate()}
         >
           <sl-radio-button value="events">${msg('Events')}</sl-radio-button>
-          <sl-radio-button value="event_proposals"
-            >${msg('Event Proposals')}</sl-radio-button
+          <sl-radio-button value="proposals"
+            >${msg('Proposals')}</sl-radio-button
           >
         </sl-radio-group>
         <sl-radio-group

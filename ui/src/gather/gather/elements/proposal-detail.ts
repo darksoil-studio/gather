@@ -1,8 +1,4 @@
-import {
-  hashProperty,
-  sharedStyles,
-  wrapPathInSvg,
-} from '@holochain-open-dev/elements';
+import { hashProperty, wrapPathInSvg } from '@holochain-open-dev/elements';
 import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
@@ -13,11 +9,10 @@ import { classMap } from 'lit/directives/class-map.js';
 import {
   mdiAccountGroup,
   mdiAccountPlus,
-  mdiBell,
   mdiCalendar,
   mdiCalendarClock,
+  mdiCancel,
   mdiCash,
-  mdiCheck,
   mdiFormatListChecks,
   mdiMapMarker,
   mdiPencil,
@@ -56,6 +51,10 @@ import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { ProposalWithStatus } from '../types.js';
 import { ParticipateDialog } from './participate-dialog.js';
+import { styles } from '../../../styles.js';
+import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
+import { proposalToEventCalendar } from '../utils.js';
+import { SlDrawer } from '@shoelace-style/shoelace';
 
 @localized()
 @customElement('proposal-detail')
@@ -108,6 +107,14 @@ export class ProposalDetail extends LitElement {
     if (proposalStatus === 'expired_proposal')
       return html`<sl-tag variant="warning">${msg('Expired')}</sl-tag>`;
 
+    if (proposalStatus === 'fulfilled_proposal')
+      return html`<div class="column" style="gap: 8px; align-items: end">
+        <sl-tag variant="success">${msg('Proposal Succeeded')}</sl-tag
+        ><span class="placeholder"
+          >${msg('Decide on a time and location to create the event.')}</span
+        >
+      </div>`;
+
     return html`<sl-tag
       >${msg('Open Proposal')}${proposal.callToAction.entry.expiration_time
         ? html`${msg(': expires')}&nbsp;
@@ -120,7 +127,6 @@ export class ProposalDetail extends LitElement {
 
   renderActions(proposal: ProposalWithStatus, participants: AgentPubKey[]) {
     const proposalStatus = proposal.status.type;
-    if (proposalStatus !== 'open_proposal') return html``;
 
     const myPubKeyStr = this.gatherStore.client.client.myPubKey.toString();
     const iAmParticipant = participants.find(i => i.toString() === myPubKeyStr);
@@ -130,46 +136,89 @@ export class ProposalDetail extends LitElement {
         h => h.toString() === myPubKeyStr
       );
 
-    return html`<div
-      class="column"
-      style="position:absolute; right: 16px; bottom: 16px; gap: 8px"
-    >
-      ${iAmHost
-        ? html`
+    const buttons = !this._isMobile
+      ? [
+          html`
             <sl-button
               variant="default"
               pill
               @click=${() => {
-                this._editing = true;
+                (
+                  this.shadowRoot?.querySelector('sl-drawer') as SlDrawer
+                ).show();
               }}
             >
-              <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
-              ${msg('Edit proposal')}
+              <sl-icon .src=${wrapPathInSvg(mdiTimeline)}></sl-icon>
+              ${msg('See Activity')}
             </sl-button>
-          `
-        : iAmParticipant
-        ? html``
-        : html`
-            <interest-button
-              .proposalHash=${this.proposalHash}
-            ></interest-button>
-            <sl-button
-              variant="primary"
-              pill
-              @click=${() =>
-                (
-                  this.shadowRoot?.querySelector(
-                    'participate-dialog'
-                  ) as ParticipateDialog
-                ).show()}
-            >
-              <sl-icon
-                slot="prefix"
-                .src=${wrapPathInSvg(mdiAccountPlus)}
-              ></sl-icon>
-              ${msg('Participate')}
-            </sl-button>
-          `}
+          `,
+        ]
+      : [];
+
+    if (
+      proposalStatus === 'open_proposal' ||
+      proposalStatus === 'fulfilled_proposal'
+    ) {
+      if (iAmHost) {
+        buttons.push(html`
+          <sl-button
+            variant="default"
+            pill
+            @click=${() => {
+              this._editing = true;
+            }}
+          >
+            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
+            ${msg('Edit Proposal')}
+          </sl-button>
+        `);
+      }
+      if (iAmParticipant) {
+        buttons.push(html`
+          <sl-button
+            variant="warning"
+            pill
+            @click=${() =>
+              (
+                this.shadowRoot?.querySelector(
+                  'create-cancellation-dialog'
+                ) as CreateCancellationDialog
+              ).show()}
+          >
+            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
+            ${msg('Cancel Participation')}
+          </sl-button>
+        `);
+      } else {
+        buttons.push(html`
+          <interested-button
+            .proposalHash=${this.proposalHash}
+          ></interested-button>
+          <sl-button
+            variant="primary"
+            pill
+            @click=${() =>
+              (
+                this.shadowRoot?.querySelector(
+                  'participate-dialog'
+                ) as ParticipateDialog
+              ).show()}
+          >
+            <sl-icon
+              slot="prefix"
+              .src=${wrapPathInSvg(mdiAccountPlus)}
+            ></sl-icon>
+            ${msg('Participate')}
+          </sl-button>
+        `);
+      }
+    }
+
+    return html`<div
+      class="column"
+      style="position:absolute; right: 16px; bottom: 16px; gap: 8px"
+    >
+      ${buttons.map(b => b)}
     </div> `;
   }
 
@@ -192,46 +241,53 @@ export class ProposalDetail extends LitElement {
               >${proposal.currentProposal.entry.description}</span
             >
 
-            <div class="column" style="justify-content: end; flex: 1">
+            <div
+              class="column"
+              style="justify-content: end; flex: 1; gap: 16px"
+            >
               <div
-                style="display: flex; flex-direction: row; align-items: center;"
+                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
               >
                 <sl-icon
                   title=${msg('location')}
-                  style="margin-right: 4px"
                   .src=${wrapPathInSvg(mdiMapMarker)}
                 ></sl-icon>
                 <span style="white-space: pre-line"
-                  >${proposal.currentProposal.entry.location}</span
+                  >${proposal.currentProposal.entry.location
+                    ? proposal.currentProposal.entry.location
+                    : msg('TBD')}</span
                 >
               </div>
 
               <div
-                style="display: flex; flex-direction: row; align-items: center; margin-top: 16px"
+                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
               >
                 <sl-icon
                   title=${msg('time')}
-                  style="margin-right: 4px"
                   .src=${wrapPathInSvg(mdiCalendarClock)}
                 ></sl-icon>
-                <span
-                  >${new Date(
-                    proposal.currentProposal.entry.time!.start_time / 1000
-                  ).toLocaleString()}
-                  -
-                  ${new Date(
-                    (proposal.currentProposal.entry.time as any).end_time / 1000
-                  ).toLocaleString()}</span
-                >
+                ${proposal.currentProposal.entry.time
+                  ? html`
+                      <span
+                        >${new Date(
+                          proposal.currentProposal.entry.time!.start_time / 1000
+                        ).toLocaleString()}
+                        -
+                        ${new Date(
+                          (proposal.currentProposal.entry.time as any)
+                            .end_time / 1000
+                        ).toLocaleString()}</span
+                      >
+                    `
+                  : html`<span>${msg('TBD')}</span>`}
               </div>
 
               ${proposal.currentProposal.entry.cost
                 ? html` <div
-                    style="display: flex; flex-direction: row; align-items: center; margin-top: 16px"
+                    style="display: flex; flex-direction: row; align-items: center; gap: 4px"
                   >
                     <sl-icon
                       title=${msg('cost')}
-                      style="margin-right: 4px"
                       .src=${wrapPathInSvg(mdiCash)}
                     ></sl-icon>
                     <span style="white-space: pre-line"
@@ -244,10 +300,6 @@ export class ProposalDetail extends LitElement {
 
           <div class="column" style="align-items: end">
             ${this.renderStatus(proposal)}
-            <div
-              class="row"
-              style="justify-content:end; flex: 1; margin-top: 8px"
-            ></div>
           </div>
         </div>
       </sl-card>
@@ -258,7 +310,7 @@ export class ProposalDetail extends LitElement {
     if (this._editing) {
       return html`<edit-proposal
         .originalProposalHash=${this.proposalHash}
-        .currentRecord=${proposal}
+        .proposal=${proposal}
         @proposal-updated=${async () => {
           this._editing = false;
         }}
@@ -321,26 +373,65 @@ export class ProposalDetail extends LitElement {
             </div>
           </sl-tab>
 
-          <sl-tab-panel name="proposal" style="position: relative">
-            ${this.renderDetail(proposal)}
+          <sl-tab-panel name="proposal" style="position: relative; ">
+            <div class="flex-scrollable-parent">
+              <div class="flex-scrollable-container">
+                <div class="flex-scrollable-y">
+                  <div class="column" style="padding: 16px; gap: 16px">
+                    ${this.renderDetail(proposal)}
+                    <span class="title">${msg('Unsatisfied Needs')}</span>
+                    <call-to-action-unsatisfied-needs
+                      .callToActionHash=${proposal.currentProposal.entry
+                        .call_to_action_hash}
+                      .hideNeeds=${[0]}
+                    ></call-to-action-unsatisfied-needs>
+                  </div>
+                </div>
+              </div>
+            </div>
             ${this.renderActions(proposal, participants)}
           </sl-tab-panel>
           <sl-tab-panel name="participants" style="position: relative">
-            <participants-for-event
-              style="margin-bottom: 16px;"
-              .proposalHash=${this.proposalHash}
-            ></participants-for-event>
+            <div class="flex-scrollable-parent">
+              <div class="flex-scrollable-container">
+                <div class="flex-scrollable-y">
+                  <div class="column" style="padding: 16px; gap: 16px">
+                    <participants-for-event
+                      .proposalHash=${this.proposalHash}
+                    ></participants-for-event>
+                  </div>
+                </div>
+              </div>
+            </div>
             ${this.renderActions(proposal, participants)}
           </sl-tab-panel>
           <sl-tab-panel name="needs" style="position: relative">
-            <call-to-action-needs
-              .callToActionHash=${proposal.currentProposal.entry
-                .call_to_action_hash}
-            ></call-to-action-needs>
+            <div class="flex-scrollable-parent">
+              <div class="flex-scrollable-container">
+                <div class="flex-scrollable-y">
+                  <div class="column" style="padding: 16px; gap: 16px">
+                    <call-to-action-needs
+                      .callToActionHash=${proposal.currentProposal.entry
+                        .call_to_action_hash}
+                    ></call-to-action-needs>
+                  </div>
+                </div>
+              </div>
+            </div>
             ${this.renderActions(proposal, participants)}
           </sl-tab-panel>
           <sl-tab-panel name="activity">
-            <event-activity .proposalHash=${this.proposalHash}></event-activity>
+            <div class="flex-scrollable-parent">
+              <div class="flex-scrollable-container">
+                <div class="flex-scrollable-y">
+                  <div class="column" style="padding: 16px; gap: 16px">
+                    <event-activity
+                      .proposalHash=${this.proposalHash}
+                    ></event-activity>
+                  </div>
+                </div>
+              </div>
+            </div>
           </sl-tab-panel>
         </sl-tab-group>
       `;
@@ -351,8 +442,8 @@ export class ProposalDetail extends LitElement {
 
         <div class="row" style="gap: 16px">
           <participants-for-event
-            style="margin-bottom: 16px;"
             .eventHash=${this.proposalHash}
+            style="width: 400px"
           ></participants-for-event>
           <call-to-action-needs
             .callToActionHash=${proposal.currentProposal.entry
@@ -360,6 +451,12 @@ export class ProposalDetail extends LitElement {
           ></call-to-action-needs>
         </div>
       </div>
+      <sl-drawer .label=${msg('Activity')}>
+        <event-activity
+          style="flex: 1"
+          .proposalHash=${proposal.originalActionHash}
+        ></event-activity>
+      </sl-drawer>
       ${this.renderActions(proposal, participants)}
     `;
   }
@@ -375,17 +472,32 @@ export class ProposalDetail extends LitElement {
       case 'complete':
         const proposal = this._proposal.value.value[0];
         const participants = this._proposal.value.value[1];
-        if (proposal.status.type === 'fulfilled_proposal') {
+        if (proposal.status.type === 'actual_event') {
           return html`<event-detail
             style="flex: 1"
             .eventHash=${proposal.status.eventHash}
           ></event-detail>`;
         }
 
-        return html` <participate-dialog
+        const myParticipationCommitment = participants.has(
+          this.gatherStore.client.client.myPubKey
+        );
+
+        return html` ${myParticipationCommitment
+            ? html`
+                <create-cancellation-dialog
+                  .label=${msg('Cancel My Participation')}
+                  .warning=${msg(
+                    'Are you sure? All participants will be notified.'
+                  )}
+                  .cancelledHash=${myParticipationCommitment}
+                ></create-cancellation-dialog>
+              `
+            : html``}
+          <participate-dialog
             .proposalHash=${this.proposalHash}
           ></participate-dialog>
-          ${this.renderProposal(proposal, participants)}`;
+          ${this.renderProposal(proposal, Array.from(participants.keys()))}`;
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching the proposal')}
@@ -395,41 +507,20 @@ export class ProposalDetail extends LitElement {
   }
 
   static styles = [
-    sharedStyles,
+    styles,
     css`
       :host {
         display: flex;
         flex-direction: column;
-        align-items: center;
-      }
-      sl-tab-group::part(body) {
-        display: flex;
-        flex: 1;
       }
       sl-tab {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         background-color: white;
-      }
-      sl-tab-group {
-        display: flex;
-      }
-      sl-tab-group::part(base) {
-        display: flex;
-        flex: 1;
-      }
-      sl-tab-panel {
-        width: 100%;
-        --padding: 0;
-      }
-      sl-tab-panel {
-        --padding: 0;
-        padding: 16px;
       }
       sl-tab sl-icon {
         font-size: 24px;
+      }
+      sl-tab-panel {
+        --padding: 0;
       }
     `,
   ];

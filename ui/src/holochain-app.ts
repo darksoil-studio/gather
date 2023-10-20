@@ -50,6 +50,7 @@ import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 
 import './gather/gather/elements/event-detail.js';
+import './gather/gather/elements/proposal-detail.js';
 import './gather/gather/elements/create-event.js';
 import './gather/gather/elements/all-events.js';
 import './gather/gather/elements/events-filter.js';
@@ -91,6 +92,7 @@ export async function sendRequest(request: any) {
 type View =
   | { view: 'main' }
   | { view: 'event_detail'; selectedEventHash: ActionHash }
+  | { view: 'proposal_detail'; selectedProposalHash: ActionHash }
   | { view: 'create_event' };
 
 @localized()
@@ -250,7 +252,15 @@ export class HolochainApp extends LitElement {
                   selectedEventHash: e.detail.eventHash,
                 };
               }}
-              style="max-width: 600px"
+              @proposal-created=${async (e: CustomEvent) => {
+                this._view = {
+                  view: 'proposal_detail',
+                  selectedProposalHash: e.detail.proposalHash,
+                };
+              }}
+              style=${styleMap({
+                width: this._isMobile ? '100%' : '600px',
+              })}
             ></create-event>
           </div>
         </div>
@@ -270,9 +280,34 @@ export class HolochainApp extends LitElement {
           <div class="flex-scrollable-y">
             <div class="column" style="flex: 1; align-items: center;">
               <event-detail
-                style="margin: 16px"
+                style="margin: 16px; min-width: 600px; max-width: 100%"
                 .eventHash=${eventHash}
               ></event-detail>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderProposalDetail(proposalHash: ActionHash) {
+    if (this._isMobile)
+      return html`
+        <proposal-detail
+          style="flex: 1"
+          .proposalHash=${proposalHash}
+        ></proposal-detail>
+      `;
+
+    return html`
+      <div class="flex-scrollable-parent">
+        <div class="flex-scrollable-container">
+          <div class="flex-scrollable-y">
+            <div class="column" style="flex: 1; align-items: center;">
+              <proposal-detail
+                style="margin: 16px; min-width: 600px; max-width: 100%"
+                .proposalHash=${proposalHash}
+              ></proposal-detail>
             </div>
           </div>
         </div>
@@ -297,11 +332,14 @@ export class HolochainApp extends LitElement {
   }
 
   renderContent() {
+    if (this._view.view === 'proposal_detail')
+      return this.renderProposalDetail(this._view.selectedProposalHash);
+    if (this._view.view === 'event_detail')
+      return this.renderEventDetail(this._view.selectedEventHash);
+
+    if (this._view.view === 'create_event') return this.renderCreateEvent();
+
     return html`
-      ${this._view.view === 'create_event' ? this.renderCreateEvent() : html``}
-      ${this._view.view === 'event_detail'
-        ? this.renderEventDetail(this._view.selectedEventHash)
-        : html``}
       <sl-tab-group
         id="tabs"
         .placement=${this._isMobile ? 'bottom' : 'start'}
@@ -313,6 +351,12 @@ export class HolochainApp extends LitElement {
           this._view = {
             view: 'event_detail',
             selectedEventHash: e.detail.eventHash,
+          };
+        }}
+        @proposal-selected=${(e: CustomEvent) => {
+          this._view = {
+            view: 'proposal_detail',
+            selectedProposalHash: e.detail.proposalHash,
           };
         }}
       >

@@ -8,8 +8,7 @@ import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { msg } from '@lit/localize';
 import { mdiBell, mdiCheck, mdiClose } from '@mdi/js';
-import { SlDialog } from '@shoelace-style/shoelace';
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { gatherStoreContext } from '../context';
 import { GatherStore } from '../gather-store';
@@ -42,7 +41,7 @@ export class InterestedButton extends LitElement {
   committing = false;
 
   async addInterest() {
-    let eventOrProposalHash = this.proposalHash
+    const eventOrProposalHash = this.proposalHash
       ? this.proposalHash
       : this.eventHash;
     if (this.committing) return;
@@ -78,7 +77,7 @@ export class InterestedButton extends LitElement {
   }
 
   async removeInterest() {
-    let eventOrProposalHash = this.proposalHash
+    const eventOrProposalHash = this.proposalHash
       ? this.proposalHash
       : this.eventHash;
     if (this.committing) return;
@@ -167,5 +166,16 @@ export class InterestedButton extends LitElement {
     }
   }
 
-  static styles = [sharedStyles];
+  static styles = [
+    sharedStyles,
+    css`
+      :host {
+        display: flex;
+      }
+
+      sl-button {
+        flex: 1;
+      }
+    `,
+  ];
 }

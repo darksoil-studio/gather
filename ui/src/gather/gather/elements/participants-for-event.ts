@@ -25,6 +25,8 @@ import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/profiles/dist/elements/profile-list-item-skeleton.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
+import '@shoelace-style/shoelace/dist/components/tag/tag.js';
+import '@shoelace-style/shoelace/dist/components/card/card.js';
 
 import './profile-list-item.js';
 
@@ -76,15 +78,24 @@ export class ParticipantsForEvent extends LitElement {
 
   renderParticipantsList(
     participants: AgentPubKey[],
+    event: EntryRecord<Event | Proposal>,
     placeholderLabel: string
   ) {
     if (participants.length === 0)
       return html`<span class="placeholder">${placeholderLabel}</span>`;
     return html`
-      <div class="column" style="gap: 8px">
+      <div class="column" style="gap: 16px; flex: 1">
         ${participants.map(
           pubkey => html`
-            <profile-list-item .agentPubKey=${pubkey}></profile-list-item>
+            <div class="row" style="align-items: center; gap: 16px;">
+              <profile-list-item
+                .agentPubKey=${pubkey}
+                style="flex: 1"
+              ></profile-list-item
+              >${event.entry.hosts.find(h => h.toString() === pubkey.toString())
+                ? html` <sl-tag>${msg('Host')}</sl-tag> `
+                : html``}
+            </div>
           `
         )}
       </div>
@@ -97,33 +108,34 @@ export class ParticipantsForEvent extends LitElement {
     interested: AgentPubKey[]
   ) {
     return html`
-      <div class="column" style="gap: 16px">
-        <div class="row" style="align-items: center;">
-          <span class="title" style="flex: 1">${msg('Participants')}</span>
-
-          <call-to-action-need-progress
-            .callToActionHash=${event.entry.call_to_action_hash}
-            .needIndex=${0}
-            style="width: 150px"
-          ></call-to-action-need-progress>
-        </div>
-
-        <div class="column" style="flex: 1">
+      <div class="column" style="flex: 1; gap: 16px;">
+        <sl-card>
+          <div slot="header" class="row" style="align-items: center; gap: 16px">
+            <span class="title">${msg('Participants')}</span>
+            <call-to-action-need-progress
+              .callToActionHash=${event.entry.call_to_action_hash}
+              .needIndex=${0}
+              style="flex: 1"
+            ></call-to-action-need-progress>
+          </div>
           ${this.renderParticipantsList(
             participants,
-
+            event,
             this.eventHash
               ? msg('This event has no participants yet.')
               : msg('This proposal has no participants yet.')
           )}
+        </sl-card>
+        <sl-card>
+          <span slot="header" class="title">${msg('Interested')}</span>
           ${this.renderParticipantsList(
             interested,
-
+            event,
             this.eventHash
               ? msg('No one is interested in this event yet.')
               : msg('No one is interested in this proposal yet.')
           )}
-        </div>
+        </sl-card>
       </div>
     `;
   }
@@ -139,7 +151,7 @@ export class ParticipantsForEvent extends LitElement {
       case 'complete':
         return this.renderParticipants(
           this._participants.value.value[0],
-          this._participants.value.value[1],
+          Array.from(this._participants.value.value[1].keys()),
           this._participants.value.value[2]
         );
       case 'error':

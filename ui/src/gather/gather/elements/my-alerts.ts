@@ -98,7 +98,7 @@ export class MyAlerts extends LitElement {
       >
         <sl-icon
           .src=${wrapPathInSvg(mdiInformationOutline)}
-          style="font-size: 96px;"
+          style="font-size: 96px; color: grey"
           class="placeholder"
         ></sl-icon>
         <span class="placeholder">${msg('You have no unread alerts.')}</span>

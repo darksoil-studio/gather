@@ -16,18 +16,18 @@ import SlInput from '@shoelace-style/shoelace/dist/components/input/input.js';
 import '@shoelace-style/shoelace/dist/components/checkbox/checkbox.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
 import '@shoelace-style/shoelace/dist/components/input/input.js';
+import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 
 import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
+import { mdiCancel } from '@mdi/js';
+import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { Event as GatherEvent } from '../types.js';
-import { SlDialog } from '@shoelace-style/shoelace';
-import { mdiCancel } from '@mdi/js';
-import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
 
 @localized()
 @customElement('edit-event')
@@ -55,6 +55,7 @@ export class EditEvent extends LitElement {
     const event: GatherEvent = {
       ...fields,
       call_to_action_hash: this.currentRecord.entry.call_to_action_hash,
+      hosts: this.currentRecord.entry.hosts,
       time: {
         type: 'Unique',
         start_time: new Date(fields.start_time).valueOf() * 1000,
@@ -95,10 +96,10 @@ export class EditEvent extends LitElement {
         )}
         .cancelledHash=${this.originalEventHash}
       ></create-cancellation-dialog>
-      <sl-card style="display: flex;">
+      <sl-card style="display: flex; flex: 1">
         <span slot="header">${msg('Edit Event')}</span>
         <form
-          style="display: flex; flex-direction: column; margin: 0;"
+          style="display: flex; flex-direction: column; flex: 1; margin: 0; gap: 16px"
           ${onSubmit(fields => this.updateEvent(fields))}
         >
           <upload-files
@@ -113,62 +114,53 @@ export class EditEvent extends LitElement {
             name="title"
             required
             .label=${msg('Title')}
-            style="margin-bottom: 16px; margin-top: 16px"
             .defaultValue=${this.currentRecord.entry.title}
           ></sl-input>
-          <sl-input
+          <sl-textarea
             name="description"
             required
             .label=${msg('Description')}
-            style="margin-bottom: 16px"
             .defaultValue=${this.currentRecord.entry.description}
+          ></sl-textarea>
+
+          <sl-datetime-input
+            name="start_time"
+            required
+            id="start-time"
+            .defaultValue=${new Date(
+              this.currentRecord.entry.time.start_time / 1000
+            )}
+            .label=${msg('Start Time')}
+            style="flex: 1;"
+            @input=${() => this.requestUpdate()}
+          ></sl-datetime-input>
+          <sl-datetime-input
+            required
+            .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
+              ?.value}
+            name="end_time"
+            .defaultValue=${new Date(
+              (this.currentRecord.entry.time as any).end_time / 1000
+            )}
+            .label=${msg('End Time')}
+            style="flex: 1;"
+          ></sl-datetime-input>
+
+          <sl-input
+            name="location"
+            required
+            .label=${msg('Location')}
+            .defaultValue=${this.currentRecord.entry.location}
+          ></sl-input>
+          <sl-input
+            name="cost"
+            .label=${msg('Cost')}
+            .defaultValue=${this.currentRecord.entry.cost || ''}
           ></sl-input>
 
-          <div class="row" style="margin-bottom: 16px">
-            <sl-datetime-input
-              name="start_time"
-              required
-              id="start-time"
-              .defaultValue=${new Date(
-                this.currentRecord.entry.time.start_time / 1000
-              )}
-              .label=${msg('Start Time')}
-              style="flex: 1; margin-right: 16px"
-              @input=${() => this.requestUpdate()}
-            ></sl-datetime-input>
-            <sl-datetime-input
-              required
-              .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
-                ?.value}
-              name="end_time"
-              .defaultValue=${new Date(
-                (this.currentRecord.entry.time as any).end_time / 1000
-              )}
-              .label=${msg('End Time')}
-              style="flex: 1;"
-            ></sl-datetime-input>
-          </div>
-
-          <div class="row" style="margin-bottom: 16px">
-            <sl-input
-              name="location"
-              required
-              style="flex: 1; margin-right: 16px"
-              .label=${msg('Location')}
-              .defaultValue=${this.currentRecord.entry.location}
-            ></sl-input>
-            <sl-input
-              name="cost"
-              style="flex: 1;"
-              .label=${msg('Cost')}
-              .defaultValue=${this.currentRecord.entry.cost || ''}
-            ></sl-input>
-          </div>
-
-          <div style="display: flex; flex-direction: row">
+          <div style="display: flex; flex-direction: row; gap: 8px">
             <sl-button
               variant="warning"
-              pill
               @click=${() => {
                 (
                   this.shadowRoot?.querySelector(
@@ -176,21 +168,10 @@ export class EditEvent extends LitElement {
                   ) as CreateCancellationDialog
                 ).show();
               }}
+              style="flex: 1;"
             >
               <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
               ${msg('Cancel Event')}
-            </sl-button>
-            <sl-button
-              @click=${() =>
-                this.dispatchEvent(
-                  new CustomEvent('edit-canceled', {
-                    bubbles: true,
-                    composed: true,
-                  })
-                )}
-              style="flex: 1; margin-right: 16px"
-            >
-              ${msg('Cancel')}
             </sl-button>
             <sl-button
               variant="primary"
