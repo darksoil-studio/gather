@@ -479,7 +479,7 @@ export class ProposalDetail extends LitElement {
           ></event-detail>`;
         }
 
-        const myParticipationCommitment = participants.has(
+        const myParticipationCommitment = participants.get(
           this.gatherStore.client.client.myPubKey
         );
 
