@@ -34,7 +34,7 @@ export type EventTime =
 
 export interface FromProposal {
   proposal_hash: ActionHash;
-  assembly_hash: ActionHash;
+  assembly_hash: ActionHash | undefined;
 }
 
 export interface Event {

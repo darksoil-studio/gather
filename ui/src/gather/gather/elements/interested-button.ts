@@ -7,9 +7,9 @@ import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { msg } from '@lit/localize';
-import { mdiBell, mdiCheck, mdiClose } from '@mdi/js';
+import { mdiBell, mdiClose } from '@mdi/js';
 import { css, html, LitElement } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { gatherStoreContext } from '../context';
 import { GatherStore } from '../gather-store';
 

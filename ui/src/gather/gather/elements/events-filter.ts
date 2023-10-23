@@ -159,7 +159,7 @@ export class EventsFilter extends LitElement {
           ></sl-icon>
           ${this.title}
         </sl-button>
-        <sl-drawer contained placement="top" .label=${msg('Filter')}>
+        <sl-drawer placement="top" .label=${msg('Filter')}>
           ${this.renderFilter()}
         </sl-drawer>
       `;
@@ -196,6 +196,11 @@ export class EventsFilter extends LitElement {
         display: flex;
         flex-direction: row;
         gap: 16px;
+      }
+
+      sl-drawer::part(base) {
+        position: absolute !important;
+        z-index: initial !important;
       }
     `,
     sharedStyles,

@@ -48,7 +48,7 @@ export function proposalToEventCalendar(
     id: encodeHashToBase64(proposal.actionHash),
     title: proposal.entry.title,
     allDay: false,
-    backgroundColor: 'blue',
+    backgroundColor: 'white',
     extendedProps: {
       isProposal: true,
     },

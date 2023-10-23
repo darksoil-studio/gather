@@ -3,7 +3,12 @@ import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
-import { joinAsync, StoreSubscriber } from '@holochain-open-dev/stores';
+import {
+  joinAsync,
+  pipe,
+  sliceAndJoin,
+  StoreSubscriber,
+} from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import {
@@ -41,20 +46,20 @@ import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 import '@darksoil/assemble/dist/elements/call-to-action-unsatisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-satisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
+import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
+import { SlDrawer } from '@shoelace-style/shoelace';
 
 import './participants-for-event.js';
 import './event-activity.js';
 import './edit-proposal.js';
 import './event-detail.js';
+import './call-to-action-unsatisfied-needs-summary.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { ProposalWithStatus } from '../types.js';
 import { ParticipateDialog } from './participate-dialog.js';
 import { styles } from '../../../styles.js';
-import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
-import { proposalToEventCalendar } from '../utils.js';
-import { SlDrawer } from '@shoelace-style/shoelace';
 
 @localized()
 @customElement('proposal-detail')
@@ -109,10 +114,7 @@ export class ProposalDetail extends LitElement {
 
     if (proposalStatus === 'fulfilled_proposal')
       return html`<div class="column" style="gap: 8px; align-items: end">
-        <sl-tag variant="success">${msg('Proposal Succeeded')}</sl-tag
-        ><span class="placeholder"
-          >${msg('Decide on a time and location to create the event.')}</span
-        >
+        <sl-tag variant="success">${msg('Proposal Succeeded')}</sl-tag>
       </div>`;
 
     return html`<sl-tag
@@ -190,13 +192,15 @@ export class ProposalDetail extends LitElement {
           </sl-button>
         `);
       } else {
-        buttons.push(html`
-          <interested-button
-            .proposalHash=${this.proposalHash}
-          ></interested-button>
+        const isMaximumPeopleReached =
+          !!proposal.callToAction.entry.needs[0].max_possible &&
+          participants.length >=
+            proposal.callToAction.entry.needs[0].max_possible;
+        const participateButton = html`
           <sl-button
             variant="primary"
             pill
+            .disabled=${isMaximumPeopleReached}
             @click=${() =>
               (
                 this.shadowRoot?.querySelector(
@@ -210,6 +214,19 @@ export class ProposalDetail extends LitElement {
             ></sl-icon>
             ${msg('Participate')}
           </sl-button>
+        `;
+
+        const participateButtonWithTooltip = isMaximumPeopleReached
+          ? html`<sl-tooltip .content=${msg('Max. participants reached')}
+              >${participateButton}</sl-tooltip
+            >`
+          : participateButton;
+
+        buttons.push(html`
+          <interested-button
+            .proposalHash=${this.proposalHash}
+          ></interested-button>
+          ${participateButtonWithTooltip}
         `);
       }
     }
@@ -231,76 +248,71 @@ export class ProposalDetail extends LitElement {
           style="height: 300px; flex: 1"
         ></show-image>
 
-        <div class="row" style="flex: 1">
-          <div style="display: flex; flex-direction: column; flex: 1;">
-            <span class="title" style="margin-bottom: 16px"
+        <div class="column" style="flex: 1; gap: 16px">
+          <div class="row" style="align-items: center">
+            <span class="title" style="flex: 1"
               >${proposal.currentProposal.entry.title}</span
             >
-
-            <span style="white-space: pre-line; margin-bottom: 16px"
-              >${proposal.currentProposal.entry.description}</span
-            >
-
-            <div
-              class="column"
-              style="justify-content: end; flex: 1; gap: 16px"
-            >
-              <div
-                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
-              >
-                <sl-icon
-                  title=${msg('location')}
-                  .src=${wrapPathInSvg(mdiMapMarker)}
-                ></sl-icon>
-                <span style="white-space: pre-line"
-                  >${proposal.currentProposal.entry.location
-                    ? proposal.currentProposal.entry.location
-                    : msg('TBD')}</span
-                >
-              </div>
-
-              <div
-                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
-              >
-                <sl-icon
-                  title=${msg('time')}
-                  .src=${wrapPathInSvg(mdiCalendarClock)}
-                ></sl-icon>
-                ${proposal.currentProposal.entry.time
-                  ? html`
-                      <span
-                        >${new Date(
-                          proposal.currentProposal.entry.time!.start_time / 1000
-                        ).toLocaleString()}
-                        -
-                        ${new Date(
-                          (proposal.currentProposal.entry.time as any)
-                            .end_time / 1000
-                        ).toLocaleString()}</span
-                      >
-                    `
-                  : html`<span>${msg('TBD')}</span>`}
-              </div>
-
-              ${proposal.currentProposal.entry.cost
-                ? html` <div
-                    style="display: flex; flex-direction: row; align-items: center; gap: 4px"
-                  >
-                    <sl-icon
-                      title=${msg('cost')}
-                      .src=${wrapPathInSvg(mdiCash)}
-                    ></sl-icon>
-                    <span style="white-space: pre-line"
-                      >${proposal.currentProposal.entry.cost}</span
-                    >
-                  </div>`
-                : html``}
-            </div>
-          </div>
-
-          <div class="column" style="align-items: end">
             ${this.renderStatus(proposal)}
           </div>
+
+          <span style="white-space: pre-line;"
+            >${proposal.currentProposal.entry.description}</span
+          >
+
+          <div class="row" style="align-items: center; gap: 4px">
+            <sl-icon
+              style="font-size: 24px"
+              title=${msg('location')}
+              .src=${wrapPathInSvg(mdiMapMarker)}
+            ></sl-icon>
+            <span style="white-space: pre-line"
+              >${proposal.currentProposal.entry.location
+                ? proposal.currentProposal.entry.location
+                : msg('To Be Defined')}</span
+            >
+          </div>
+          <div class="row" style="align-items: center; gap: 4px">
+            <sl-icon
+              style="font-size: 24px"
+              title=${msg('time')}
+              .src=${wrapPathInSvg(mdiCalendarClock)}
+            ></sl-icon>
+            ${proposal.currentProposal.entry.time
+              ? html`
+                  <span
+                    >${new Date(
+                      proposal.currentProposal.entry.time!.start_time / 1000
+                    ).toLocaleString()}
+                    -
+                    ${new Date(
+                      (proposal.currentProposal.entry.time as any).end_time /
+                        1000
+                    ).toLocaleString()}</span
+                  >
+                `
+              : html`<span>${msg('To Be Defined')}</span>`}
+          </div>
+          ${proposal.currentProposal.entry.cost
+            ? html` <div
+                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
+              >
+                <sl-icon
+                  style="font-size: 24px"
+                  title=${msg('cost')}
+                  .src=${wrapPathInSvg(mdiCash)}
+                ></sl-icon>
+                <span style="white-space: pre-line"
+                  >${proposal.currentProposal.entry.cost}</span
+                >
+              </div>`
+            : html``}
+
+          <span class="placeholder"
+            >${msg(
+              'Edit the proposal and decide on a time and location to create the event.'
+            )}</span
+          >
         </div>
       </sl-card>
     `;
@@ -380,11 +392,10 @@ export class ProposalDetail extends LitElement {
                   <div class="column" style="padding: 16px; gap: 16px">
                     ${this.renderDetail(proposal)}
                     <span class="title">${msg('Unsatisfied Needs')}</span>
-                    <call-to-action-unsatisfied-needs
+                    <call-to-action-unsatisfied-needs-summary
                       .callToActionHash=${proposal.currentProposal.entry
                         .call_to_action_hash}
-                      .hideNeeds=${[0]}
-                    ></call-to-action-unsatisfied-needs>
+                    ></call-to-action-unsatisfied-needs-summary>
                   </div>
                 </div>
               </div>
@@ -441,10 +452,13 @@ export class ProposalDetail extends LitElement {
         ${this.renderDetail(proposal)}
 
         <div class="row" style="gap: 16px">
-          <participants-for-event
-            .eventHash=${this.proposalHash}
-            style="width: 400px"
-          ></participants-for-event>
+          <div class="column" style="gap: 16px">
+            <span class="title">${msg('Participants')}</span>
+            <participants-for-event
+              .proposalHash=${this.proposalHash}
+              style="width: 400px"
+            ></participants-for-event>
+          </div>
           <call-to-action-needs
             .callToActionHash=${proposal.currentProposal.entry
               .call_to_action_hash}

@@ -20,7 +20,7 @@ pub enum EventTime {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FromProposal {
     pub proposal_hash: ActionHash,
-    pub assembly_hash: ActionHash,
+    pub assembly_hash: Option<ActionHash>, // CallToActions without any required needs won't have any assembly
 }
 
 #[hdk_entry_helper]

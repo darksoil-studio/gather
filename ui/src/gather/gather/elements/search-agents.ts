@@ -46,6 +46,20 @@ export class SearchAgents extends LitElement implements FormField {
   disabled = false;
 
   /**
+   * Label for the agent searching field.
+   * @attr field-label
+   */
+  @property({ type: String, attribute: 'field-label' })
+  fieldLabel!: string;
+
+  /**
+   * Placeholder to show when the list is empty.
+   * @attr empty-list-placeholder
+   */
+  @property({ type: String, attribute: 'empty-list-placeholder' })
+  emptyListPlaceholder = msg('No other agents selected yet.');
+
+  /**
    * @internal
    */
   _controller = new FormFieldController(this);
@@ -68,15 +82,14 @@ export class SearchAgents extends LitElement implements FormField {
     return html`
       <div class="column" style="gap: 16px">
         <search-agent
+          .fieldLabel=${this.fieldLabel}
           clear-on-select
           @agent-selected=${(e: any) => {
             this.value = [...this.value, e.detail.agentPubKey];
           }}
         ></search-agent>
         ${this.value.length === 0
-          ? html`<span class="placeholder"
-              >${msg('No other agents selected yet.')}</span
-            >`
+          ? html`<span class="placeholder">${this.emptyListPlaceholder}</span>`
           : this.value.map(
               (agent, i) =>
                 html`<div class="row">

@@ -110,23 +110,19 @@ export class ProposalSummary extends LitElement {
 
           <div style="display: flex; flex-direction: row; ">
             <div class="column" style="justify-content: end; gap: 8px">
-              ${this._isMobile
-                ? html``
-                : html`
-                    <div
-                      style="display: flex; flex-direction: row; align-items: center; gap: 4px"
-                    >
-                      <sl-icon
-                        title=${msg('location')}
-                        .src=${wrapPathInSvg(mdiMapMarker)}
-                      ></sl-icon>
-                      <span style="white-space: pre-line"
-                        >${proposal.currentProposal.entry.location
-                          ? proposal.currentProposal.entry.location
-                          : msg('TBD')}</span
-                      >
-                    </div>
-                  `}
+              <div
+                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
+              >
+                <sl-icon
+                  title=${msg('location')}
+                  .src=${wrapPathInSvg(mdiMapMarker)}
+                ></sl-icon>
+                <span style="white-space: pre-line"
+                  >${proposal.currentProposal.entry.location
+                    ? proposal.currentProposal.entry.location
+                    : msg('To Be Defined')}</span
+                >
+              </div>
               <div
                 style="display: flex; flex-direction: row; align-items: center; gap: 4px"
               >
@@ -136,7 +132,7 @@ export class ProposalSummary extends LitElement {
                     ? new Date(
                         proposal.currentProposal.entry.time.start_time / 1000
                       ).toLocaleString()
-                    : msg('TBD')}</span
+                    : msg('To Be Defined')}</span
                 >
               </div>
             </div>
@@ -148,7 +144,8 @@ export class ProposalSummary extends LitElement {
             </div>
           </div>
 
-          ${proposal.status.type === 'open_proposal'
+          ${proposal.status.type === 'open_proposal' ||
+          proposal.status.type === 'fulfilled_proposal'
             ? html` <call-to-action-progress
                 .callToActionHash=${proposal.currentProposal.entry
                   .call_to_action_hash}

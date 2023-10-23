@@ -5,7 +5,6 @@ import {
   sharedStyles,
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
-import { EntryRecord } from '@holochain-open-dev/utils';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
@@ -22,6 +21,8 @@ import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 
 import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
+import { mdiCancel } from '@mdi/js';
+import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
@@ -30,8 +31,6 @@ import {
   Proposal,
   ProposalWithStatus,
 } from '../types.js';
-import { mdiCancel } from '@mdi/js';
-import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
 
 @localized()
 @customElement('edit-proposal')
@@ -60,6 +59,12 @@ export class EditProposal extends LitElement {
   @state()
   committing = false;
 
+  @state()
+  updating = false;
+
+  @state()
+  creatingEvent = false;
+
   async updateProposal(fields: any) {
     if (this.committing) return;
     this.committing = true;
@@ -82,7 +87,7 @@ export class EditProposal extends LitElement {
       time,
     };
 
-    if (this.isReadyToConvertToEvent()) {
+    if (this.creatingEvent) {
       try {
         const event = await this.gatherStore.client.createEvent({
           ...proposal,
@@ -130,17 +135,38 @@ export class EditProposal extends LitElement {
       }
     }
     this.committing = false;
+    this.updating = false;
+    this.creatingEvent = false;
   }
 
   isReadyToConvertToEvent() {
     return (
-      this.proposal.status.type === 'fulfilled_proposal' &&
+      (this.proposal.status.type === 'fulfilled_proposal' ||
+        (this.proposal.status.type === 'open_proposal' &&
+          this.proposal.callToAction.entry.needs.every(
+            n => n.min_necessary === 0
+          ))) &&
       !this.locationTbd &&
       !this.timeTbd
     );
   }
 
   render() {
+    const createEventButton = html`
+      <sl-button
+        variant="success"
+        type="submit"
+        .disabled=${!this.isReadyToConvertToEvent()}
+        style="flex: 1;"
+        .loading=${this.creatingEvent && this.committing}
+        @click=${() => {
+          this.updating = false;
+          this.creatingEvent = true;
+        }}
+      >
+        ${msg('Create Event')}
+      </sl-button>
+    `;
     return html` <create-cancellation-dialog
         .label=${msg('Cancel Proposal')}
         .warning=${msg(
@@ -152,7 +178,9 @@ export class EditProposal extends LitElement {
         <span slot="header">${msg('Edit Proposal')}</span>
         <form
           style="display: flex; flex-direction: column; flex: 1; margin: 0; gap: 16px"
-          ${onSubmit(fields => this.updateProposal(fields))}
+          ${onSubmit(fields =>
+            setTimeout(() => this.updateProposal(fields), 1)
+          )}
         >
           <upload-files
             name="image"
@@ -186,7 +214,7 @@ export class EditProposal extends LitElement {
                   ? new Date(
                       this.proposal.currentProposal.entry.time.start_time / 1000
                     )
-                  : undefined}
+                  : new Date()}
                 .label=${msg('Start Time')}
                 style="flex: 1;"
                 @input=${() => this.requestUpdate()}
@@ -203,7 +231,7 @@ export class EditProposal extends LitElement {
                       (this.proposal.currentProposal.entry.time as any)
                         .end_time / 1000
                     )
-                  : undefined}
+                  : new Date()}
                 .label=${msg('End Time')}
                 style="flex: 1;"
               ></sl-datetime-input>
@@ -260,15 +288,29 @@ export class EditProposal extends LitElement {
               ${msg('Cancel Proposal')}
             </sl-button>
             <sl-button
-              .variant=${this.isReadyToConvertToEvent() ? 'success' : 'primary'}
+              variant="primary"
               type="submit"
               style="flex: 1;"
-              .loading=${this.committing}
+              @click=${() => {
+                this.creatingEvent = false;
+                this.updating = true;
+              }}
+              .loading=${this.updating && this.committing}
             >
-              ${this.isReadyToConvertToEvent()
-                ? msg('Create Event')
-                : msg('Save')}
+              ${msg('Update Proposal')}
             </sl-button>
+            ${this.isReadyToConvertToEvent()
+              ? createEventButton
+              : html`
+                  <sl-tooltip
+                    .content=${this.proposal.status.type ===
+                    'fulfilled_proposal'
+                      ? msg('Time or location are still To Be Defined')
+                      : msg('There are still unsatisfied needs')}
+                  >
+                    ${createEventButton}
+                  </sl-tooltip>
+                `}
           </div>
         </form></sl-card
       >`;

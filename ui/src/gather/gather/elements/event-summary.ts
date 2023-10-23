@@ -105,21 +105,17 @@ export class EventSummary extends LitElement {
 
           <div style="display: flex; flex-direction: row; ">
             <div class="column" style="justify-content: end; gap: 8px">
-              ${this._isMobile
-                ? html``
-                : html`
-                    <div
-                      style="display: flex; flex-direction: row; align-items: center; gap: 4px"
-                    >
-                      <sl-icon
-                        title=${msg('location')}
-                        .src=${wrapPathInSvg(mdiMapMarker)}
-                      ></sl-icon>
-                      <span style="white-space: pre-line"
-                        >${event.entry.location}</span
-                      >
-                    </div>
-                  `}
+              <div
+                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
+              >
+                <sl-icon
+                  title=${msg('location')}
+                  .src=${wrapPathInSvg(mdiMapMarker)}
+                ></sl-icon>
+                <span style="white-space: pre-line"
+                  >${event.entry.location}</span
+                >
+              </div>
               <div
                 style="display: flex; flex-direction: row; align-items: center; gap: 4px"
               >

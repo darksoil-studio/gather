@@ -1,14 +1,19 @@
 import {
   hashProperty,
   notifyError,
-  sharedStyles,
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
+import { EntryRecord } from '@holochain-open-dev/utils';
 import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
-import { joinAsync, StoreSubscriber } from '@holochain-open-dev/stores';
+import {
+  joinAsync,
+  pipe,
+  sliceAndJoin,
+  StoreSubscriber,
+} from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import {
@@ -23,7 +28,7 @@ import {
   mdiPencil,
   mdiTimeline,
 } from '@mdi/js';
-import { SlDialog, SlDrawer } from '@shoelace-style/shoelace';
+import { SlDrawer } from '@shoelace-style/shoelace';
 
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
@@ -49,6 +54,8 @@ import '@darksoil/assemble/dist/elements/call-to-action-unsatisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-satisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
 import '@darksoil/assemble/dist/elements/my-commitments-for-call-to-action.js';
+import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
+import { CallToAction, Satisfaction } from '@darksoil/assemble';
 
 import './participants-for-event.js';
 import './interested-button.js';
@@ -61,7 +68,6 @@ import { GatherStore } from '../gather-store.js';
 import { EventWithStatus } from '../types.js';
 import { ParticipateDialog } from './participate-dialog.js';
 import { styles } from '../../../styles.js';
-import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
 
 @localized()
 @customElement('event-detail')
@@ -84,7 +90,11 @@ export class EventDetail extends LitElement {
       joinAsync([
         this.gatherStore.eventsStatus.get(this.eventHash),
         this.gatherStore.participantsForEvent.get(this.eventHash),
-        this.gatherStore.interestedInEvent.get(this.eventHash),
+        pipe(this.gatherStore.events.get(this.eventHash), event =>
+          this.gatherStore.assembleStore.callToActions.get(
+            event.entry.call_to_action_hash
+          )
+        ),
       ]),
     () => [this.eventHash]
   );
@@ -143,7 +153,11 @@ export class EventDetail extends LitElement {
     return html`<sl-tag variant="success">${msg('Past Event')}</sl-tag>`;
   }
 
-  renderActions(event: EventWithStatus, participants: AgentPubKey[]) {
+  renderActions(
+    event: EventWithStatus,
+    participants: AgentPubKey[],
+    callToAction: EntryRecord<CallToAction>
+  ) {
     const myPubKeyStr = this.gatherStore.client.client.myPubKey.toString();
     const iAmHost =
       event.currentEvent.action.author.toString() === myPubKeyStr ||
@@ -202,11 +216,14 @@ export class EventDetail extends LitElement {
           </sl-button>
         `);
       } else {
-        buttons.push(html`
-          <interested-button .eventHash=${this.eventHash}></interested-button>
+        const isMaximumPeopleReached =
+          !!callToAction.entry.needs[0].max_possible &&
+          participants.length >= callToAction.entry.needs[0].max_possible;
+        const participateButton = html`
           <sl-button
             variant="primary"
             pill
+            .disabled=${isMaximumPeopleReached}
             @click=${() =>
               (
                 this.shadowRoot?.querySelector(
@@ -220,6 +237,17 @@ export class EventDetail extends LitElement {
             ></sl-icon>
             ${msg('Participate')}
           </sl-button>
+        `;
+
+        const participateButtonWithTooltip = isMaximumPeopleReached
+          ? html`<sl-tooltip .content=${msg('Max. participants reached')}
+              >${participateButton}</sl-tooltip
+            >`
+          : participateButton;
+
+        buttons.push(html`
+          <interested-button .eventHash=${this.eventHash}></interested-button>
+          ${participateButtonWithTooltip}
         `);
       }
     }
@@ -241,79 +269,74 @@ export class EventDetail extends LitElement {
           style="height: 300px; flex: 1"
         ></show-image>
 
-        <div class="row" style="flex: 1">
-          <div style="display: flex; flex-direction: column; flex: 1;">
-            <span class="title" style="margin-bottom: 16px"
+        <div class="column" style="flex: 1; gap: 16px">
+          <div class="row" style="align-items: center">
+            <span class="title" style="flex: 1">
               >${event.currentEvent.entry.title}</span
             >
+            ${this.renderStatus(event)}
+          </div>
 
-            <span style="white-space: pre-line; margin-bottom: 16px"
-              >${event.currentEvent.entry.description}</span
+          <span style="white-space: pre-line"
+            >${event.currentEvent.entry.description}</span
+          >
+
+          <div
+            style="display: flex; flex-direction: row; align-items: center; gap: 4px"
+          >
+            <sl-icon
+              style="font-size: 24px"
+              title=${msg('location')}
+              .src=${wrapPathInSvg(mdiMapMarker)}
+            ></sl-icon>
+            <span style="white-space: pre-line"
+              >${event.currentEvent.entry.location}</span
             >
+          </div>
 
-            <div class="column" style="justify-content: end; flex: 1">
-              <div
-                style="display: flex; flex-direction: row; align-items: center;"
+          <div
+            style="display: flex; flex-direction: row; align-items: center; gap: 4px"
+          >
+            <sl-icon
+              style="font-size: 24px"
+              title=${msg('time')}
+              .src=${wrapPathInSvg(mdiCalendarClock)}
+            ></sl-icon>
+            <span
+              >${new Date(
+                event.currentEvent.entry.time.start_time / 1000
+              ).toLocaleString()}
+              -
+              ${new Date(
+                (event.currentEvent.entry.time as any).end_time / 1000
+              ).toLocaleString()}</span
+            >
+          </div>
+
+          ${event.currentEvent.entry.cost
+            ? html` <div
+                style="display: flex; flex-direction: row; align-items: center; gap: 4px"
               >
                 <sl-icon
-                  title=${msg('location')}
-                  style="margin-right: 4px"
-                  .src=${wrapPathInSvg(mdiMapMarker)}
+                  style="font-size: 24px"
+                  title=${msg('cost')}
+                  .src=${wrapPathInSvg(mdiCash)}
                 ></sl-icon>
                 <span style="white-space: pre-line"
-                  >${event.currentEvent.entry.location}</span
+                  >${event.currentEvent.entry.cost}</span
                 >
-              </div>
-
-              <div
-                style="display: flex; flex-direction: row; align-items: center; margin-top: 16px"
-              >
-                <sl-icon
-                  title=${msg('time')}
-                  style="margin-right: 4px"
-                  .src=${wrapPathInSvg(mdiCalendarClock)}
-                ></sl-icon>
-                <span
-                  >${new Date(
-                    event.currentEvent.entry.time.start_time / 1000
-                  ).toLocaleString()}
-                  -
-                  ${new Date(
-                    (event.currentEvent.entry.time as any).end_time / 1000
-                  ).toLocaleString()}</span
-                >
-              </div>
-
-              ${event.currentEvent.entry.cost
-                ? html` <div
-                    style="display: flex; flex-direction: row; align-items: center; margin-top: 16px"
-                  >
-                    <sl-icon
-                      title=${msg('cost')}
-                      style="margin-right: 4px"
-                      .src=${wrapPathInSvg(mdiCash)}
-                    ></sl-icon>
-                    <span style="white-space: pre-line"
-                      >${event.currentEvent.entry.cost}</span
-                    >
-                  </div>`
-                : html``}
-            </div>
-          </div>
-
-          <div class="column" style="align-items: end">
-            ${this.renderStatus(event)}
-            <div
-              class="row"
-              style="justify-content:end; flex: 1; margin-top: 8px"
-            ></div>
-          </div>
+              </div>`
+            : html``}
         </div>
       </sl-card>
     `;
   }
 
-  renderEvent(event: EventWithStatus, participants: AgentPubKey[]) {
+  renderEvent(
+    event: EventWithStatus,
+    participants: AgentPubKey[],
+    callToAction: EntryRecord<CallToAction>
+  ) {
     if (this._editing) {
       return html`<edit-event
         .originalEventHash=${this.eventHash}
@@ -402,7 +425,7 @@ export class EventDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(event, participants)}
+            ${this.renderActions(event, participants, callToAction)}
           </sl-tab-panel>
           <sl-tab-panel name="participants" style="position: relative">
             <div class="flex-scrollable-parent">
@@ -416,7 +439,7 @@ export class EventDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(event, participants)}
+            ${this.renderActions(event, participants, callToAction)}
           </sl-tab-panel>
           <sl-tab-panel name="needs" style="position: relative">
             <div class="flex-scrollable-parent">
@@ -431,7 +454,7 @@ export class EventDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(event, participants)}
+            ${this.renderActions(event, participants, callToAction)}
           </sl-tab-panel>
           <sl-tab-panel name="activity">
             <div class="flex-scrollable-parent">
@@ -454,10 +477,13 @@ export class EventDetail extends LitElement {
         ${this.renderDetail(event)}
 
         <div class="row" style="gap: 16px">
-          <participants-for-event
-            style="width: 400px"
-            .eventHash=${this.eventHash}
-          ></participants-for-event>
+          <div class="column" style="gap: 16px">
+            <span class="title">${msg('Participants')}</span>
+            <participants-for-event
+              style="width: 400px"
+              .eventHash=${this.eventHash}
+            ></participants-for-event>
+          </div>
           <call-to-action-needs
             .callToActionHash=${event.currentEvent.entry.call_to_action_hash}
           ></call-to-action-needs>
@@ -469,7 +495,7 @@ export class EventDetail extends LitElement {
           .eventHash=${event.originalActionHash}
         ></event-activity>
       </sl-drawer>
-      ${this.renderActions(event, participants)}
+      ${this.renderActions(event, participants, callToAction)}
     `;
   }
 
@@ -484,6 +510,7 @@ export class EventDetail extends LitElement {
       case 'complete':
         const event = this._event.value.value;
         const participants = event[1];
+        const callToAction = event[2];
 
         const myParticipationCommitment = participants.get(
           this.gatherStore.client.client.myPubKey
@@ -501,7 +528,11 @@ export class EventDetail extends LitElement {
               `
             : html``}
           <participate-dialog .eventHash=${this.eventHash}></participate-dialog>
-          ${this.renderEvent(event[0], Array.from(event[1].keys()))}`;
+          ${this.renderEvent(
+            event[0],
+            Array.from(event[1].keys()),
+            callToAction
+          )}`;
       case 'error':
         return html`<display-error
           .error=${this._event.value.error}

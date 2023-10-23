@@ -78,6 +78,7 @@ export class CreateEvent extends LitElement {
         ? fields.hosts
         : [fields.hosts]
       : [];
+    const cost = fields.cost === '' ? undefined : fields.cost;
 
     const needs: Array<Need> = needsFields.map((n: string) => JSON.parse(n));
     const participantsNeeds: Need = JSON.parse(fields.participants);
@@ -109,10 +110,13 @@ export class CreateEvent extends LitElement {
               end_time: new Date(fields.end_time).valueOf() * 1000,
             }
           : undefined;
+        const location = !this.locationTbd ? fields.location : undefined;
         const proposal: Proposal = {
           ...fields,
           hosts,
           time,
+          cost,
+          location,
           call_to_action_hash: callToActionEntryRecord.actionHash,
         };
         eventRecord = await this.gatherStore.client.createProposal(proposal);
@@ -130,6 +134,13 @@ export class CreateEvent extends LitElement {
         };
         eventRecord = await this.gatherStore.client.createEvent(event);
       }
+
+      await this.gatherStore.assembleStore.client.createCommitment({
+        amount: 1,
+        call_to_action_hash: callToActionEntryRecord.actionHash,
+        comment: msg('I commit to participate'),
+        need_index: 0,
+      });
 
       if (this.isProposal) {
         this.dispatchEvent(
@@ -175,6 +186,8 @@ export class CreateEvent extends LitElement {
     `;
   }
 
+  pagesToValidate = [2, 3];
+
   renderNextButton() {
     return html`
       <sl-button
@@ -183,7 +196,11 @@ export class CreateEvent extends LitElement {
             | HTMLFormElement
             | undefined;
           if (form) {
-            if (this.currentPage === 2 && !form.reportValidity()) return;
+            if (
+              this.pagesToValidate.includes(this.currentPage) &&
+              !form.reportValidity()
+            )
+              return;
           }
           this.currentPage += 1;
         }}
@@ -248,9 +265,105 @@ export class CreateEvent extends LitElement {
             'Who hosts this event? Hosts are able to update the event details (time, location, etc.), and accept needs that require host approval.'
           )}</span
         >
+        <span
+          >${msg(
+            'As the creator of the event, you will be automatically added as a host.'
+          )}</span
+        >
         <div class="column" style="align-items: center">
-          <search-agents name="hosts" style="width: 300px;"></search-agents>
+          <search-agents
+            .emptyListPlaceholder=${msg(
+              'No other hosts selected: you are the only host.'
+            )}
+            .fieldLabel=${msg('Add Host')}
+            name="hosts"
+            style="width: 300px;"
+          ></search-agents>
         </div>
+
+        <div class="row" style="gap: 8px; justify-content: end">
+          ${this.renderBackButton()} ${this.renderNextButton()}
+        </div>
+      </div>
+    `;
+  }
+
+  renderTimeFields(pageIndex: number) {
+    return html`
+      <div
+        class="column"
+        style=${styleMap({
+          display: this.currentPage === pageIndex ? 'flex' : 'none',
+          gap: '16px',
+        })}
+      >
+        <span class="title">${msg('Time')}</span>
+        ${this.isProposal
+          ? html`
+              <span class="placeholder"
+                >${msg(
+                  "If you leave the time as To Be Defined, you'll be able to set it later at any point. However, it must be set before converting the event proposal into an actual event."
+                )}</span
+              >
+              <sl-switch
+                .checked=${this.timeTbd}
+                @sl-change=${() => {
+                  this.timeTbd = !this.timeTbd;
+                }}
+                >${msg('Leave as "To Be Defined"')}</sl-switch
+              >
+            `
+          : html``}
+        <sl-datetime-input
+          name="start_time"
+          .min=${pageIndex === this.currentPage
+            ? new Date().toISOString()
+            : undefined}
+          .required=${pageIndex === this.currentPage &&
+          (!this.isProposal || !this.timeTbd)}
+          .disabled=${this.isProposal && this.timeTbd}
+          .label=${msg('Start Time')}
+          style="flex: 1"
+          id="start-time"
+          @input=${() => this.requestUpdate()}
+        ></sl-datetime-input>
+        <sl-datetime-input
+          name="end_time"
+          .required=${pageIndex === this.currentPage &&
+          (!this.isProposal || !this.timeTbd)}
+          .disabled=${this.isProposal && this.timeTbd}
+          .label=${msg('End Time')}
+          style="flex: 1"
+          .min=${pageIndex === this.currentPage
+            ? (this.shadowRoot?.getElementById('start-time') as SlInput)?.value
+            : undefined}
+        ></sl-datetime-input>
+
+        <span class="title">${msg('Location')}</span>
+        ${this.isProposal
+          ? html`
+              <span class="placeholder"
+                >${msg(
+                  "If you leave the location as To Be Defined, you'll be able to set it later at any point. However, it must be set before converting the event proposal into an actual event."
+                )}</span
+              >
+              <sl-switch
+                .checked=${this.locationTbd}
+                @sl-change=${() => {
+                  this.locationTbd = !this.locationTbd;
+                }}
+                >${msg('Leave as "To Be Defined"')}</sl-switch
+              >
+            `
+          : html``}
+        <sl-input
+          name="location"
+          .required=${pageIndex === this.currentPage &&
+          (!this.isProposal || !this.locationTbd)}
+          .disabled=${this.isProposal && this.locationTbd}
+          .label=${msg('Location')}
+          style="flex: 1"
+        ></sl-input>
 
         <div class="row" style="gap: 8px; justify-content: end">
           ${this.renderBackButton()} ${this.renderNextButton()}
@@ -284,57 +397,6 @@ export class CreateEvent extends LitElement {
           .label=${msg('Description')}
         ></sl-textarea>
 
-        <div class="row" style="gap: 8px; align-items: center;">
-          <div class="column" style="gap: 8px; flex: 1">
-            <sl-datetime-input
-              name="start_time"
-              .disabled=${this.timeTbd}
-              .min=${new Date().toISOString().slice(0, 16)}
-              .required=${!this.isProposal || !this.timeTbd}
-              .label=${msg('Start Time')}
-              style="flex: 1"
-              id="start-time"
-              @input=${() => this.requestUpdate()}
-            ></sl-datetime-input>
-            <sl-datetime-input
-              name="end_time"
-              .required=${!this.isProposal || !this.timeTbd}
-              .disabled=${this.timeTbd}
-              .label=${msg('End Time')}
-              style="flex: 1"
-              .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
-                ?.value}
-            ></sl-datetime-input>
-          </div>
-          ${this.isProposal
-            ? html` <sl-switch
-                style="margin-top: 16px"
-                @sl-change=${() => {
-                  this.timeTbd = !this.timeTbd;
-                }}
-                >${msg('TBD')}</sl-switch
-              >`
-            : html``}
-        </div>
-
-        <div class="row" style="gap: 8px; align-items: center;">
-          <sl-input
-            name="location"
-            .required=${!this.isProposal || !this.locationTbd}
-            .disabled=${this.locationTbd}
-            .label=${msg('Location')}
-            style="flex: 1"
-          ></sl-input>
-          ${this.isProposal
-            ? html` <sl-switch
-                style="margin-top: 16px"
-                @sl-change=${() => {
-                  this.locationTbd = !this.locationTbd;
-                }}
-                >${msg('TBD')}</sl-switch
-              >`
-            : html``}
-        </div>
         <sl-input name="cost" .label=${msg('Cost')} style="flex: 1"></sl-input>
 
         <div class="row" style="justify-content: end; gap: 16px">
@@ -361,38 +423,36 @@ export class CreateEvent extends LitElement {
                   'Event proposals that have an expiration date will not become actual events if the minimum required participants and needs are not satisfied by the expiration date.'
                 )}</span
               >
-              <div class="row" style="align-items: center">
-                <sl-switch
-                  id="expiration-switch"
-                  style="margin-right: 16px;"
-                  @input=${() => this.requestUpdate()}
-                  >${msg('Set an expiration time')}</sl-switch
-                >
+              <sl-switch
+                id="expiration-switch"
+                @input=${() => this.requestUpdate()}
+                >${msg('Set an expiration time')}</sl-switch
+              >
 
-                <sl-datetime-input
-                  name="expiration_time"
-                  .label=${msg('Expiration Date')}
-                  .required=${(
-                    this.shadowRoot?.getElementById(
-                      'expiration-switch'
-                    ) as SlSwitch
-                  )?.checked}
-                  .disabled=${!(
-                    this.shadowRoot?.getElementById(
-                      'expiration-switch'
-                    ) as SlSwitch
-                  )?.checked}
-                  .min=${new Date().toISOString().slice(0, 16)}
-                  .max=${(
-                    this.shadowRoot?.getElementById('start-time') as SlInput
-                  )?.value}
-                ></sl-datetime-input>
-              </div>
+              <sl-datetime-input
+                name="expiration_time"
+                .label=${msg('Expiration Date')}
+                .required=${(
+                  this.shadowRoot?.getElementById(
+                    'expiration-switch'
+                  ) as SlSwitch
+                )?.checked}
+                .disabled=${!(
+                  this.shadowRoot?.getElementById(
+                    'expiration-switch'
+                  ) as SlSwitch
+                )?.checked}
+                .min=${new Date().toISOString()}
+                .max=${this.timeTbd
+                  ? undefined
+                  : (this.shadowRoot?.getElementById('start-time') as SlInput)
+                      ?.value}
+              ></sl-datetime-input>
             `
           : html`
               <span class="placeholder"
                 >${msg(
-                  "When creating an events, you can't specify any need as minimum required, but you can still accept contributions from participants."
+                  "When creating an event, you can't specify any need as minimum required, but you can still accept contributions from participants."
                 )}</span
               >
             `}
@@ -448,7 +508,8 @@ export class CreateEvent extends LitElement {
           style="flex: 1"
         >
           ${this.renderIsProposal(0)} ${this.renderHostsFields(1)}
-          ${this.renderEventFields(2)} ${this.renderNeedsFields(3)}
+          ${this.renderEventFields(2)}${this.renderTimeFields(3)}
+          ${this.renderNeedsFields(4)}
         </form>
       </sl-card>
     `;
