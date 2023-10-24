@@ -78,6 +78,7 @@ export class CreateEvent extends LitElement {
         ? fields.hosts
         : [fields.hosts]
       : [];
+    hosts.push(this.gatherStore.client.client.myPubKey);
     const cost = fields.cost === '' ? undefined : fields.cost;
 
     const needs: Array<Need> = needsFields.map((n: string) => JSON.parse(n));

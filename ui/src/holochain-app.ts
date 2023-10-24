@@ -329,50 +329,49 @@ export class HolochainApp extends LitElement {
   }
 
   renderEventDetail(eventHash: ActionHash) {
-    if (this._isMobile)
-      return html`
-        <event-detail style="flex: 1" .eventHash=${eventHash}></event-detail>
-      `;
-
     return html`
-      <div class="flex-scrollable-parent">
-        <div class="flex-scrollable-container">
-          <div class="flex-scrollable-y">
-            <div class="column" style="flex: 1; align-items: center;">
-              <event-detail
-                style="margin: 16px; min-width: 600px; max-width: 100%"
-                .eventHash=${eventHash}
-              ></event-detail>
-            </div>
-          </div>
-        </div>
-      </div>
+      <event-detail style="flex: 1" .eventHash=${eventHash}></event-detail>
     `;
+
+    // return html`
+    //   <div class="flex-scrollable-parent">
+    //     <div class="flex-scrollable-container">
+    //       <div class="flex-scrollable-y">
+    //         <div class="column" style="flex: 1; align-items: center;">
+    //           <event-detail
+    //             style="margin: 16px; min-width: 600px; max-width: 100%"
+    //             .eventHash=${eventHash}
+    //           ></event-detail>
+    //         </div>
+    //       </div>
+    //     </div>
+    //   </div>
+    // `;
   }
 
   renderProposalDetail(proposalHash: ActionHash) {
-    if (this._isMobile)
-      return html`
-        <proposal-detail
-          style="flex: 1"
-          .proposalHash=${proposalHash}
-        ></proposal-detail>
-      `;
-
+    // if (this._isMobile)
     return html`
-      <div class="flex-scrollable-parent">
-        <div class="flex-scrollable-container">
-          <div class="flex-scrollable-y">
-            <div class="column" style="flex: 1; align-items: center;">
-              <proposal-detail
-                style="margin: 16px; min-width: 600px; max-width: 100%"
-                .proposalHash=${proposalHash}
-              ></proposal-detail>
-            </div>
-          </div>
-        </div>
-      </div>
+      <proposal-detail
+        style="flex: 1"
+        .proposalHash=${proposalHash}
+      ></proposal-detail>
     `;
+
+    // return html`
+    //   <div class="flex-scrollable-parent">
+    //     <div class="flex-scrollable-container">
+    //       <div class="flex-scrollable-y">
+    //         <div class="column" style="flex: 1; align-items: center;">
+    //           <proposal-detail
+    //             style="margin: 16px; min-width: 600px; max-width: 100%"
+    //             .proposalHash=${proposalHash}
+    //           ></proposal-detail>
+    //         </div>
+    //       </div>
+    //     </div>
+    //   </div>
+    // `;
   }
 
   renderCreateEventButton() {

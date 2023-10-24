@@ -22,8 +22,6 @@ import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 
 import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
-import { mdiCancel } from '@mdi/js';
-import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
@@ -89,101 +87,93 @@ export class EditEvent extends LitElement {
   }
 
   render() {
-    return html` <create-cancellation-dialog
-        .label=${msg('Cancel Event')}
-        .warning=${msg(
-          'Are you sure you want to cancel this event? This cannot be reversed. All participants will be notified.'
-        )}
-        .cancelledHash=${this.originalEventHash}
-      ></create-cancellation-dialog>
-      <sl-card style="display: flex; flex: 1">
-        <span slot="header">${msg('Edit Event')}</span>
-        <form
-          style="display: flex; flex-direction: column; flex: 1; margin: 0; gap: 16px"
-          ${onSubmit(fields => this.updateEvent(fields))}
-        >
-          <upload-files
-            name="image"
-            required
-            one-file
-            .defaultValue=${this.currentRecord.entry.image}
-            accepted-files="image/jpeg,image/png,image/gif"
-          ></upload-files>
+    return html` <sl-card style="display: flex; flex: 1">
+      <span slot="header">${msg('Edit Event')}</span>
+      <form
+        style="display: flex; flex-direction: column; flex: 1; margin: 0; gap: 16px"
+        ${onSubmit(fields => this.updateEvent(fields))}
+      >
+        <upload-files
+          name="image"
+          required
+          one-file
+          .defaultValue=${this.currentRecord.entry.image}
+          accepted-files="image/jpeg,image/png,image/gif"
+        ></upload-files>
 
-          <sl-input
-            name="title"
-            required
-            .label=${msg('Title')}
-            .defaultValue=${this.currentRecord.entry.title}
-          ></sl-input>
-          <sl-textarea
-            name="description"
-            required
-            .label=${msg('Description')}
-            .defaultValue=${this.currentRecord.entry.description}
-          ></sl-textarea>
+        <sl-input
+          name="title"
+          required
+          .label=${msg('Title')}
+          .defaultValue=${this.currentRecord.entry.title}
+        ></sl-input>
+        <sl-textarea
+          name="description"
+          required
+          .label=${msg('Description')}
+          .defaultValue=${this.currentRecord.entry.description}
+        ></sl-textarea>
 
-          <sl-datetime-input
-            name="start_time"
-            required
-            id="start-time"
-            .defaultValue=${new Date(
-              this.currentRecord.entry.time.start_time / 1000
-            )}
-            .label=${msg('Start Time')}
+        <sl-datetime-input
+          name="start_time"
+          required
+          id="start-time"
+          .defaultValue=${new Date(
+            this.currentRecord.entry.time.start_time / 1000
+          )}
+          .label=${msg('Start Time')}
+          style="flex: 1;"
+          @input=${() => this.requestUpdate()}
+        ></sl-datetime-input>
+        <sl-datetime-input
+          required
+          .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
+            ?.value}
+          name="end_time"
+          .defaultValue=${new Date(
+            (this.currentRecord.entry.time as any).end_time / 1000
+          )}
+          .label=${msg('End Time')}
+          style="flex: 1;"
+        ></sl-datetime-input>
+
+        <sl-input
+          name="location"
+          required
+          .label=${msg('Location')}
+          .defaultValue=${this.currentRecord.entry.location}
+        ></sl-input>
+        <sl-input
+          name="cost"
+          .label=${msg('Cost')}
+          .defaultValue=${this.currentRecord.entry.cost || ''}
+        ></sl-input>
+
+        <div style="display: flex; flex-direction: row; gap: 8px">
+          <sl-button
             style="flex: 1;"
-            @input=${() => this.requestUpdate()}
-          ></sl-datetime-input>
-          <sl-datetime-input
-            required
-            .min=${(this.shadowRoot?.getElementById('start-time') as SlInput)
-              ?.value}
-            name="end_time"
-            .defaultValue=${new Date(
-              (this.currentRecord.entry.time as any).end_time / 1000
-            )}
-            .label=${msg('End Time')}
+            @click=${() => {
+              this.dispatchEvent(
+                new CustomEvent('edit-cancelled', {
+                  bubbles: true,
+                  composed: true,
+                })
+              );
+            }}
+          >
+            ${msg('Go Back')}
+          </sl-button>
+          <sl-button
+            variant="primary"
+            type="submit"
             style="flex: 1;"
-          ></sl-datetime-input>
-
-          <sl-input
-            name="location"
-            required
-            .label=${msg('Location')}
-            .defaultValue=${this.currentRecord.entry.location}
-          ></sl-input>
-          <sl-input
-            name="cost"
-            .label=${msg('Cost')}
-            .defaultValue=${this.currentRecord.entry.cost || ''}
-          ></sl-input>
-
-          <div style="display: flex; flex-direction: row; gap: 8px">
-            <sl-button
-              variant="warning"
-              @click=${() => {
-                (
-                  this.shadowRoot?.querySelector(
-                    'create-cancellation-dialog'
-                  ) as CreateCancellationDialog
-                ).show();
-              }}
-              style="flex: 1;"
-            >
-              <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
-              ${msg('Cancel Event')}
-            </sl-button>
-            <sl-button
-              variant="primary"
-              type="submit"
-              style="flex: 1;"
-              .loading=${this.updating}
-            >
-              ${msg('Save')}
-            </sl-button>
-          </div>
-        </form></sl-card
-      >`;
+            .loading=${this.updating}
+          >
+            ${msg('Save')}
+          </sl-button>
+        </div>
+      </form></sl-card
+    >`;
   }
 
   static styles = [sharedStyles];

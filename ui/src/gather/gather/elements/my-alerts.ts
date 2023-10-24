@@ -1,4 +1,8 @@
-import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
+import {
+  notifyError,
+  sharedStyles,
+  wrapPathInSvg,
+} from '@holochain-open-dev/elements';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg, str } from '@lit/localize';
@@ -202,6 +206,30 @@ export class MyAlerts extends LitElement {
     }
   }
 
+  @state()
+  committing = false;
+
+  async markAlertsAsRead(alerts: Array<Alert<GatherAlert>>) {
+    if (this.committing) return;
+    this.committing = true;
+    try {
+      await this.gatherStore.alertsStore.client.markAlertsAsRead(
+        alerts.map(a => a.createLink.hashed.hash)
+      );
+
+      this.dispatchEvent(
+        new CustomEvent('unread-alerts-dismissed', {
+          composed: true,
+          bubbles: true,
+        })
+      );
+    } catch (e: any) {
+      notifyError(msg('Error dismissing the alerts'));
+      console.error(e);
+    }
+    this.committing = false;
+  }
+
   renderDismissButton() {
     if (
       this.panel !== 'unread_alerts' ||
@@ -215,10 +243,9 @@ export class MyAlerts extends LitElement {
         pill
         .disabled=${alerts.length === 0}
         @click=${() => {
-          this.gatherStore.alertsStore.client.markAlertsAsRead(
-            alerts.map(a => a.createLink.hashed.hash)
-          );
+          this.markAlertsAsRead(alerts);
         }}
+        .loading=${this.committing}
         ><sl-icon
           slot="prefix"
           .src=${wrapPathInSvg(mdiNotificationClearAll)}

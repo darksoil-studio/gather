@@ -56,6 +56,7 @@ import { GatherStore } from '../gather-store.js';
 import { ProposalWithStatus } from '../types.js';
 import { ParticipateDialog } from './participate-dialog.js';
 import { styles } from '../../../styles.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 @localized()
 @customElement('proposal-detail')
@@ -133,11 +134,9 @@ export class ProposalDetail extends LitElement {
 
     const myPubKeyStr = this.gatherStore.client.client.myPubKey.toString();
     const iAmParticipant = participants.find(i => i.toString() === myPubKeyStr);
-    const iAmHost =
-      proposal.currentProposal.action.author.toString() === myPubKeyStr ||
-      !!proposal.currentProposal.entry.hosts.find(
-        h => h.toString() === myPubKeyStr
-      );
+    const iAmHost = !!proposal.currentProposal.entry.hosts.find(
+      h => h.toString() === myPubKeyStr
+    );
 
     const buttons = !this._isMobile
       ? [
@@ -174,6 +173,20 @@ export class ProposalDetail extends LitElement {
             <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
             ${msg('Edit Proposal')}
           </sl-button>
+          <sl-button
+            variant="danger"
+            pill
+            @click=${() => {
+              (
+                this.shadowRoot?.getElementById(
+                  'cancel-proposal'
+                ) as CreateCancellationDialog
+              ).show();
+            }}
+          >
+            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
+            ${msg('Cancel Proposal')}
+          </sl-button>
         `);
       }
       if (iAmParticipant) {
@@ -183,8 +196,8 @@ export class ProposalDetail extends LitElement {
             pill
             @click=${() =>
               (
-                this.shadowRoot?.querySelector(
-                  'create-cancellation-dialog'
+                this.shadowRoot?.getElementById(
+                  'cancel-participation'
                 ) as CreateCancellationDialog
               ).show()}
           >
@@ -327,16 +340,19 @@ export class ProposalDetail extends LitElement {
 
   renderProposal(proposal: ProposalWithStatus, participants: AgentPubKey[]) {
     if (this._editing) {
-      return html`<edit-proposal
+      return html` <edit-proposal
         .originalProposalHash=${this.proposalHash}
         .proposal=${proposal}
         @proposal-updated=${async () => {
           this._editing = false;
         }}
-        @edit-canceled=${() => {
+        @edit-cancelled=${() => {
           this._editing = false;
         }}
-        style="display: flex;"
+        style=${styleMap({
+          margin: this._isMobile ? '0' : '16px',
+          width: this._isMobile ? '100%' : '600px',
+        })}
       ></edit-proposal>`;
     }
 
@@ -396,7 +412,10 @@ export class ProposalDetail extends LitElement {
             <div class="flex-scrollable-parent">
               <div class="flex-scrollable-container">
                 <div class="flex-scrollable-y">
-                  <div class="column" style="padding: 16px; gap: 16px">
+                  <div
+                    class="column"
+                    style="padding: 16px; gap: 16px; margin-bottom: 200px"
+                  >
                     ${this.renderDetail(proposal)}
                     <span class="title">${msg('Unsatisfied Needs')}</span>
                     <call-to-action-unsatisfied-needs-summary
@@ -413,7 +432,10 @@ export class ProposalDetail extends LitElement {
             <div class="flex-scrollable-parent">
               <div class="flex-scrollable-container">
                 <div class="flex-scrollable-y">
-                  <div class="column" style="padding: 16px; gap: 16px">
+                  <div
+                    class="column"
+                    style="padding: 16px; gap: 16px;  margin-bottom: 200px"
+                  >
                     <participants-for-event
                       .proposalHash=${this.proposalHash}
                     ></participants-for-event>
@@ -427,7 +449,10 @@ export class ProposalDetail extends LitElement {
             <div class="flex-scrollable-parent">
               <div class="flex-scrollable-container">
                 <div class="flex-scrollable-y">
-                  <div class="column" style="padding: 16px; gap: 16px">
+                  <div
+                    class="column"
+                    style="padding: 16px; gap: 16px;  margin-bottom: 200px"
+                  >
                     <call-to-action-needs
                       .callToActionHash=${proposal.currentProposal.entry
                         .call_to_action_hash}
@@ -455,29 +480,38 @@ export class ProposalDetail extends LitElement {
       `;
 
     return html`
-      <div class="column" style="gap: 16px; align-items: center">
-        ${this.renderDetail(proposal)}
+      <div class="flex-scrollable-parent">
+        <div class="flex-scrollable-container">
+          <div class="flex-scrollable-y">
+            <div
+              class="column"
+              style="gap: 16px; align-items: center; margin: 16px"
+            >
+              ${this.renderDetail(proposal)}
 
-        <div class="row" style="gap: 16px">
-          <div class="column" style="gap: 16px">
-            <span class="title">${msg('Participants')}</span>
-            <participants-for-event
-              .proposalHash=${this.proposalHash}
-              style="width: 400px"
-            ></participants-for-event>
+              <div class="row" style="gap: 16px">
+                <div class="column" style="gap: 16px">
+                  <span class="title">${msg('Participants')}</span>
+                  <participants-for-event
+                    .proposalHash=${this.proposalHash}
+                    style="width: 400px"
+                  ></participants-for-event>
+                </div>
+                <call-to-action-needs
+                  .callToActionHash=${proposal.currentProposal.entry
+                    .call_to_action_hash}
+                ></call-to-action-needs>
+              </div>
+            </div>
+            <sl-drawer .label=${msg('Activity')}>
+              <event-activity
+                style="flex: 1"
+                .proposalHash=${proposal.originalActionHash}
+              ></event-activity>
+            </sl-drawer>
           </div>
-          <call-to-action-needs
-            .callToActionHash=${proposal.currentProposal.entry
-              .call_to_action_hash}
-          ></call-to-action-needs>
         </div>
       </div>
-      <sl-drawer .label=${msg('Activity')}>
-        <event-activity
-          style="flex: 1"
-          .proposalHash=${proposal.originalActionHash}
-        ></event-activity>
-      </sl-drawer>
       ${this.renderActions(proposal, participants)}
     `;
   }
@@ -507,6 +541,7 @@ export class ProposalDetail extends LitElement {
         return html` ${myParticipationCommitment
             ? html`
                 <create-cancellation-dialog
+                  id="cancel-participation"
                   .label=${msg('Cancel My Participation')}
                   .warning=${msg(
                     'Are you sure? All participants will be notified.'
@@ -515,6 +550,15 @@ export class ProposalDetail extends LitElement {
                 ></create-cancellation-dialog>
               `
             : html``}
+          <create-cancellation-dialog
+            id="cancel-proposal"
+            .label=${msg('Cancel Proposal')}
+            .warning=${msg(
+              'Are you sure you want to cancel this proposal? This cannot be reversed. All participants will be notified.'
+            )}
+            .cancelledHash=${this.proposalHash}
+          ></create-cancellation-dialog>
+
           <participate-dialog
             .proposalHash=${this.proposalHash}
           ></participate-dialog>
@@ -531,6 +575,7 @@ export class ProposalDetail extends LitElement {
     styles,
     css`
       :host {
+        position: relative;
         display: flex;
         flex-direction: column;
       }

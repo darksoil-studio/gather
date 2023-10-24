@@ -182,6 +182,28 @@ export class GatherStore {
             });
           }
         }
+      } else if (signal.type === 'EntryUpdated') {
+        if (signal.app_entry.type === 'Event') {
+          let lastUpdate: ActionHash | undefined =
+            signal.action.hashed.content.original_action_address;
+          let originalAction = lastUpdate;
+
+          while (lastUpdate) {
+            const event: EntryRecord<Event> | undefined =
+              await this.client.getEvent(lastUpdate);
+            lastUpdate =
+              event?.action.type === 'Update'
+                ? event.action.original_action_address
+                : undefined;
+            if (lastUpdate) {
+              originalAction = lastUpdate;
+            }
+          }
+          await this.notifyOfEventAction(originalAction, {
+            actionHash: signal.action.hashed.hash,
+            type: 'event_updated',
+          });
+        }
       }
     });
     assembleStore.client.onSignal(async signal => {
@@ -310,7 +332,7 @@ export class GatherStore {
             ) {
               await this.notifyOfEventAction(eventHash, {
                 type: 'satisfaction_deleted',
-                actionHash: eventHash,
+                actionHash: signal.action.hashed.hash,
               });
             }
           }
@@ -1208,12 +1230,15 @@ export class GatherStore {
                 })
               );
             case 'satisfaction_deleted':
+              console.log('hey');
               return pipe(
                 this.assembleStore.satisfactions.get(actionHash), // TODO: remove this hack
-                deleteAction =>
-                  this.assembleStore.satisfactions.get(
+                deleteAction => {
+                  console.log(deleteAction);
+                  return this.assembleStore.satisfactions.get(
                     (deleteAction!.action as DeleteLink).link_add_address
-                  ),
+                  );
+                },
                 createLinkRecord =>
                   this.assembleStore.satisfactions.get(
                     (createLinkRecord!.action as CreateLink).target_address
@@ -1223,12 +1248,15 @@ export class GatherStore {
                   this.assembleStore.callToActions.get(
                     satisfaction!.entry.call_to_action_hash
                   ),
-                (callToAction, satisfaction, _, deleteAction) => ({
-                  type: 'satisfaction_deleted',
-                  record: deleteAction as unknown as EntryRecord<void>,
-                  satisfaction: satisfaction!,
-                  callToAction,
-                })
+                (callToAction, satisfaction, _, deleteAction) => {
+                  console.log('aaaa');
+                  return {
+                    type: 'satisfaction_deleted',
+                    record: deleteAction as unknown as EntryRecord<void>,
+                    satisfaction: satisfaction!,
+                    callToAction,
+                  };
+                }
               );
             case 'assembly_created':
               return pipe(

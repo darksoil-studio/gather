@@ -29,6 +29,7 @@ import {
   mdiTimeline,
 } from '@mdi/js';
 import { SlDrawer } from '@shoelace-style/shoelace';
+import { styleMap } from 'lit/directives/style-map.js';
 
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
@@ -51,12 +52,13 @@ import '@holochain-open-dev/cancellations/dist/elements/cancellations-for.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 
+import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
+
 import '@darksoil/assemble/dist/elements/call-to-action-unsatisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-satisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
 import '@darksoil/assemble/dist/elements/my-commitments-for-call-to-action.js';
-import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
-import { CallToAction, Satisfaction } from '@darksoil/assemble';
+import { CallToAction } from '@darksoil/assemble';
 
 import './participants-for-event.js';
 import './interested-button.js';
@@ -160,9 +162,9 @@ export class EventDetail extends LitElement {
     callToAction: EntryRecord<CallToAction>
   ) {
     const myPubKeyStr = this.gatherStore.client.client.myPubKey.toString();
-    const iAmHost =
-      event.currentEvent.action.author.toString() === myPubKeyStr ||
-      !!event.currentEvent.entry.hosts.find(h => h.toString() === myPubKeyStr);
+    const iAmHost = !!event.currentEvent.entry.hosts.find(
+      h => h.toString() === myPubKeyStr
+    );
     const iAmParticipant = participants.find(i => i.toString() === myPubKeyStr);
     const eventStatus = event.status;
 
@@ -198,6 +200,21 @@ export class EventDetail extends LitElement {
             <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
             ${msg('Edit event')}
           </sl-button>
+
+          <sl-button
+            pill
+            variant="danger"
+            @click=${() => {
+              (
+                this.shadowRoot?.getElementById(
+                  'cancel-event'
+                ) as CreateCancellationDialog
+              ).show();
+            }}
+          >
+            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
+            ${msg('Cancel Event')}
+          </sl-button>
         `);
       }
       if (iAmParticipant) {
@@ -207,8 +224,8 @@ export class EventDetail extends LitElement {
             pill
             @click=${() =>
               (
-                this.shadowRoot?.querySelector(
-                  'create-cancellation-dialog'
+                this.shadowRoot?.getElementById(
+                  'cancel-participation'
                 ) as CreateCancellationDialog
               ).show()}
           >
@@ -345,19 +362,19 @@ export class EventDetail extends LitElement {
     callToAction: EntryRecord<CallToAction>
   ) {
     if (this._editing) {
-      return html`<edit-event
+      return html` <edit-event
         .originalEventHash=${this.eventHash}
         .currentRecord=${event.currentEvent}
         @event-updated=${async () => {
           this._editing = false;
         }}
-        @edit-canceled=${() => {
+        @edit-cancelled=${() => {
           this._editing = false;
         }}
-        @cancellation-created=${() => {
-          this._editing = false;
-        }}
-        style="display: flex;"
+        style=${styleMap({
+          margin: this._isMobile ? '0' : '16px',
+          width: this._isMobile ? '100%' : '600px',
+        })}
       ></edit-event>`;
     }
 
@@ -417,7 +434,10 @@ export class EventDetail extends LitElement {
             <div class="flex-scrollable-parent">
               <div class="flex-scrollable-container">
                 <div class="flex-scrollable-y">
-                  <div class="column" style="padding: 16px; gap: 16px">
+                  <div
+                    class="column"
+                    style="padding: 16px; gap: 16px; margin-bottom: 200px"
+                  >
                     ${this.renderDetail(event)}
                     <span class="title">${msg('My Commitments')}</span>
                     <sl-card>
@@ -438,7 +458,10 @@ export class EventDetail extends LitElement {
             <div class="flex-scrollable-parent">
               <div class="flex-scrollable-container">
                 <div class="flex-scrollable-y">
-                  <div class="column" style="padding: 16px; gap: 16px">
+                  <div
+                    class="column"
+                    style="padding: 16px; gap: 16px;  margin-bottom: 200px"
+                  >
                     <participants-for-event
                       .eventHash=${this.eventHash}
                     ></participants-for-event>
@@ -452,7 +475,10 @@ export class EventDetail extends LitElement {
             <div class="flex-scrollable-parent">
               <div class="flex-scrollable-container">
                 <div class="flex-scrollable-y">
-                  <div class="column" style="padding: 16px; gap: 16px">
+                  <div
+                    class="column"
+                    style="padding: 16px; gap: 16px;  margin-bottom: 200px"
+                  >
                     <call-to-action-needs
                       .callToActionHash=${event.currentEvent.entry
                         .call_to_action_hash}
@@ -480,28 +506,38 @@ export class EventDetail extends LitElement {
       `;
 
     return html`
-      <div class="column" style="gap: 16px; align-items: center">
-        ${this.renderDetail(event)}
+      <div class="flex-scrollable-parent">
+        <div class="flex-scrollable-container">
+          <div class="flex-scrollable-y">
+            <div
+              class="column"
+              style="gap: 16px; align-items: center; margin: 16px"
+            >
+              ${this.renderDetail(event)}
 
-        <div class="row" style="gap: 16px">
-          <div class="column" style="gap: 16px">
-            <span class="title">${msg('Participants')}</span>
-            <participants-for-event
-              style="width: 400px"
-              .eventHash=${this.eventHash}
-            ></participants-for-event>
+              <div class="row" style="gap: 16px">
+                <div class="column" style="gap: 16px">
+                  <span class="title">${msg('Participants')}</span>
+                  <participants-for-event
+                    style="width: 400px"
+                    .eventHash=${this.eventHash}
+                  ></participants-for-event>
+                </div>
+                <call-to-action-needs
+                  .callToActionHash=${event.currentEvent.entry
+                    .call_to_action_hash}
+                ></call-to-action-needs>
+              </div>
+            </div>
+            <sl-drawer .label=${msg('Activity')}>
+              <event-activity
+                style="flex: 1"
+                .eventHash=${event.originalActionHash}
+              ></event-activity>
+            </sl-drawer>
           </div>
-          <call-to-action-needs
-            .callToActionHash=${event.currentEvent.entry.call_to_action_hash}
-          ></call-to-action-needs>
         </div>
       </div>
-      <sl-drawer .label=${msg('Activity')}>
-        <event-activity
-          style="flex: 1"
-          .eventHash=${event.originalActionHash}
-        ></event-activity>
-      </sl-drawer>
       ${this.renderActions(event, participants, callToAction)}
     `;
   }
@@ -526,14 +562,23 @@ export class EventDetail extends LitElement {
         return html` ${myParticipationCommitment
             ? html`
                 <create-cancellation-dialog
+                  id="cancel-participation"
                   .label=${msg('Cancel My Participation')}
                   .warning=${msg(
-                    'Are you sure? All event participants will be notified.'
+                    'Are you sure you want to cancel your participation? All event participants will be notified.'
                   )}
                   .cancelledHash=${myParticipationCommitment}
                 ></create-cancellation-dialog>
               `
             : html``}
+          <create-cancellation-dialog
+            id="cancel-event"
+            .label=${msg('Cancel Event')}
+            .warning=${msg(
+              'Are you sure you want to cancel this event? This cannot be reversed. All participants will be notified.'
+            )}
+            .cancelledHash=${this.eventHash}
+          ></create-cancellation-dialog>
           <participate-dialog .eventHash=${this.eventHash}></participate-dialog>
           ${this.renderEvent(
             event[0],
@@ -551,7 +596,9 @@ export class EventDetail extends LitElement {
     styles,
     css`
       :host {
+        position: relative;
         display: flex;
+        align-items: center;
         flex-direction: column;
       }
       sl-tab {
