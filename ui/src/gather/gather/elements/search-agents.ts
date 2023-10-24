@@ -11,11 +11,12 @@ import {
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
 import { AgentPubKey } from '@holochain/client';
-import { msg } from '@lit/localize';
+import { localized, msg } from '@lit/localize';
 import { mdiDelete } from '@mdi/js';
 
 import './profile-list-item.js';
 
+@localized()
 @customElement('search-agents')
 export class SearchAgents extends LitElement implements FormField {
   /** Form field properties */

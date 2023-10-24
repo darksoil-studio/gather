@@ -2,13 +2,14 @@ import { notifyError, sharedStyles } from '@holochain-open-dev/elements';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
-import { msg } from '@lit/localize';
+import { localized, msg } from '@lit/localize';
 import { SlDialog } from '@shoelace-style/shoelace';
 import { html, LitElement } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { gatherStoreContext } from '../context';
 import { GatherStore } from '../gather-store';
 
+@localized()
 @customElement('participate-dialog')
 export class ParticipateDialog extends LitElement {
   @property()

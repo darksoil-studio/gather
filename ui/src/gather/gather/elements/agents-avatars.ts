@@ -1,8 +1,10 @@
 import { AgentPubKey } from '@holochain/client';
+import { localized } from '@lit/localize';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { styles } from '../../../styles';
 
+@localized()
 @customElement('agents-avatar')
 export class AgentsAvatars extends LitElement {
   @property()

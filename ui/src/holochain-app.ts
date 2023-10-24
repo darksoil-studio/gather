@@ -47,7 +47,6 @@ import '@shoelace-style/shoelace/dist/components/drawer/drawer.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
-import SlTabGroup from '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 
 import './gather/gather/elements/event-detail.js';
 import './gather/gather/elements/proposal-detail.js';
@@ -64,7 +63,7 @@ import {
 import { GatherStore } from './gather/gather/gather-store.js';
 import { GatherClient } from './gather/gather/gather-client.js';
 import { ResizeController } from '@lit-labs/observers/resize-controller.js';
-import { installLogger, MOBILE_WIDTH_PX } from './gather/gather/utils.js';
+import { MOBILE_WIDTH_PX } from './gather/gather/utils.js';
 import { AlertsClient } from './alerts/alerts-client.js';
 import { AlertsStore } from './alerts/alerts-store.js';
 import {
@@ -331,14 +330,7 @@ export class HolochainApp extends LitElement {
     `;
   }
 
-  renderContent() {
-    if (this._view.view === 'proposal_detail')
-      return this.renderProposalDetail(this._view.selectedProposalHash);
-    if (this._view.view === 'event_detail')
-      return this.renderEventDetail(this._view.selectedEventHash);
-
-    if (this._view.view === 'create_event') return this.renderCreateEvent();
-
+  renderMain() {
     return html`
       <sl-tab-group
         id="tabs"
@@ -427,6 +419,18 @@ export class HolochainApp extends LitElement {
         </sl-tab-panel>
       </sl-tab-group>
     `;
+  }
+
+  renderContent() {
+    let detail = html``;
+    if (this._view.view === 'proposal_detail')
+      detail = this.renderProposalDetail(this._view.selectedProposalHash);
+    if (this._view.view === 'event_detail')
+      detail = this.renderEventDetail(this._view.selectedEventHash);
+
+    if (this._view.view === 'create_event') detail = this.renderCreateEvent();
+
+    return html` ${detail} ${this.renderMain()} `;
   }
 
   renderBackButton() {

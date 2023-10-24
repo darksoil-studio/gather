@@ -3,6 +3,7 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import {
   AppAgentWebsocket,
   CallZomeRequest,
+  decodeHashFromBase64,
   encodeHashToBase64,
   HoloHash,
 } from '@holochain/client';
@@ -71,6 +72,12 @@ export function intersection(
   return array1.filter(
     hash => !!array2.find(h => h.toString() === hash.toString())
   );
+}
+
+export function uniquify(array: Array<HoloHash>): Array<HoloHash> {
+  const strArray = array.map(h => encodeHashToBase64(h));
+  const uniqueArray = [...new Set(strArray)];
+  return uniqueArray.map(h => decodeHashFromBase64(h));
 }
 
 export function installLogger(appAgentWebsocket: AppAgentWebsocket) {

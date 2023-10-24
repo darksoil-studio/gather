@@ -1,11 +1,12 @@
 import { hashProperty, sharedStyles } from '@holochain-open-dev/elements';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
-import { msg } from '@lit/localize';
+import { localized, msg } from '@lit/localize';
 import { html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { isMobileContext } from '../context';
 
+@localized()
 @customElement('call-to-action-needs')
 export class CallToActionNeeds extends LitElement {
   @property(hashProperty('call-to-action-hash'))

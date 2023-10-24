@@ -7,7 +7,6 @@ import {
   ProfilesStore,
   profilesStoreContext,
 } from '@holochain-open-dev/profiles';
-import { EntryRecord } from '@holochain-open-dev/utils';
 import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
 import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';

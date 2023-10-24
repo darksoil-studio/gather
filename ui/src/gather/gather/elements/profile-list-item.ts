@@ -10,8 +10,9 @@ import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/profiles/dist/elements/profile-list-item-skeleton.js';
-import { msg } from '@lit/localize';
+import { localized, msg } from '@lit/localize';
 
+@localized()
 @customElement('profile-list-item')
 export class ProfileListItem extends LitElement {
   /**

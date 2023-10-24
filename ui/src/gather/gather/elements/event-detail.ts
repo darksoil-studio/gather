@@ -47,6 +47,7 @@ import '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
 import '@shoelace-style/shoelace/dist/components/radio-button/radio-button.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
+import '@holochain-open-dev/cancellations/dist/elements/cancellations-for.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 
@@ -272,10 +273,16 @@ export class EventDetail extends LitElement {
         <div class="column" style="flex: 1; gap: 16px">
           <div class="row" style="align-items: center">
             <span class="title" style="flex: 1">
-              >${event.currentEvent.entry.title}</span
+              ${event.currentEvent.entry.title}</span
             >
             ${this.renderStatus(event)}
           </div>
+
+          <cancellations-for
+            .label=${msg('Event has been cancelled')}
+            .cancelledHash=${this.eventHash}
+            .hideNoCancellationsNotice=${true}
+          ></cancellations-for>
 
           <span style="white-space: pre-line"
             >${event.currentEvent.entry.description}</span

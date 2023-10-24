@@ -1,10 +1,4 @@
-import {
-  Assembly,
-  CallToAction,
-  Commitment,
-  Satisfaction,
-} from '@darksoil/assemble';
-import { Cancellation } from '@holochain-open-dev/cancellations';
+import { CallToAction } from '@darksoil/assemble';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import {
   ActionHash,
@@ -17,6 +11,11 @@ import {
   SignedActionHashed,
   Update,
 } from '@holochain/client';
+
+export interface IndexedHash {
+  type: 'event' | 'proposal';
+  hash: ActionHash;
+}
 
 export type EventTime =
   | {
@@ -113,57 +112,3 @@ export type GatherSignal =
 export type EntryTypes =
   | ({ type: 'Proposal' } & Proposal)
   | ({ type: 'Event' } & Event);
-
-export type EventAction =
-  | {
-      type: 'proposal_created';
-      record: EntryRecord<Proposal>;
-    }
-  | {
-      type: 'proposal_updated';
-      record: EntryRecord<Proposal>;
-    }
-  | {
-      type: 'proposal_cancelled';
-      record: EntryRecord<Cancellation>;
-    }
-  | {
-      type: 'event_created';
-      record: EntryRecord<Event>;
-    }
-  | {
-      type: 'event_updated';
-      record: EntryRecord<Event>;
-    }
-  | {
-      type: 'commitment_created';
-      record: EntryRecord<Commitment>;
-      callToAction: EntryRecord<CallToAction>;
-    }
-  | {
-      type: 'commitment_cancelled';
-      record: EntryRecord<Cancellation>;
-      commitment: EntryRecord<Commitment>;
-      callToAction: EntryRecord<CallToAction>;
-    }
-  | {
-      type: 'commitment_cancellation_undone';
-      record: EntryRecord<void>;
-      cancellation: EntryRecord<Cancellation>;
-      commitment: EntryRecord<Commitment>;
-    }
-  | {
-      type: 'satisfaction_created';
-      record: EntryRecord<Satisfaction>;
-      callToAction: EntryRecord<CallToAction>;
-    }
-  | {
-      type: 'assembly_created';
-      record: EntryRecord<Assembly>;
-    }
-  | {
-      type: 'event_cancelled';
-      record: EntryRecord<Cancellation>;
-    };
-
-export type EventActivity = Array<EventAction>;

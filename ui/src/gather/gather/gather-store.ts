@@ -1,16 +1,8 @@
+import { AssembleStore, CallToAction, Commitment } from '@darksoil/assemble';
 import {
-  AssembleStore,
-  Assembly,
-  CallToAction,
-  Commitment,
-  Satisfaction,
-} from '@darksoil/assemble';
-import {
-  asyncDeriveAndJoin,
   AsyncReadable,
   completed,
   joinAsync,
-  joinAsyncMap,
   lazyLoadAndPoll,
   pipe,
   sliceAndJoin,
@@ -20,27 +12,40 @@ import {
   EntryRecord,
   LazyHoloHashMap,
   HoloHashMap,
+  LazyMap,
 } from '@holochain-open-dev/utils';
 import {
   Cancellation,
   CancellationsStore,
   UndoneCancellation,
 } from '@holochain-open-dev/cancellations';
-import { ActionHash, AgentPubKey, Record } from '@holochain/client';
-import { msg } from '@lit/localize';
+import {
+  ActionHash,
+  AgentPubKey,
+  CreateLink,
+  DeleteLink,
+} from '@holochain/client';
 
 import {
   Proposal,
   Event,
   EventStatus,
   EventWithStatus,
-  EventActivity,
   ProposalWithStatus,
   ProposalStatus,
+  IndexedHash,
 } from './types.js';
 import { GatherClient } from './gather-client.js';
-import { intersection, isExpired, isPast } from './utils.js';
+import { intersection, isPast, uniquify } from './utils.js';
 import { AlertsStore } from '../../alerts/alerts-store.js';
+import { Alert } from '../../alerts/alerts-client.js';
+import {
+  actionTimestamp,
+  EventAction,
+  EventActionOnlyHash,
+  EventActionTypes,
+  EventActivity,
+} from './activity.js';
 
 // export function filterFutureEvents(
 //   events: HoloHashMap<ActionHash, EntryRecord<Event>>
@@ -103,23 +108,82 @@ export function deriveProposalStatus(
   return { type: 'open_proposal' };
 }
 
-export type EventUpdate = {
-  type: 'event_was_cancelled';
-};
-
-export type EventAlert = {
-  author: AgentPubKey;
+export interface EventAlert {
   eventHash: ActionHash;
-  update: EventUpdate;
-};
+  action: EventActionOnlyHash;
+}
+
+export interface ProposalAlert {
+  proposalHash: ActionHash;
+  action: EventActionOnlyHash;
+}
+
+export type GatherAlert =
+  | ({
+      type: 'event_alert';
+    } & EventAlert)
+  | ({
+      type: 'proposal_alert';
+    } & ProposalAlert);
 
 export class GatherStore {
   constructor(
     public client: GatherClient,
     public assembleStore: AssembleStore,
-    public alertsStore: AlertsStore<EventAlert>,
+    public alertsStore: AlertsStore<GatherAlert>,
     public cancellationsStore: CancellationsStore
   ) {
+    client.onSignal(async signal => {
+      if (signal.type === 'EntryCreated') {
+        if (signal.app_entry.type === 'Proposal') {
+          await alertsStore.client.notifyAlert(signal.app_entry.hosts, {
+            type: 'proposal_alert',
+            proposalHash: signal.action.hashed.hash,
+            action: {
+              type: 'proposal_created',
+              actionHash: signal.action.hashed.hash,
+            },
+          });
+        } else if (signal.app_entry.type === 'Event') {
+          if (signal.app_entry.from_proposal) {
+            const participants = await toPromise(
+              this.participantsForProposal.get(
+                signal.app_entry.from_proposal.proposal_hash
+              )
+            );
+            const interested = await toPromise(
+              this.interestedInProposal.get(
+                signal.app_entry.from_proposal.proposal_hash
+              )
+            );
+            await alertsStore.client.notifyAlert(
+              [
+                ...Array.from(participants.keys()),
+                ...interested,
+                ...signal.app_entry.hosts,
+              ],
+              {
+                type: 'event_alert',
+                eventHash: signal.action.hashed.hash,
+                action: {
+                  type: 'event_created',
+                  actionHash: signal.action.hashed.hash,
+                },
+              }
+            );
+          } else {
+            await alertsStore.client.notifyAlert(signal.app_entry.hosts, {
+              type: 'event_alert',
+              eventHash: signal.action.hashed.hash,
+              action: {
+                type: 'event_created',
+                actionHash: signal.action.hashed.hash,
+              },
+            });
+          }
+        }
+      }
+    });
     assembleStore.client.onSignal(async signal => {
       if (signal.type === 'EntryCreated') {
         if (signal.app_entry.type === 'Assembly') {
@@ -129,7 +193,10 @@ export class GatherStore {
             )
           );
           const allOpenProposals = await toPromise(
-            sliceAndJoin(this.proposals, await toPromise(this.allOpenProposals))
+            sliceAndJoin(
+              this.proposals,
+              (await toPromise(this.allOpenProposals)).map(h => h.hash)
+            )
           );
 
           for (const [proposalHash, proposal] of allOpenProposals) {
@@ -145,7 +212,106 @@ export class GatherStore {
                     assembly_hash: signal.action.hashed.hash,
                   },
                 });
+              } else {
+                const participants = await toPromise(
+                  this.participantsForProposal.get(proposalHash)
+                );
+                const interested = await toPromise(
+                  this.interestedInProposal.get(proposalHash)
+                );
+                await this.alertsStore.client.notifyAlert(
+                  [...Array.from(participants.keys()), ...interested],
+                  {
+                    type: 'proposal_alert',
+                    proposalHash,
+                    action: {
+                      type: 'assembly_created',
+                      actionHash: signal.action.hashed.hash,
+                    },
+                  }
+                );
               }
+            }
+          }
+        } else if (signal.app_entry.type === 'Satisfaction') {
+          const callToAction = await toPromise(
+            this.assembleStore.callToActions.get(
+              signal.app_entry.call_to_action_hash
+            )
+          );
+          const allOpenProposals = await toPromise(
+            sliceAndJoin(
+              this.proposals,
+              (await toPromise(this.allOpenProposals)).map(h => h.hash)
+            )
+          );
+
+          for (const [proposalHash, proposal] of allOpenProposals) {
+            if (
+              proposal.entry.call_to_action_hash.toString() ===
+              callToAction.actionHash.toString()
+            ) {
+              const participants = await toPromise(
+                this.participantsForProposal.get(proposalHash)
+              );
+              const interested = await toPromise(
+                this.interestedInProposal.get(proposalHash)
+              );
+              await this.alertsStore.client.notifyAlert(
+                [...Array.from(participants.keys()), ...interested],
+                {
+                  type: 'proposal_alert',
+                  proposalHash,
+                  action: {
+                    type: 'satisfaction_created',
+                    actionHash: signal.action.hashed.hash,
+                  },
+                }
+              );
+            }
+          }
+        }
+      } else if (signal.type === 'LinkDeleted') {
+        if ('CallToActionToSatisfactions' in (signal.link_type as any)) {
+          const callToAction = await toPromise(
+            this.assembleStore.callToActions.get(
+              signal.action.hashed.content.base_address
+            )
+          );
+          const allOpenProposals = await toPromise(
+            sliceAndJoin(
+              this.proposals,
+              (await toPromise(this.allOpenProposals)).map(h => h.hash)
+            )
+          );
+
+          for (const [proposalHash, proposal] of allOpenProposals) {
+            if (
+              proposal.entry.call_to_action_hash.toString() ===
+              callToAction.actionHash.toString()
+            ) {
+              await this.notifyOfProposalAction(proposalHash, {
+                type: 'satisfaction_deleted',
+                actionHash: signal.action.hashed.hash,
+              });
+            }
+          }
+          const allUpcomingEvents = await toPromise(
+            sliceAndJoin(
+              this.events,
+              (await toPromise(this.allUpcomingEvents)).map(h => h.hash)
+            )
+          );
+
+          for (const [eventHash, event] of allUpcomingEvents) {
+            if (
+              event.entry.call_to_action_hash.toString() ===
+              callToAction.actionHash.toString()
+            ) {
+              await this.notifyOfEventAction(eventHash, {
+                type: 'satisfaction_deleted',
+                actionHash: eventHash,
+              });
             }
           }
         }
@@ -157,15 +323,55 @@ export class GatherStore {
           // Something was cancelled
           const cancelledHash = signal.app_entry.cancelled_hash;
           try {
-            const proposal = await toPromise(this.proposals.get(cancelledHash));
-            if (!proposal.entry.call_to_action_hash) return;
-            await this.client.markProposalAsCancelled(cancelledHash);
+            const event = await toPromise(this.events.get(cancelledHash));
+            if ('from_proposal' in event.entry) {
+              await this.client.markEventAsCancelled(cancelledHash);
+              const participants = await toPromise(
+                this.participantsForEvent.get(cancelledHash)
+              );
+              const interested = await toPromise(
+                this.interestedInEvent.get(cancelledHash)
+              );
+              await this.alertsStore.client.notifyAlert(
+                [...Array.from(participants.keys()), ...interested],
+                {
+                  type: 'event_alert',
+                  eventHash: cancelledHash,
+                  action: {
+                    type: 'event_cancelled',
+                    actionHash: signal.action.hashed.hash,
+                  },
+                }
+              );
+              return;
+            }
           } catch (e) {
             console.log(e);
           }
           try {
-            const event = await toPromise(this.events.get(cancelledHash));
-            await this.client.markEventAsCancelled(cancelledHash);
+            const proposal = await toPromise(this.proposals.get(cancelledHash));
+            if ('hosts' in proposal.entry) {
+              await this.client.markProposalAsCancelled(cancelledHash);
+              const proposalHash = cancelledHash;
+              const participants = await toPromise(
+                this.participantsForProposal.get(proposalHash)
+              );
+              const interested = await toPromise(
+                this.interestedInProposal.get(proposalHash)
+              );
+              await this.alertsStore.client.notifyAlert(
+                [...Array.from(participants.keys()), ...interested],
+                {
+                  type: 'proposal_alert',
+                  proposalHash: cancelledHash,
+                  action: {
+                    type: 'proposal_cancelled',
+                    actionHash: signal.action.hashed.hash,
+                  },
+                }
+              );
+              return;
+            }
           } catch (e) {
             console.log(e);
           }
@@ -362,7 +568,6 @@ export class GatherStore {
         [commitments, cancellations, undoneCancellations],
         satisfactions,
         assemblies,
-
         callToAction,
       ]) => {
         const commitmentActivity: EventActivity = Array.from(
@@ -410,17 +615,28 @@ export class GatherStore {
           record: c,
         }));
 
+        const expiredActivity: EventActivity =
+          assemblies.size === 0 &&
+          !!callToAction.entry.expiration_time &&
+          Date.now() * 1000 > callToAction.entry.expiration_time
+            ? [
+                {
+                  type: 'proposal_expired',
+                  timestamp: callToAction.entry.expiration_time,
+                },
+              ]
+            : [];
+
         let activity: EventActivity = [
           ...commitmentActivity,
           ...cancellationsActivity,
           ...satisfactionsActivity,
           ...assembliesActivity,
+          ...expiredActivity,
         ];
 
         activity = activity.sort(
-          (r1, r2) =>
-            r2.record.record.signed_action.hashed.content.timestamp -
-            r1.record.record.signed_action.hashed.content.timestamp
+          (r1, r2) => actionTimestamp(r2) - actionTimestamp(r1)
         );
         return activity;
       }
@@ -462,7 +678,7 @@ export class GatherStore {
         ];
 
         activity = activity.sort(
-          (r1, r2) => r2.record.action.timestamp - r1.record.action.timestamp
+          (r1, r2) => actionTimestamp(r2) - actionTimestamp(r1)
         );
         return activity;
       }
@@ -487,7 +703,7 @@ export class GatherStore {
         ];
 
         activity = activity.sort(
-          (r1, r2) => r2.record.action.timestamp - r1.record.action.timestamp
+          (r1, r2) => actionTimestamp(r2) - actionTimestamp(r1)
         );
         return activity;
       }
@@ -543,9 +759,7 @@ export class GatherStore {
           ];
 
           activity = activity.sort(
-            (r1, r2) =>
-              r2.record.record.signed_action.hashed.content.timestamp -
-              r1.record.record.signed_action.hashed.content.timestamp
+            (r1, r2) => actionTimestamp(r2) - actionTimestamp(r1)
           );
           return activity;
         }
@@ -630,7 +844,7 @@ export class GatherStore {
         }
 
         // Remove all participants that have actually committed to go
-        for (const participant of p[0]) {
+        for (const participant of eventParticipants) {
           participants.delete(participant);
         }
 
@@ -644,7 +858,7 @@ export class GatherStore {
   );
 
   // Will contain an ordered list of the original action hashes for the upcoming events
-  allUpcomingEvents = pipe(
+  allUpcomingEvents: AsyncReadable<Array<IndexedHash>> = pipe(
     lazyLoadAndPoll(() => this.client.getAllUpcomingEvents(), 4000),
     upcomingEventsHashes =>
       sliceAndJoin(this.eventsStatus, upcomingEventsHashes),
@@ -663,22 +877,74 @@ export class GatherStore {
             event2.currentEvent.entry.time.start_time -
             event1.currentEvent.entry.time.start_time
         )
-        .map(e => e.originalActionHash);
+        .map(e => ({
+          type: 'event',
+          hash: e.originalActionHash,
+        }));
     }
   );
 
   // Will contain an ordered list of the original action hashes for the cancelled events
-  allCancelledEvents = lazyLoadAndPoll(
-    () => this.client.getAllCancelledEvents(),
-    4000
+  allCancelledEvents: AsyncReadable<Array<IndexedHash>> = pipe(
+    lazyLoadAndPoll(() => this.client.getAllCancelledEvents(), 4000),
+    hashes =>
+      uniquify(hashes).map(hash => ({
+        type: 'event',
+        hash,
+      }))
   );
 
   // Will contain an ordered list of the original action hashes for the cancelled events
-  allPastEvents = lazyLoadAndPoll(() => this.client.getAllPastEvents(), 4000);
+  allPastEvents: AsyncReadable<Array<IndexedHash>> = pipe(
+    lazyLoadAndPoll(() => this.client.getAllPastEvents(), 4000),
+    hashes =>
+      uniquify(hashes).map(hash => ({
+        type: 'event',
+        hash,
+      }))
+  );
+
+  async notifyOfProposalAction(
+    proposalHash: ActionHash,
+    action: EventActionOnlyHash
+  ) {
+    const participants = await toPromise(
+      this.participantsForProposal.get(proposalHash)
+    );
+    const interested = await toPromise(
+      this.interestedInProposal.get(proposalHash)
+    );
+    await this.alertsStore.client.notifyAlert(
+      [...Array.from(participants.keys()), ...interested],
+      {
+        type: 'proposal_alert',
+        proposalHash,
+        action,
+      }
+    );
+  }
+
+  async notifyOfEventAction(
+    eventHash: ActionHash,
+    action: EventActionOnlyHash
+  ) {
+    const participants = await toPromise(
+      this.participantsForEvent.get(eventHash)
+    );
+    const interested = await toPromise(this.interestedInEvent.get(eventHash));
+    await this.alertsStore.client.notifyAlert(
+      [...Array.from(participants.keys()), ...interested],
+      {
+        type: 'event_alert',
+        eventHash,
+        action,
+      }
+    );
+  }
 
   // Will contain an ordered list of the original action hashes for the upcoming events
-  allOpenProposals = pipe(
-    lazyLoadAndPoll(() => this.client.getAllOpenProposals(), 1000),
+  allOpenProposals: AsyncReadable<Array<IndexedHash>> = pipe(
+    lazyLoadAndPoll(() => this.client.getAllOpenProposals(), 4000),
     openProposalsHashes =>
       sliceAndJoin(this.proposalsStatus, openProposalsHashes),
     openProposals => {
@@ -689,6 +955,11 @@ export class GatherStore {
       ] of openProposals.entries()) {
         if (proposalWithStatus.status.type === 'expired_proposal') {
           this.client.markProposalAsExpired(proposalHash);
+          this.notifyOfProposalAction(proposalHash, {
+            type: 'proposal_expired',
+            actionHash: proposalHash,
+            timestamp: proposalWithStatus.callToAction.entry.expiration_time!,
+          });
         } else if (
           proposalWithStatus.status.type === 'open_proposal' ||
           proposalWithStatus.status.type === 'fulfilled_proposal'
@@ -706,68 +977,338 @@ export class GatherStore {
               ? proposal1.currentProposal.entry.time.start_time
               : Number.MAX_VALUE)
         )
-        .map(e => e.originalActionHash);
+        .map(e => ({
+          type: 'proposal',
+          hash: e.originalActionHash,
+        }));
     }
   );
 
   // Will contain an ordered list of the original action hashes for the cancelled events
-  allCancelledProposals = lazyLoadAndPoll(
-    () => this.client.getAllCancelledProposals(),
-    4000
+  allCancelledProposals: AsyncReadable<Array<IndexedHash>> = pipe(
+    lazyLoadAndPoll(() => this.client.getAllCancelledProposals(), 4000),
+    hashes => uniquify(hashes).map(hash => ({ hash, type: 'proposal' }))
   );
 
   // Will contain an ordered list of the original action hashes for the cancelled events
-  allExpiredProposals = lazyLoadAndPoll(
-    () => this.client.getAllExpiredProposals(),
-    4000
+  allExpiredProposals: AsyncReadable<Array<IndexedHash>> = pipe(
+    lazyLoadAndPoll(() => this.client.getAllExpiredProposals(), 4000),
+    hashes => uniquify(hashes).map(hash => ({ hash, type: 'proposal' }))
   );
 
   /** My events */
 
   myEvents = lazyLoadAndPoll(() => this.client.getMyEvents(), 4000);
 
-  myPastEvents = pipe(
+  myPastEvents: AsyncReadable<Array<IndexedHash>> = pipe(
     joinAsync([this.myEvents, this.allPastEvents]),
     ([myEventsHashes, allPastEventsHashes]) =>
-      intersection(myEventsHashes, allPastEventsHashes)
+      intersection(
+        myEventsHashes,
+        allPastEventsHashes.map(h => h.hash)
+      ).map(hash => ({
+        hash,
+        type: 'event',
+      }))
   );
 
-  myCancelledEvents = pipe(
+  myCancelledEvents: AsyncReadable<Array<IndexedHash>> = pipe(
     joinAsync([this.myEvents, this.allCancelledEvents]),
     ([myEventsHashes, allCancelledEventsHashes]) =>
-      intersection(myEventsHashes, allCancelledEventsHashes)
+      intersection(
+        myEventsHashes,
+        allCancelledEventsHashes.map(h => h.hash)
+      ).map(hash => ({
+        hash,
+        type: 'event',
+      }))
   );
 
-  myUpcomingEvents = pipe(
+  myUpcomingEvents: AsyncReadable<Array<IndexedHash>> = pipe(
     joinAsync([this.myEvents, this.allUpcomingEvents]),
     ([myEventsHashes, allUpcomingEventsHashes]) =>
-      intersection(myEventsHashes, allUpcomingEventsHashes)
+      intersection(
+        myEventsHashes,
+        allUpcomingEventsHashes.map(h => h.hash)
+      ).map(hash => ({
+        hash,
+        type: 'event',
+      }))
   );
 
-  myOpenProposals = pipe(
+  myOpenProposals: AsyncReadable<Array<IndexedHash>> = pipe(
     joinAsync([this.myEvents, this.allOpenProposals]),
     ([myEventsHashes, allOpenProposalsHashes]) =>
-      intersection(myEventsHashes, allOpenProposalsHashes)
+      intersection(
+        myEventsHashes,
+        allOpenProposalsHashes.map(h => h.hash)
+      ).map(hash => ({
+        hash,
+        type: 'proposal',
+      }))
   );
 
-  myExpiredProposals = pipe(
+  myExpiredProposals: AsyncReadable<Array<IndexedHash>> = pipe(
     joinAsync([this.myEvents, this.allExpiredProposals]),
     ([myEventsHashes, allExpiredProposalsHashes]) =>
-      intersection(myEventsHashes, allExpiredProposalsHashes)
+      intersection(
+        myEventsHashes,
+        allExpiredProposalsHashes.map(h => h.hash)
+      ).map(hash => ({
+        hash,
+        type: 'proposal',
+      }))
   );
 
-  myCancelledProposals = pipe(
+  myCancelledProposals: AsyncReadable<Array<IndexedHash>> = pipe(
     joinAsync([this.myEvents, this.allCancelledProposals]),
     ([myEventsHashes, allCancelledProposalsHashes]) =>
-      intersection(myEventsHashes, allCancelledProposalsHashes)
+      intersection(
+        myEventsHashes,
+        allCancelledProposalsHashes.map(h => h.hash)
+      ).map(hash => ({
+        hash,
+        type: 'proposal',
+      }))
   );
 
-  unreadAlerts = asyncDeriveAndJoin(
-    this.alertsStore.unreadAlerts,
-    unreadAlerts => {
-      const eventsHashes = unreadAlerts.map(a => a.alert.eventHash);
+  /** Aggregators */
 
-      return sliceAndJoin(this.eventsStatus, eventsHashes);
-    }
+  allUpcoming = pipe(
+    joinAsync([this.allUpcomingEvents, this.allOpenProposals]),
+    ([events, proposals]) => [...events, ...proposals]
+  );
+
+  allPast = pipe(
+    joinAsync([this.allPastEvents, this.allExpiredProposals]),
+    ([events, proposals]) => [...events, ...proposals]
+  );
+
+  allCancelled = pipe(
+    joinAsync([this.allCancelledEvents, this.allCancelledProposals]),
+    ([events, proposals]) => [...events, ...proposals]
+  );
+
+  myUpcoming = pipe(
+    joinAsync([this.myUpcomingEvents, this.myOpenProposals]),
+    ([events, proposals]) => [...events, ...proposals]
+  );
+
+  myPast = pipe(
+    joinAsync([this.myPastEvents, this.myExpiredProposals]),
+    ([events, proposals]) => [...events, ...proposals]
+  );
+
+  myCancelled = pipe(
+    joinAsync([this.myCancelledEvents, this.myCancelledProposals]),
+    ([events, proposals]) => [...events, ...proposals]
+  );
+
+  eventActionFromOnlyHash = new LazyMap(
+    (actionType: EventActionTypes) =>
+      new LazyHoloHashMap<ActionHash, AsyncReadable<EventAction>>(
+        (actionHash: ActionHash) => {
+          switch (actionType) {
+            case 'proposal_created':
+              return pipe(this.proposals.get(actionHash), proposal => ({
+                type: 'proposal_created',
+                record: proposal,
+              }));
+            case 'proposal_updated':
+              return pipe(this.proposals.get(actionHash), proposal => ({
+                type: 'proposal_updated',
+                record: proposal,
+              }));
+            case 'proposal_cancelled':
+              return pipe(
+                this.assembleStore.cancellationsStore.cancellations.get(
+                  actionHash
+                ),
+                cancellations => ({
+                  type: 'proposal_cancelled',
+                  record: cancellations,
+                })
+              );
+            case 'proposal_expired':
+              return pipe(
+                this.proposals.get(actionHash),
+                proposal =>
+                  this.assembleStore.callToActions.get(
+                    proposal.entry.call_to_action_hash
+                  ),
+                callToAction => ({
+                  type: 'proposal_expired',
+                  timestamp: callToAction.entry.expiration_time!,
+                })
+              );
+            case 'event_created':
+              return pipe(this.events.get(actionHash), event => ({
+                type: 'event_created',
+                record: event,
+              }));
+            case 'event_updated':
+              return pipe(this.events.get(actionHash), event => ({
+                type: 'event_updated',
+                record: event,
+              }));
+            case 'event_cancelled':
+              return pipe(
+                this.assembleStore.cancellationsStore.cancellations.get(
+                  actionHash
+                ),
+                cancellations => ({
+                  type: 'event_cancelled',
+                  record: cancellations,
+                })
+              );
+            case 'commitment_created':
+              return pipe(
+                this.assembleStore.commitments.get(actionHash),
+                commitment =>
+                  this.assembleStore.callToActions.get(
+                    commitment.entry.call_to_action_hash
+                  ),
+                (callToAction, commitment) => ({
+                  type: 'commitment_created',
+                  record: commitment,
+                  callToAction,
+                })
+              );
+            case 'commitment_cancelled':
+              return pipe(
+                this.assembleStore.cancellationsStore.cancellations.get(
+                  actionHash
+                ),
+                cancellation =>
+                  this.assembleStore.commitments.get(
+                    cancellation.entry.cancelled_hash
+                  ),
+                commitment =>
+                  this.assembleStore.callToActions.get(
+                    commitment.entry.call_to_action_hash
+                  ),
+                (callToAction, commitment, cancellation) => ({
+                  type: 'commitment_cancelled',
+                  record: cancellation,
+                  commitment,
+                  callToAction,
+                })
+              );
+            case 'satisfaction_created':
+              return pipe(
+                this.assembleStore.satisfactions.get(actionHash),
+                satisfaction =>
+                  this.assembleStore.callToActions.get(
+                    satisfaction!.entry.call_to_action_hash
+                  ),
+                (callToAction, satisfaction) => ({
+                  type: 'satisfaction_created',
+                  record: satisfaction!,
+                  callToAction,
+                })
+              );
+            case 'satisfaction_deleted':
+              return pipe(
+                this.assembleStore.satisfactions.get(actionHash), // TODO: remove this hack
+                deleteAction =>
+                  this.assembleStore.satisfactions.get(
+                    (deleteAction!.action as DeleteLink).link_add_address
+                  ),
+                createLinkRecord =>
+                  this.assembleStore.satisfactions.get(
+                    (createLinkRecord!.action as CreateLink).target_address
+                  ),
+
+                satisfaction =>
+                  this.assembleStore.callToActions.get(
+                    satisfaction!.entry.call_to_action_hash
+                  ),
+                (callToAction, satisfaction, _, deleteAction) => ({
+                  type: 'satisfaction_deleted',
+                  record: deleteAction as unknown as EntryRecord<void>,
+                  satisfaction: satisfaction!,
+                  callToAction,
+                })
+              );
+            case 'assembly_created':
+              return pipe(
+                this.assembleStore.assemblies.get(actionHash),
+                assembly => ({
+                  type: 'assembly_created',
+                  record: assembly!,
+                })
+              );
+          }
+          throw new Error('Action not supported yet');
+        }
+      )
+  );
+
+  unreadAlerts = pipe(
+    this.alertsStore.unreadAlerts,
+    alerts => {
+      return [...alerts].sort((a1, a2) => a2.timestamp - a1.timestamp);
+    },
+    unreadAlerts => {
+      const eventsHashes = unreadAlerts
+        .filter(a => a.alert.type === 'event_alert')
+        .map(a => (a.alert as any).eventHash);
+      const proposalsHashes = unreadAlerts
+        .filter(a => a.alert.type === 'proposal_alert')
+        .map(a => (a.alert as any).proposalHash);
+
+      const actions = unreadAlerts.map(ua =>
+        this.eventActionFromOnlyHash
+          .get(ua.alert.action.type)
+          .get(ua.alert.action.actionHash)
+      );
+
+      return joinAsync([
+        sliceAndJoin(this.eventsStatus, eventsHashes),
+        sliceAndJoin(this.proposalsStatus, proposalsHashes),
+        joinAsync(actions),
+      ]);
+    },
+    ([events, proposals, actions], alerts) =>
+      [alerts, actions, events, proposals] as [
+        Array<Alert<GatherAlert>>,
+        EventAction[],
+        ReadonlyMap<ActionHash, EventWithStatus>,
+        ReadonlyMap<ActionHash, ProposalWithStatus>
+      ]
+  );
+
+  readAlerts = pipe(
+    this.alertsStore.readAlerts,
+    alerts => {
+      return [...alerts].sort((a1, a2) => a2.timestamp - a1.timestamp);
+    },
+    readAlerts => {
+      const eventsHashes = readAlerts
+        .filter(a => a.alert.type === 'event_alert')
+        .map(a => (a.alert as any).eventHash);
+      const proposalsHashes = readAlerts
+        .filter(a => a.alert.type === 'proposal_alert')
+        .map(a => (a.alert as any).proposalHash);
+
+      const actions = readAlerts.map(ua =>
+        this.eventActionFromOnlyHash
+          .get(ua.alert.action.type)
+          .get(ua.alert.action.actionHash)
+      );
+
+      return joinAsync([
+        sliceAndJoin(this.eventsStatus, eventsHashes),
+        sliceAndJoin(this.proposalsStatus, proposalsHashes),
+        joinAsync(actions),
+      ]);
+    },
+    ([events, proposals, actions], alerts) =>
+      [alerts, actions, events, proposals] as [
+        Array<Alert<GatherAlert>>,
+        EventAction[],
+        ReadonlyMap<ActionHash, EventWithStatus>,
+        ReadonlyMap<ActionHash, ProposalWithStatus>
+      ]
   );
 }

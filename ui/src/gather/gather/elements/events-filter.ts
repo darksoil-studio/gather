@@ -1,7 +1,7 @@
 import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { msg } from '@lit/localize';
+import { localized, msg } from '@lit/localize';
 import { classMap } from 'lit/directives/class-map.js';
 import { mdiChevronDown } from '@mdi/js';
 import { consume } from '@lit-labs/context';
@@ -13,18 +13,19 @@ import SlRadioGroup from '@shoelace-style/shoelace/dist/components/radio-group/r
 import { isMobileContext } from '../context.js';
 
 export interface Filter {
-  type: 'events' | 'proposals';
+  type: 'all' | 'events' | 'proposals';
   status: 'upcoming' | 'past' | 'cancelled';
   view: 'list' | 'calendar';
 }
 export function defaultFilter(): Filter {
   return {
-    type: 'events',
+    type: 'all',
     status: 'upcoming',
     view: 'list',
   };
 }
 
+@localized()
 @customElement('events-filter')
 export class EventsFilter extends LitElement {
   @property()
@@ -64,7 +65,14 @@ export class EventsFilter extends LitElement {
 
   get title() {
     if (this.category === 'all_events') {
-      if (this.filter.type === 'events') {
+      if (this.filter.type === 'all') {
+        if (this.filter.status === 'upcoming')
+          return msg('All upcoming events and proposals');
+        if (this.filter.status === 'past')
+          return msg('All past events and proposals');
+        if (this.filter.status === 'cancelled')
+          return msg('All cancelled events and proposals');
+      } else if (this.filter.type === 'events') {
         if (this.filter.status === 'upcoming')
           return msg('All upcoming events');
         if (this.filter.status === 'past') return msg('All past events');
@@ -77,7 +85,14 @@ export class EventsFilter extends LitElement {
           return msg('All cancelled proposals');
       }
     } else {
-      if (this.filter.type === 'events') {
+      if (this.filter.type === 'all') {
+        if (this.filter.status === 'upcoming')
+          return msg('My upcoming events and proposals');
+        if (this.filter.status === 'past')
+          return msg('My past events and proposals');
+        if (this.filter.status === 'cancelled')
+          return msg('My cancelled events and proposals');
+      } else if (this.filter.type === 'events') {
         if (this.filter.status === 'upcoming') return msg('My upcoming events');
         if (this.filter.status === 'past') return msg('My past events');
         if (this.filter.status === 'cancelled')
@@ -108,6 +123,7 @@ export class EventsFilter extends LitElement {
           id="type"
           @sl-change=${() => this.requestUpdate()}
         >
+          <sl-radio-button value="all">${msg('All')}</sl-radio-button>
           <sl-radio-button value="events">${msg('Events')}</sl-radio-button>
           <sl-radio-button value="proposals"
             >${msg('Proposals')}</sl-radio-button
@@ -119,14 +135,14 @@ export class EventsFilter extends LitElement {
           id="status"
         >
           <sl-radio-button value="upcoming"
-            >${this.filter.type === 'events'
-              ? msg('Upcoming')
-              : msg('Open')}</sl-radio-button
+            >${this.filter.type === 'proposals'
+              ? msg('Open')
+              : msg('Upcoming')}</sl-radio-button
           >
           <sl-radio-button value="past"
-            >${this.filter.type === 'events'
-              ? msg('Past')
-              : msg('Expired')}</sl-radio-button
+            >${this.filter.type === 'proposals'
+              ? msg('Expired')
+              : msg('Past')}</sl-radio-button
           >
           <sl-radio-button value="cancelled"
             >${msg('Cancelled')}</sl-radio-button

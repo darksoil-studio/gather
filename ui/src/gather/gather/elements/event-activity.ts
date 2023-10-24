@@ -9,6 +9,7 @@ import { localized, msg, str } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
@@ -37,17 +38,7 @@ import './edit-event.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
-import {
-  mdiCancel,
-  mdiCheckBold,
-  mdiCreation,
-  mdiHandshake,
-  mdiPartyPopper,
-  mdiUndo,
-  mdiUpdate,
-} from '@mdi/js';
-import { styleMap } from 'lit/directives/style-map.js';
-import { EventAction } from '../types.js';
+import { EventAction, messageAndIcon } from '../activity.js';
 
 @localized()
 @customElement('event-activity')
@@ -83,106 +74,8 @@ export class EventActivity extends LitElement {
   @property()
   _isMobile!: boolean;
 
-  messageAndIcon(action: EventAction) {
-    switch (action.type) {
-      case 'proposal_created':
-        return {
-          message: msg('Proposal was created.'),
-          icon: wrapPathInSvg(mdiCreation),
-        };
-      case 'proposal_cancelled':
-        return {
-          message: msg('Proposal was cancelled because:'),
-          secondary: action.record.entry.reason,
-          icon: wrapPathInSvg(mdiCancel),
-        };
-      case 'proposal_updated':
-        return {
-          message: msg('Proposal was updated.'),
-          icon: wrapPathInSvg(mdiUpdate),
-        };
-      case 'event_created':
-        return {
-          message: action.record.entry.from_proposal
-            ? msg('The proposal succeeded! It is now an event.')
-            : msg('Event was created.'),
-          icon: wrapPathInSvg(mdiCreation),
-        };
-      case 'event_cancelled':
-        return {
-          message: msg('Event was cancelled because:'),
-          secondary: action.record.entry.reason,
-          icon: wrapPathInSvg(mdiCancel),
-        };
-      case 'event_updated':
-        return {
-          message: msg('Event was updated.'),
-          icon: wrapPathInSvg(mdiUpdate),
-        };
-      case 'commitment_created':
-        if (action.record.entry.need_index === 0) {
-          return {
-            message: msg('New commitment to participate in the event.'),
-            icon: wrapPathInSvg(mdiHandshake),
-          };
-        }
-        return {
-          message: msg('New contribution:'),
-          secondary: msg(
-            str`Commitment to contribute ${
-              action.record.entry.amount
-            } to need "${
-              action.callToAction.entry.needs[action.record.entry.need_index]
-                .description
-            }".`
-          ),
-          icon: wrapPathInSvg(mdiHandshake),
-        };
-      case 'commitment_cancelled':
-        return {
-          message: msg(
-            str`Commitment to contribute to need "${
-              action.callToAction.entry.needs[
-                action.commitment.entry.need_index
-              ].description
-            }" was cancelled because:`
-          ),
-          secondary: action.record.entry.reason,
-          icon: wrapPathInSvg(mdiCancel),
-        };
-      case 'commitment_cancellation_undone':
-        return {
-          message: msg('Commitment was uncancelled.'),
-          icon: wrapPathInSvg(mdiUndo),
-        };
-      case 'satisfaction_created':
-        if (action.record.entry.need_index === 0) {
-          return {
-            message: msg(
-              'The minimum required participants for the event has been reached.'
-            ),
-            icon: wrapPathInSvg(mdiHandshake),
-          };
-        }
-        return {
-          message: msg(
-            str`Need "${
-              action.callToAction.entry.needs[action.record.entry.need_index]
-                .description
-            }" was satisfied.`
-          ),
-          icon: wrapPathInSvg(mdiCheckBold),
-        };
-      case 'assembly_created':
-        return {
-          message: msg('All needs have been satisfied!'),
-          icon: wrapPathInSvg(mdiPartyPopper),
-        };
-    }
-  }
-
   renderAction(action: EventAction, first: boolean, last: boolean) {
-    const info = this.messageAndIcon(action)!;
+    const info = messageAndIcon(action)!;
     const message = info.message;
     const icon = info.icon;
     const secondary = info.secondary;
@@ -198,7 +91,7 @@ export class EventActivity extends LitElement {
               opacity: first ? 0 : 1,
             })}
           ></sl-divider>
-          <sl-icon .src=${icon}></sl-icon>
+          <sl-icon style="font-size: 24px" .src=${icon}></sl-icon>
           <sl-divider
             vertical
             style=${styleMap({
@@ -216,14 +109,24 @@ export class EventActivity extends LitElement {
               : html``}
             <div class="row placeholder" style="align-items: center">
               <span style="flex: 1"></span>
-              <span>${msg('By')}&nbsp;</span>
-              <agent-avatar
-                .agentPubKey=${action.record.action.author}
-              ></agent-avatar>
-              <span>&nbsp;</span>
-              <sl-relative-time
-                .date=${new Date(Math.floor(action.record.action.timestamp))}
-              ></sl-relative-time>
+              ${'record' in action
+                ? html`
+                    <span>${msg('By')}&nbsp;</span>
+                    <agent-avatar
+                      .agentPubKey=${action.record.action.author}
+                    ></agent-avatar>
+                    <span>&nbsp;</span>
+                    <sl-relative-time
+                      .date=${new Date(
+                        Math.floor(action.record.action.timestamp)
+                      )}
+                    ></sl-relative-time>
+                  `
+                : html`
+                    <sl-relative-time
+                      .date=${new Date(Math.floor(action.timestamp / 1000))}
+                    ></sl-relative-time>
+                  `}
             </div>
           </div>
         </sl-card>

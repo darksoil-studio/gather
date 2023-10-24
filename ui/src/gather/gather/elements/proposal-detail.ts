@@ -3,12 +3,7 @@ import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
-import {
-  joinAsync,
-  pipe,
-  sliceAndJoin,
-  StoreSubscriber,
-} from '@holochain-open-dev/stores';
+import { joinAsync, StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import {
@@ -40,10 +35,12 @@ import '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
 import '@shoelace-style/shoelace/dist/components/radio-button/radio-button.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
+import '@holochain-open-dev/cancellations/dist/elements/cancellations-for.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 
 import '@darksoil/assemble/dist/elements/call-to-action-unsatisfied-needs.js';
+import '@darksoil/assemble/dist/elements/call-to-action-unsatisfied-needs-summary.js';
 import '@darksoil/assemble/dist/elements/call-to-action-satisfied-needs.js';
 import '@darksoil/assemble/dist/elements/call-to-action-need-progress.js';
 import { CreateCancellationDialog } from '@holochain-open-dev/cancellations/dist/elements/create-cancellation-dialog.js';
@@ -53,7 +50,6 @@ import './participants-for-event.js';
 import './event-activity.js';
 import './edit-proposal.js';
 import './event-detail.js';
-import './call-to-action-unsatisfied-needs-summary.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
@@ -110,7 +106,12 @@ export class ProposalDetail extends LitElement {
     if (proposalStatus === 'cancelled_proposal')
       return html`<sl-tag variant="warning">${msg('Cancelled')}</sl-tag>`;
     if (proposalStatus === 'expired_proposal')
-      return html`<sl-tag variant="warning">${msg('Expired')}</sl-tag>`;
+      return html`<sl-tag variant="warning"
+        >${msg('Expired')}&nbsp;
+        <sl-relative-time
+          .date=${proposal.callToAction.entry.expiration_time! / 1000}
+        ></sl-relative-time>
+      </sl-tag>`;
 
     if (proposalStatus === 'fulfilled_proposal')
       return html`<div class="column" style="gap: 8px; align-items: end">
@@ -255,6 +256,12 @@ export class ProposalDetail extends LitElement {
             >
             ${this.renderStatus(proposal)}
           </div>
+
+          <cancellations-for
+            .label=${msg('Proposal has been cancelled')}
+            .cancelledHash=${this.proposalHash}
+            .hideNoCancellationsNotice=${true}
+          ></cancellations-for>
 
           <span style="white-space: pre-line;"
             >${proposal.currentProposal.entry.description}</span

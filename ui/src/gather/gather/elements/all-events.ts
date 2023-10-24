@@ -1,6 +1,6 @@
 import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
 import { css, html, LitElement } from 'lit';
-import { StoreSubscriber } from '@holochain-open-dev/stores';
+import { joinAsync, StoreSubscriber } from '@holochain-open-dev/stores';
 import { ActionHash } from '@holochain/client';
 import { customElement, property, state } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
@@ -17,6 +17,7 @@ import './proposal-summary.js';
 import { defaultFilter, Filter } from './events-filter.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { mdiInformationOutline } from '@mdi/js';
+import { IndexedHash } from '../types.js';
 
 @localized()
 @customElement('all-events')
@@ -30,7 +31,13 @@ export class AllEvents extends LitElement {
   _allEvents = new StoreSubscriber(
     this,
     () => {
-      if (this.filter.type === 'events') {
+      if (this.filter.type === 'all') {
+        if (this.filter.status === 'upcoming')
+          return this.gatherStore.allUpcoming;
+        if (this.filter.status === 'past') return this.gatherStore.allPast;
+        if (this.filter.status === 'cancelled')
+          return this.gatherStore.allCancelled;
+      } else if (this.filter.type === 'events') {
         if (this.filter.status === 'upcoming')
           return this.gatherStore.allUpcomingEvents;
         if (this.filter.status === 'past')
@@ -53,40 +60,40 @@ export class AllEvents extends LitElement {
   @property()
   _isMobile!: boolean;
 
-  renderCalendar(events: ActionHash[]) {
-    if (this.filter.type === 'events')
-      return html`
-        <gather-events-calendar
-          style="flex: 1"
-          .events=${events}
-        ></gather-events-calendar>
-      `;
+  renderCalendar(eventsAndProposals: Array<IndexedHash>) {
+    const events = eventsAndProposals
+      .filter(h => h.type === 'event')
+      .map(h => h.hash);
+    const proposals = eventsAndProposals
+      .filter(h => h.type === 'proposal')
+      .map(h => h.hash);
     return html`
       <gather-events-calendar
         style="flex: 1"
-        .proposals=${events}
+        .events=${events}
+        .proposals=${proposals}
       ></gather-events-calendar>
     `;
   }
 
-  renderSummary(hash: ActionHash) {
-    if (this.filter.type === 'events')
+  renderSummary(hash: IndexedHash) {
+    if (hash.type === 'event')
       return html` <event-summary
-        .eventHash=${hash}
+        .eventHash=${hash.hash}
         style=${styleMap({
           width: this._isMobile ? '' : '800px',
         })}
       ></event-summary>`;
 
     return html` <proposal-summary
-      .proposalHash=${hash}
+      .proposalHash=${hash.hash}
       style=${styleMap({
         width: this._isMobile ? '' : '800px',
       })}
     ></proposal-summary>`;
   }
 
-  renderList(hashes: Array<ActionHash>) {
+  renderList(hashes: Array<IndexedHash>) {
     if (hashes.length === 0)
       return html` <div
         style="display: flex; align-items: center; flex-direction: column; margin: 48px; gap: 16px"
