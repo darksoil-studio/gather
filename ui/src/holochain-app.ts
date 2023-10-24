@@ -16,6 +16,8 @@ import {
 } from '@holochain-open-dev/profiles';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js';
+import '@holochain-open-dev/profiles/dist/elements/profile-detail.js';
+import '@holochain-open-dev/profiles/dist/elements/update-profile.js';
 import '@holochain-open-dev/profiles/dist/elements/profile-list-item-skeleton.js';
 import {
   ActionHash,
@@ -92,6 +94,7 @@ type View =
   | { view: 'main' }
   | { view: 'event_detail'; selectedEventHash: ActionHash }
   | { view: 'proposal_detail'; selectedProposalHash: ActionHash }
+  | { view: 'profile_detail' }
   | { view: 'create_event' };
 
 @localized()
@@ -226,6 +229,11 @@ export class HolochainApp extends LitElement {
           class="row"
           style="align-items: center;"
           slot="actionItems"
+          @click=${() => {
+            this._view = {
+              view: 'profile_detail',
+            };
+          }}
         >
           <agent-avatar .agentPubKey=${this._client.myPubKey}></agent-avatar>
           <span style="margin: 0 16px;">${profile?.nickname}</span>
@@ -265,6 +273,59 @@ export class HolochainApp extends LitElement {
         </div>
       </div>
     </div>`;
+  }
+
+  @state()
+  editingProfile = false;
+
+  renderProfileDetail() {
+    if (this.editingProfile)
+      return html`
+        <div class="column" style="flex: 1; align-items: center;">
+          <sl-card
+            style=${styleMap({
+              width: this._isMobile ? '100%' : '400px',
+              'margin-top': this._isMobile ? '0' : '16px',
+            })}
+          >
+            <span slot="header" class="title">${msg('Update Profile')}</span>
+            <update-profile
+              style="flex: 1"
+              @profile-updated=${() => {
+                this.editingProfile = false;
+              }}
+              @cancel-edit-profile=${() => {
+                this.editingProfile = false;
+              }}
+            ></update-profile>
+          </sl-card>
+        </div>
+      `;
+    return html`
+      <div class="column" style="flex: 1; align-items: center;">
+        <sl-card
+          style=${styleMap({
+            width: this._isMobile ? '100%' : '400px',
+            'margin-top': this._isMobile ? '0' : '16px',
+          })}
+        >
+          <span slot="header" class="title">${msg('Your Profile')}</span>
+          <div class="column" style="flex: 1; gap: 16px">
+            <profile-detail
+              style="flex: 1"
+              .agentPubKey=${this._gatherStore.client.client.myPubKey}
+            ></profile-detail>
+
+            <sl-button
+              @click=${() => {
+                this.editingProfile = true;
+              }}
+              >${msg('Edit Profile')}</sl-button
+            >
+          </div>
+        </sl-card>
+      </div>
+    `;
   }
 
   renderEventDetail(eventHash: ActionHash) {
@@ -423,12 +484,15 @@ export class HolochainApp extends LitElement {
 
   renderContent() {
     let detail = html``;
-    if (this._view.view === 'proposal_detail')
+    if (this._view.view === 'proposal_detail') {
       detail = this.renderProposalDetail(this._view.selectedProposalHash);
-    if (this._view.view === 'event_detail')
+    } else if (this._view.view === 'event_detail') {
       detail = this.renderEventDetail(this._view.selectedEventHash);
-
-    if (this._view.view === 'create_event') detail = this.renderCreateEvent();
+    } else if (this._view.view === 'create_event') {
+      detail = this.renderCreateEvent();
+    } else if (this._view.view === 'profile_detail') {
+      detail = this.renderProfileDetail();
+    }
 
     return html` ${detail} ${this.renderMain()} `;
   }
