@@ -177,18 +177,6 @@ export class HolochainApp extends LitElement {
 
     await this.initStores(this._client);
 
-    // let finished = false;
-
-    // while (!finished) {
-    //   try {
-    //     await this._profilesStore.client.getAgentProfile(this._client.myPubKey);
-    //     finished = true;
-    //   } catch (e) {
-    //     console.warn(e);
-    //     await new Promise(r => setTimeout(() => r(undefined), 500));
-    //   }
-    // }
-
     this._loading = false;
   }
 

@@ -1,7 +1,0 @@
----
-manifest_version: "1"
-name: gather
-ui:
-  bundled: "../dist.zip"
-happ_manifest:
-  bundled: "../../../workdir/gather.happ"
