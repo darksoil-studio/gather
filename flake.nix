@@ -29,10 +29,11 @@
           }: {
             devShells.default = pkgs.mkShell {
               inputsFrom = [ inputs'.holochain.devShells.holonix ];
-              packages = [
-                pkgs.nodejs-18_x
+              packages = with pkgs; [
+                nodejs-18_x
                 # more packages go here
-                pkgs.cargo-nextest
+                cargo-nextest
+                binaryen
               ];
 
               shellHook = ''

@@ -115,7 +115,13 @@ export class AllEvents extends LitElement {
         <div class="flex-scrollable-container">
           <div class="flex-scrollable-y">
             <div
-              style="display: flex; flex-direction: column; flex: 1; gap: 16px; align-items: center; margin: 16px"
+              class="column"
+              style=${styleMap({
+                'align-items': this._isMobile ? '' : 'center',
+                flex: 1,
+                gap: '16px',
+                margin: '16px',
+              })}
             >
               ${hashes.map(hash => this.renderSummary(hash))}
             </div>
