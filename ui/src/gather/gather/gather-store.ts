@@ -36,7 +36,7 @@ import {
   IndexedHash,
 } from './types.js';
 import { GatherClient } from './gather-client.js';
-import { intersection, isPast, uniquify } from './utils.js';
+import { intersection, isPast } from './utils.js';
 import { AlertsStore } from '../../alerts/alerts-store.js';
 import { Alert } from '../../alerts/alerts-client.js';
 import {
@@ -910,7 +910,7 @@ export class GatherStore {
   allCancelledEvents: AsyncReadable<Array<IndexedHash>> = pipe(
     lazyLoadAndPoll(() => this.client.getAllCancelledEvents(), 4000),
     hashes =>
-      uniquify(hashes).map(hash => ({
+      hashes.map(hash => ({
         type: 'event',
         hash,
       }))
@@ -920,7 +920,7 @@ export class GatherStore {
   allPastEvents: AsyncReadable<Array<IndexedHash>> = pipe(
     lazyLoadAndPoll(() => this.client.getAllPastEvents(), 4000),
     hashes =>
-      uniquify(hashes).map(hash => ({
+      hashes.map(hash => ({
         type: 'event',
         hash,
       }))
@@ -1009,13 +1009,13 @@ export class GatherStore {
   // Will contain an ordered list of the original action hashes for the cancelled events
   allCancelledProposals: AsyncReadable<Array<IndexedHash>> = pipe(
     lazyLoadAndPoll(() => this.client.getAllCancelledProposals(), 4000),
-    hashes => uniquify(hashes).map(hash => ({ hash, type: 'proposal' }))
+    hashes => hashes.map(hash => ({ hash, type: 'proposal' }))
   );
 
   // Will contain an ordered list of the original action hashes for the cancelled events
   allExpiredProposals: AsyncReadable<Array<IndexedHash>> = pipe(
     lazyLoadAndPoll(() => this.client.getAllExpiredProposals(), 4000),
-    hashes => uniquify(hashes).map(hash => ({ hash, type: 'proposal' }))
+    hashes => hashes.map(hash => ({ hash, type: 'proposal' }))
   );
 
   /** My events */

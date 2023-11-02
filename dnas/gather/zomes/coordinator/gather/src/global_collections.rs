@@ -1,5 +1,7 @@
 use gather_integrity::*;
 use hdk::prelude::*;
+
+
 pub fn all_upcoming_events() -> Path {
     Path::from("all_upcoming_events")
 }
@@ -113,6 +115,7 @@ fn get_from_path(path: Path, link_type: LinkTypes) -> ExternResult<Vec<ActionHas
     let hashes: Vec<ActionHash> = links
         .into_iter()
         .filter_map(|link| link.target.into_action_hash())
+        .collect::<HashSet<ActionHash>>().into_iter()
         .collect();
     Ok(hashes)
 }

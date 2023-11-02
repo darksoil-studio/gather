@@ -3,7 +3,6 @@ import {
   AssembleStore,
   AssembleClient,
 } from '@darksoil/assemble';
-
 import {
   FileStorageClient,
   fileStorageClientContext,
@@ -39,7 +38,7 @@ import {
 } from '@mdi/js';
 import { decode } from '@msgpack/msgpack';
 
-import { localized, msg } from '@lit/localize';
+import { configureLocalization, localized, msg } from '@lit/localize';
 import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
@@ -73,6 +72,7 @@ import {
   CancellationsStore,
   cancellationsStoreContext,
 } from '@holochain-open-dev/cancellations';
+import { setLocale } from './locales.js';
 
 export async function sendRequest(request: any) {
   return new Promise((resolve, reject) => {
@@ -144,6 +144,8 @@ export class HolochainApp extends LitElement {
       const envresponse = await fetch('/__HC_ENVIRONMENT__.json');
 
       const env = await envresponse.json();
+      await setLocale();
+
       const port = env.APP_INTERFACE_PORT;
       this._client = await AppAgentWebsocket.connect(
         new URL(`ws://localhost:${port}`),
@@ -166,6 +168,7 @@ export class HolochainApp extends LitElement {
         output: response => decode(response as any),
       });
     } catch (e) {
+      await setLocale();
       // console.log('we are in the normal launcher env');
       this._client = await AppAgentWebsocket.connect(
         new URL(`ws://localhost`),

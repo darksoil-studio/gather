@@ -5,7 +5,7 @@
   "scripts": {
     "start": "AGENTS=2 npm run network",
     "network": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently -k \"npm start -w app\" \"npm run launch\" \"holochain-playground\"",
-    "package": "npm run build:happ && npm run package -w app && hc web-app pack workdir --recursive",
+    "package": "npm run build:zomes && sh optimize-wasms.sh && npm run package -w app && hc web-app pack workdir --recursive",
     "test": "npm run build:zomes && hc app pack workdir --recursive && npm t -w tests",
     "launch": "echo \"pass\" | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/gather.happ --ui-port $UI_PORT network -b https://bootstrap.holo.host webrtc wss://signal.holo.host",
     "build:happ": "npm run build:zomes && hc app pack workdir --recursive",

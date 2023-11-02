@@ -23,6 +23,7 @@ dist/
 # build
 /_site/
 /out-tsc/
+locales/
 
 storybook-static
 .rollup.cache

@@ -9,7 +9,6 @@ name = "gather"
 
 [dependencies]
 hdk = { workspace = true }
-
 serde = { workspace = true }
 
 gather_integrity = { workspace = true }

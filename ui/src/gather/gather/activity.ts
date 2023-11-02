@@ -166,7 +166,7 @@ export function messageAndIcon(action: EventAction) {
     case 'proposal_expired':
       return {
         message: msg(
-          'Proposal expired without meeting the minimum required needs'
+          'Proposal expired without meeting the minimum required needs.'
         ),
         icon: wrapPathInSvg(mdiClockRemove),
       };

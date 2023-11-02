@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+<file target-language="es-419" source-language="en" original="lit-localize-inputs" datatype="plaintext">
+<body>
+<trans-unit id="sc5c9f04c2d0a5f1d">
+  <source>Error fetching the profile</source>
+  <target>Error cargando el perfil</target>
+</trans-unit>
+<trans-unit id="s52b1b9ae95705b3c">
+  <source>Proposal was created.</source>
+  <target>La propuesta fue creada.</target>
+</trans-unit>
+<trans-unit id="s45b98b5bf8532d39">
+  <source>Proposal was cancelled because:</source>
+</trans-unit>
+<trans-unit id="s62d33cbd276324b5">
+  <source>Proposal was updated.</source>
+</trans-unit>
+<trans-unit id="s016a7c24282e6342">
+  <source>The proposal succeeded! It is now an event.</source>
+</trans-unit>
+<trans-unit id="s1e06d6883ee8db7c">
+  <source>Event was created.</source>
+</trans-unit>
+<trans-unit id="s93cd05d961caecf9">
+  <source>Event was cancelled because:</source>
+</trans-unit>
+<trans-unit id="s30165140983beaf5">
+  <source>Event was updated.</source>
+</trans-unit>
+<trans-unit id="s6111a57d3ffdf7f9">
+  <source>New commitment to participate in the event.</source>
+</trans-unit>
+<trans-unit id="s8bc13748d664c5d1">
+  <source>New contribution:</source>
+</trans-unit>
+<trans-unit id="se14d143fa998e2e7">
+  <source>Commitment to contribute <x id="0" equiv-text="${action.record.entry.amount}"/> to need "<x id="1" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>".</source>
+</trans-unit>
+<trans-unit id="sb2a536c33059e52f">
+  <source>Commitment to contribute to need "<x id="0" equiv-text="${action.callToAction.entry.needs[action.commitment.entry.need_index]&#10;    .description}"/>" was cancelled because:</source>
+</trans-unit>
+<trans-unit id="s4ba6d9c7b19bbe2f">
+  <source>Commitment was uncancelled.</source>
+</trans-unit>
+<trans-unit id="s08de9815a8b2be2b">
+  <source>The minimum required participants for the event has been reached.</source>
+</trans-unit>
+<trans-unit id="se49022c596fb4258">
+  <source>Need "<x id="0" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>" was satisfied.</source>
+</trans-unit>
+<trans-unit id="sacb24b85fc980968">
+  <source>Need "<x id="0" equiv-text="${action.callToAction.entry.needs[action.satisfaction.entry.need_index].description}"/>" is no longer satisfied!</source>
+</trans-unit>
+<trans-unit id="s401a80f2189e2d14">
+  <source>All needs have been satisfied!</source>
+</trans-unit>
+<trans-unit id="s6b05f9d8801fc14f">
+  <source>Host</source>
+</trans-unit>
+<trans-unit id="s18d9277a5ac87167">
+  <source>Participants</source>
+</trans-unit>
+<trans-unit id="s4c5a99bf87598766">
+  <source>This event has no participants yet.</source>
+</trans-unit>
+<trans-unit id="s40600e7ca15ec27a">
+  <source>This proposal has no participants yet.</source>
+</trans-unit>
+<trans-unit id="sf05f5ebbb11eb012">
+  <source>Interested</source>
+</trans-unit>
+<trans-unit id="se7073d4228589ff8">
+  <source>No one is interested in this event yet.</source>
+</trans-unit>
+<trans-unit id="sf347e2f7d85d3a3e">
+  <source>No one is interested in this proposal yet.</source>
+</trans-unit>
+<trans-unit id="scc43220d6b67680f">
+  <source>Error fetching the participants for this event</source>
+</trans-unit>
+<trans-unit id="sc7ba84fda0b6f8f6">
+  <source>Error adding interest.</source>
+</trans-unit>
+<trans-unit id="sc13cbc2beddf3944">
+  <source>Error removing interest.</source>
+</trans-unit>
+<trans-unit id="sfdfd78c4d9a0f209">
+  <source>Remove Interest</source>
+</trans-unit>
+<trans-unit id="s1eb4516ee7b4f7ee">
+  <source>Add Interest</source>
+</trans-unit>
+<trans-unit id="s3d06b0c1e90e5530">
+  <source>Could not fetch your interest</source>
+</trans-unit>
+<trans-unit id="s6595f22db60cdcaa">
+  <source>I commit to participate</source>
+</trans-unit>
+<trans-unit id="sa1fb4473d9970257">
+  <source>Error adding participant.</source>
+</trans-unit>
+<trans-unit id="s8d3433db30499c2c">
+  <source>Participating in the proposal means committing yourself to going, if it actually happens. If you don't want to commit yourself yet, close this dialog and mark yourself as interested.</source>
+</trans-unit>
+<trans-unit id="s0327cb8dc9ccf1b6">
+  <source>Participating in the event means committing yourself to going. If you don't want to commit yourself yet, close this dialog and mark yourself as interested.</source>
+</trans-unit>
+<trans-unit id="s60edf80b54e37944">
+  <source>Are you sure you want to commit yourself to participating in the event?</source>
+</trans-unit>
+<trans-unit id="s5770839ab2d3abdd">
+  <source>Commit to Participate</source>
+</trans-unit>
+<trans-unit id="s00b7e89a0ef4e33d">
+  <source>Commit To Participate</source>
+</trans-unit>
+<trans-unit id="s977745420bc1279a">
+  <source>Error updating the event</source>
+</trans-unit>
+<trans-unit id="s248a29e035cabd71">
+  <source>Edit Event</source>
+</trans-unit>
+<trans-unit id="s99f110d27e30b289">
+  <source>Title</source>
+</trans-unit>
+<trans-unit id="s63d894b1ddb06289">
+  <source>Description</source>
+</trans-unit>
+<trans-unit id="s167f53f89012d24c">
+  <source>Start Time</source>
+</trans-unit>
+<trans-unit id="s58c17428301e0137">
+  <source>End Time</source>
+</trans-unit>
+<trans-unit id="see2fcaedf9743ec6">
+  <source>Location</source>
+</trans-unit>
+<trans-unit id="s367d079d1aed1358">
+  <source>Cost</source>
+</trans-unit>
+<trans-unit id="s81ec7a6847534d5e">
+  <source>Go Back</source>
+</trans-unit>
+<trans-unit id="s33f85f24c0f5f008">
+  <source>Save</source>
+</trans-unit>
+<trans-unit id="s09134b07b5aacab4">
+  <source>By</source>
+</trans-unit>
+<trans-unit id="s3bb786d3b55ba37c">
+  <source>Cancelled</source>
+</trans-unit>
+<trans-unit id="sb5b397ba72373753">
+  <source>Upcoming Event</source>
+</trans-unit>
+<trans-unit id="sba1804aea21f8ba5">
+  <source>Past Event</source>
+</trans-unit>
+<trans-unit id="s6078c6fe38dfac9d">
+  <source>See Activity</source>
+</trans-unit>
+<trans-unit id="se44a1146a7e00fd1">
+  <source>Edit event</source>
+</trans-unit>
+<trans-unit id="s1c10dc7960f4f91b">
+  <source>Cancel Event</source>
+</trans-unit>
+<trans-unit id="sae39c20e7be97fea">
+  <source>Cancel Participation</source>
+</trans-unit>
+<trans-unit id="sb98307c3a9febdbf">
+  <source>Participate</source>
+</trans-unit>
+<trans-unit id="s8300c274e78248db">
+  <source>Max. participants reached</source>
+</trans-unit>
+<trans-unit id="sc00589186947477c">
+  <source>Event has been cancelled</source>
+</trans-unit>
+<trans-unit id="s8f90406e9a94abe6">
+  <source>location</source>
+</trans-unit>
+<trans-unit id="s1e5485ef2e9f9384">
+  <source>time</source>
+</trans-unit>
+<trans-unit id="s0bef0691197c9f78">
+  <source>cost</source>
+</trans-unit>
+<trans-unit id="sd0ea7366ebc403ff">
+  <source>Event</source>
+</trans-unit>
+<trans-unit id="s0d9e6884f8c4ba1a">
+  <source>Needs</source>
+</trans-unit>
+<trans-unit id="s6c76b294d740446c">
+  <source>Activity</source>
+</trans-unit>
+<trans-unit id="s1501bf9dde6ec4f5">
+  <source>My Commitments</source>
+</trans-unit>
+<trans-unit id="sd0c08b7e6f460e06">
+  <source>Cancel My Participation</source>
+</trans-unit>
+<trans-unit id="s64e6ddd1ae7b70b8">
+  <source>Are you sure you want to cancel your participation? All event participants will be notified.</source>
+</trans-unit>
+<trans-unit id="sf49167be05ec33de">
+  <source>Are you sure you want to cancel this event? This cannot be reversed. All participants will be notified.</source>
+</trans-unit>
+<trans-unit id="sf713b09ae35d0ed7">
+  <source>Error creating the event</source>
+</trans-unit>
+<trans-unit id="s901534fa3a466fac">
+  <source>Error updating the proposal</source>
+</trans-unit>
+<trans-unit id="s693af032f4e41005">
+  <source>Create Event</source>
+</trans-unit>
+<trans-unit id="s54b4f4cd104f108d">
+  <source>Edit Proposal</source>
+</trans-unit>
+<trans-unit id="s6c700e19e1a16875">
+  <source>TBD</source>
+</trans-unit>
+<trans-unit id="sa2d605e3cbf15bea">
+  <source>Update Proposal</source>
+</trans-unit>
+<trans-unit id="s3f12c94c375c9b6b">
+  <source>Time or location are still To Be Defined</source>
+</trans-unit>
+<trans-unit id="s23e49ba9e86115f5">
+  <source>There are still unsatisfied needs</source>
+</trans-unit>
+<trans-unit id="sd923f95605fed7b2">
+  <source>Expired</source>
+</trans-unit>
+<trans-unit id="sa82b90b4bbe9cfea">
+  <source>Proposal Succeeded</source>
+</trans-unit>
+<trans-unit id="se98b8fa0b2f48785">
+  <source>Open Proposal</source>
+</trans-unit>
+<trans-unit id="s1750382a1ab70f59">
+  <source>: expires</source>
+</trans-unit>
+<trans-unit id="sc55f600f74e9e883">
+  <source>Cancel Proposal</source>
+</trans-unit>
+<trans-unit id="s983bfb45690cd03c">
+  <source>Proposal has been cancelled</source>
+</trans-unit>
+<trans-unit id="s94a6cd06edbd91d0">
+  <source>To Be Defined</source>
+</trans-unit>
+<trans-unit id="sb8dd4c5b6f008cfa">
+  <source>Edit the proposal and decide on a time and location to create the event.</source>
+</trans-unit>
+<trans-unit id="sa52d4bbde1f4fa3f">
+  <source>Proposal</source>
+</trans-unit>
+<trans-unit id="s5904bcf4eb136f1b">
+  <source>Unsatisfied Needs</source>
+</trans-unit>
+<trans-unit id="s236d5bc559c85934">
+  <source>Are you sure? All participants will be notified.</source>
+</trans-unit>
+<trans-unit id="sfed60b9731d6872a">
+  <source>Are you sure you want to cancel this proposal? This cannot be reversed. All participants will be notified.</source>
+</trans-unit>
+<trans-unit id="s6af7f6092d50656e">
+  <source>Error fetching the proposal</source>
+</trans-unit>
+<trans-unit id="s20eac6aa1151d621">
+  <source>No other agents selected yet.</source>
+</trans-unit>
+<trans-unit id="sa071b45b42b5dbe7">
+  <source>Error creating the proposal</source>
+</trans-unit>
+<trans-unit id="sc16e00a7a8b2fde2">
+  <source>Back</source>
+</trans-unit>
+<trans-unit id="s0fbf6dc6a1966408">
+  <source>Next</source>
+</trans-unit>
+<trans-unit id="s85c2182e0c46a0a1">
+  <source>Do you just want to propose an event, or do you want to create an actual event?</source>
+</trans-unit>
+<trans-unit id="s38e5d0d2dbf52fb9">
+  <source>Proposals will only become actual events if the minimum required needs for the events are fulfilled by other people's commitments, and when a specific time and place for the event has been decided.</source>
+</trans-unit>
+<trans-unit id="s3319a31f9be571ed">
+  <source>Propose Event</source>
+</trans-unit>
+<trans-unit id="sfae8c6e1b5f558f4">
+  <source>Hosts</source>
+</trans-unit>
+<trans-unit id="s410d1f301d20474d">
+  <source>Who hosts this event? Hosts are able to update the event details (time, location, etc.), and accept needs that require host approval.</source>
+</trans-unit>
+<trans-unit id="sb695f268d0f2d568">
+  <source>As the creator of the event, you will be automatically added as a host.</source>
+</trans-unit>
+<trans-unit id="sb211f52f5eea7512">
+  <source>No other hosts selected: you are the only host.</source>
+</trans-unit>
+<trans-unit id="s682a8ca0230b562e">
+  <source>Add Host</source>
+</trans-unit>
+<trans-unit id="s48e186fb300e5464">
+  <source>Time</source>
+</trans-unit>
+<trans-unit id="se4e14510540304ac">
+  <source>If you leave the time as To Be Defined, you'll be able to set it later at any point. However, it must be set before converting the event proposal into an actual event.</source>
+</trans-unit>
+<trans-unit id="se0a024485975a869">
+  <source>Leave as "To Be Defined"</source>
+</trans-unit>
+<trans-unit id="s4a269c2eff60f38a">
+  <source>If you leave the location as To Be Defined, you'll be able to set it later at any point. However, it must be set before converting the event proposal into an actual event.</source>
+</trans-unit>
+<trans-unit id="s86c2f47ead756152">
+  <source>Event Image</source>
+</trans-unit>
+<trans-unit id="s17ef13882125d28c">
+  <source>Expiration Date</source>
+</trans-unit>
+<trans-unit id="s196ae8349dbc22ed">
+  <source>Event proposals that have an expiration date will not become actual events if the minimum required participants and needs are not satisfied by the expiration date.</source>
+</trans-unit>
+<trans-unit id="s1f4f0c19444e1bc4">
+  <source>Set an expiration time</source>
+</trans-unit>
+<trans-unit id="s14295e5285e1e090">
+  <source>When creating an event, you can't specify any need as minimum required, but you can still accept contributions from participants.</source>
+</trans-unit>
+<trans-unit id="s93f6ac833d0ab2b9">
+  <source>Requires hosts approval</source>
+</trans-unit>
+<trans-unit id="s462cc027abc98129">
+  <source>Create Proposal</source>
+</trans-unit>
+<trans-unit id="s1d3b1f2fc808422a">
+  <source>No participants yet</source>
+</trans-unit>
+<trans-unit id="s1a6a3cfd037f8360">
+  <source>Error fetching the event</source>
+</trans-unit>
+<trans-unit id="s049c80bb0a4a113e">
+  <source>Satisfied Needs</source>
+</trans-unit>
+<trans-unit id="s93f0dde4aebaadbb">
+  <source>Unsatisfied needs</source>
+</trans-unit>
+<trans-unit id="s44dc99549834bede">
+  <source>Satisfied needs</source>
+</trans-unit>
+<trans-unit id="sf497ea75a3dd1359">
+  <source>All upcoming events and proposals</source>
+</trans-unit>
+<trans-unit id="sfefc6bb1d8368f6b">
+  <source>All past events and proposals</source>
+</trans-unit>
+<trans-unit id="sc823349a3c313cbe">
+  <source>All cancelled events and proposals</source>
+</trans-unit>
+<trans-unit id="sa21184b47eb2359f">
+  <source>All upcoming events</source>
+</trans-unit>
+<trans-unit id="s204bcedcaf6206a1">
+  <source>All past events</source>
+</trans-unit>
+<trans-unit id="s35399997947420a4">
+  <source>All cancelled events</source>
+</trans-unit>
+<trans-unit id="s34ecb860e75653a3">
+  <source>All open proposals</source>
+</trans-unit>
+<trans-unit id="s0ff7ff769071b38e">
+  <source>All expired proposals</source>
+</trans-unit>
+<trans-unit id="s381cfa8e3679b2e4">
+  <source>All cancelled proposals</source>
+</trans-unit>
+<trans-unit id="sb645c92d5c55b756">
+  <source>My upcoming events and proposals</source>
+</trans-unit>
+<trans-unit id="s9ee7e4a89e4c27d0">
+  <source>My past events and proposals</source>
+</trans-unit>
+<trans-unit id="s81125a7ddbccd553">
+  <source>My cancelled events and proposals</source>
+</trans-unit>
+<trans-unit id="s2b4966447a91d89c">
+  <source>My upcoming events</source>
+</trans-unit>
+<trans-unit id="s58633bce670128fe">
+  <source>My past events</source>
+</trans-unit>
+<trans-unit id="s8d67ab40360b3089">
+  <source>My cancelled events</source>
+</trans-unit>
+<trans-unit id="s71882f5a017756d6">
+  <source>My open proposals</source>
+</trans-unit>
+<trans-unit id="s68a6604e6ecc54b1">
+  <source>My expired proposals</source>
+</trans-unit>
+<trans-unit id="s1bbb8832767a8887">
+  <source>My cancelled proposals</source>
+</trans-unit>
+<trans-unit id="sd2223afb7d6b100d">
+  <source>Type</source>
+</trans-unit>
+<trans-unit id="sf993bb199fefbe04">
+  <source>All</source>
+</trans-unit>
+<trans-unit id="sc265a3e29e1206e4">
+  <source>Events</source>
+</trans-unit>
+<trans-unit id="sa0f1ffa6f3454f24">
+  <source>Proposals</source>
+</trans-unit>
+<trans-unit id="sad3e3c8146fc920f">
+  <source>Status</source>
+</trans-unit>
+<trans-unit id="s1f7698c061c208c9">
+  <source>Open</source>
+</trans-unit>
+<trans-unit id="s4627a9667a335f23">
+  <source>Upcoming</source>
+</trans-unit>
+<trans-unit id="s2e422c19ed3903bd">
+  <source>Past</source>
+</trans-unit>
+<trans-unit id="s7f59f507e02a2f38">
+  <source>View</source>
+</trans-unit>
+<trans-unit id="s3d249bb480032121">
+  <source>List</source>
+</trans-unit>
+<trans-unit id="sbb980b38227e171f">
+  <source>Calendar</source>
+</trans-unit>
+<trans-unit id="s7c95876637f6a9d7">
+  <source>Filter</source>
+</trans-unit>
+<trans-unit id="s59d8fe4f60895c05">
+  <source>No proposals found.</source>
+</trans-unit>
+<trans-unit id="seb6ade2f1b5872cf">
+  <source>No events found.</source>
+</trans-unit>
+<trans-unit id="se31341d3088f8f30">
+  <source>Error fetching events</source>
+</trans-unit>
+<trans-unit id="s001afc329eb2d6e0">
+  <source>A new proposal was created and you were added as one of its hosts.</source>
+</trans-unit>
+<trans-unit id="s38bb8d6be7dc616e">
+  <source>A new event was created and you were added as one of its hosts.</source>
+</trans-unit>
+<trans-unit id="s5ba3830e8aeefaa7">
+  <source>You have no unread alerts.</source>
+</trans-unit>
+<trans-unit id="s3aea02e11df984b4">
+  <source>You have no read alerts.</source>
+</trans-unit>
+<trans-unit id="sbd9432daa8267326">
+  <source>Error fetching my alerts</source>
+</trans-unit>
+<trans-unit id="s95495b96399beb43">
+  <source>Error dismissing the alerts</source>
+</trans-unit>
+<trans-unit id="s912fc556ca22aff0">
+  <source>Dismiss All</source>
+</trans-unit>
+<trans-unit id="s0e09d3a9d4918302">
+  <source>There no unread alerts</source>
+</trans-unit>
+<trans-unit id="s40044a467a880f82">
+  <source>Unread</source>
+</trans-unit>
+<trans-unit id="s740d542bbe696de5">
+  <source>Read</source>
+</trans-unit>
+<trans-unit id="s63f4188ef2f4f205">
+  <source>Unread alerts</source>
+</trans-unit>
+<trans-unit id="s656876771e108220">
+  <source>Read alerts</source>
+</trans-unit>
+<trans-unit id="sffdcc47c1ec17387">
+  <source>Error fetching your profile</source>
+</trans-unit>
+<trans-unit id="s639c68c3284a2269">
+  <source>Update Profile</source>
+</trans-unit>
+<trans-unit id="sface44df32238223">
+  <source>Your Profile</source>
+</trans-unit>
+<trans-unit id="s8641b6c3688a0cec">
+  <source>Edit Profile</source>
+</trans-unit>
+<trans-unit id="s93bb9a4511fa9115">
+  <source>All Events</source>
+</trans-unit>
+<trans-unit id="s0f500c92c5f036f0">
+  <source>My Events</source>
+</trans-unit>
+<trans-unit id="s88d1c1e15ca1aade">
+  <source>Alerts</source>
+</trans-unit>
+<trans-unit id="s3836bfbcb3e7f52a">
+  <source>Gather</source>
+  <target>Reunir-se</target>
+</trans-unit>
+<trans-unit id="s05e0676a12371a86">
+  <source>Proposal expired without meeting the minimum required needs.</source>
+  <target>La propuesta expiró sin que sus necesidades mínimas requeridas se pudieran satisfacer.</target>
+</trans-unit>
+</body>
+</file>
+</xliff>

@@ -34,12 +34,8 @@
                 # more packages go here
                 cargo-nextest
                 binaryen
+                sccache
               ];
-
-              shellHook = ''
-                unset CARGO_TARGET_DIR
-                unset CARGO_HOME
-              '';
 
             };
           };
