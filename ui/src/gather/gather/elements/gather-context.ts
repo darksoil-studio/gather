@@ -1,5 +1,5 @@
 import { css, html, LitElement } from 'lit';
-import { ContextProvider, provide } from '@lit-labs/context';
+import { ContextProvider, provide } from '@lit/context';
 import { customElement, property } from 'lit/decorators.js';
 
 import { gatherStoreContext } from '../context.js';

@@ -34,7 +34,6 @@
                 # more packages go here
                 cargo-nextest
                 binaryen
-                sccache
               ];
 
             };

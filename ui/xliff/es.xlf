@@ -12,96 +12,127 @@
 </trans-unit>
 <trans-unit id="s45b98b5bf8532d39">
   <source>Proposal was cancelled because:</source>
+  <target>La propuesta fue creada.</target>
 </trans-unit>
 <trans-unit id="s62d33cbd276324b5">
   <source>Proposal was updated.</source>
+  <target>La propuesta fue actualizada.</target>
 </trans-unit>
 <trans-unit id="s016a7c24282e6342">
   <source>The proposal succeeded! It is now an event.</source>
+  <target>¡La propuesta tuvo éxito! Ahora ya es un evento.</target>
 </trans-unit>
 <trans-unit id="s1e06d6883ee8db7c">
   <source>Event was created.</source>
+  <target>El evento fue creado</target>
 </trans-unit>
 <trans-unit id="s93cd05d961caecf9">
   <source>Event was cancelled because:</source>
+  <target>El evento fue cancelado porque:</target>
 </trans-unit>
 <trans-unit id="s30165140983beaf5">
   <source>Event was updated.</source>
+  <target>El evento fue actualizado.</target>
 </trans-unit>
 <trans-unit id="s6111a57d3ffdf7f9">
   <source>New commitment to participate in the event.</source>
+  <target>Nuevo compromiso para participar en el evento.</target>
 </trans-unit>
 <trans-unit id="s8bc13748d664c5d1">
   <source>New contribution:</source>
+  <target>Nueva contribución:</target>
 </trans-unit>
 <trans-unit id="se14d143fa998e2e7">
   <source>Commitment to contribute <x id="0" equiv-text="${action.record.entry.amount}"/> to need "<x id="1" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>".</source>
+  <target>Compromiso para contribuir <x id="0" equiv-text="${action.record.entry.amount}"/> a la necesidad "<x id="1" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>".</target>
 </trans-unit>
 <trans-unit id="sb2a536c33059e52f">
   <source>Commitment to contribute to need "<x id="0" equiv-text="${action.callToAction.entry.needs[action.commitment.entry.need_index]&#10;    .description}"/>" was cancelled because:</source>
+  <target>Compromiso para contribuir a la necesidad "<x id="0" equiv-text="${action.callToAction.entry.needs[action.commitment.entry.need_index]&#10;    .description}"/>" fue cancelado porque:</target>
 </trans-unit>
 <trans-unit id="s4ba6d9c7b19bbe2f">
   <source>Commitment was uncancelled.</source>
+  <target>Se deshizo la cancelación del compromiso.</target>
 </trans-unit>
 <trans-unit id="s08de9815a8b2be2b">
   <source>The minimum required participants for the event has been reached.</source>
+  <target>El número mínimo requerido de participantes ha sido alcanzado.</target>
 </trans-unit>
 <trans-unit id="se49022c596fb4258">
   <source>Need "<x id="0" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>" was satisfied.</source>
+  <target>La necesidad "<x id="0" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>" fue satisfecha.</target>
 </trans-unit>
 <trans-unit id="sacb24b85fc980968">
   <source>Need "<x id="0" equiv-text="${action.callToAction.entry.needs[action.satisfaction.entry.need_index].description}"/>" is no longer satisfied!</source>
+  <target>¡La necesidad "<x id="0" equiv-text="${action.callToAction.entry.needs[action.satisfaction.entry.need_index].description}"/>" ya no está satisfecha!</target>
 </trans-unit>
 <trans-unit id="s401a80f2189e2d14">
   <source>All needs have been satisfied!</source>
+  <target>¡Todas las necesidades han sido satisfechas!</target>
 </trans-unit>
 <trans-unit id="s6b05f9d8801fc14f">
   <source>Host</source>
+  <target>Anfitrión</target>
 </trans-unit>
 <trans-unit id="s18d9277a5ac87167">
   <source>Participants</source>
+  <target>Participantes</target>
 </trans-unit>
 <trans-unit id="s4c5a99bf87598766">
   <source>This event has no participants yet.</source>
+  <target>Este evento aún no tiene ningún participante.</target>
 </trans-unit>
 <trans-unit id="s40600e7ca15ec27a">
   <source>This proposal has no participants yet.</source>
+  <target>Esta propuesto aún no tiene ningún participante.</target>
 </trans-unit>
 <trans-unit id="sf05f5ebbb11eb012">
   <source>Interested</source>
+  <target>Interesados</target>
 </trans-unit>
 <trans-unit id="se7073d4228589ff8">
   <source>No one is interested in this event yet.</source>
+  <target>Aún no hay nadie interesado en este evento.</target>
 </trans-unit>
 <trans-unit id="sf347e2f7d85d3a3e">
   <source>No one is interested in this proposal yet.</source>
+  <target>Aún no hay nadie interesado en esta propuesta.</target>
 </trans-unit>
 <trans-unit id="scc43220d6b67680f">
   <source>Error fetching the participants for this event</source>
+  <target>Error buscando los participantes para este evento</target>
 </trans-unit>
 <trans-unit id="sc7ba84fda0b6f8f6">
   <source>Error adding interest.</source>
+  <target>Error añadiendo el interés.</target>
 </trans-unit>
 <trans-unit id="sc13cbc2beddf3944">
   <source>Error removing interest.</source>
+  <target>Error suprimiendo el interés.</target>
 </trans-unit>
 <trans-unit id="sfdfd78c4d9a0f209">
   <source>Remove Interest</source>
+  <target>Ya no estoy interesado</target>
 </trans-unit>
 <trans-unit id="s1eb4516ee7b4f7ee">
   <source>Add Interest</source>
+  <target>Estoy interesado</target>
 </trans-unit>
 <trans-unit id="s3d06b0c1e90e5530">
   <source>Could not fetch your interest</source>
+  <target>Error al buscar si estás interesado</target>
 </trans-unit>
 <trans-unit id="s6595f22db60cdcaa">
   <source>I commit to participate</source>
+  <target>Me comprometo a participar</target>
 </trans-unit>
 <trans-unit id="sa1fb4473d9970257">
   <source>Error adding participant.</source>
+  <target>Error añadiendo el participante.</target>
 </trans-unit>
 <trans-unit id="s8d3433db30499c2c">
   <source>Participating in the proposal means committing yourself to going, if it actually happens. If you don't want to commit yourself yet, close this dialog and mark yourself as interested.</source>
+  <target>Participar en la propuesta significa que te comprometes a ir al evento, si se acaba produciendo. Si no quieres comprometerte aún, cierra este diálogo y indica que solo estás interesado.</target>
 </trans-unit>
 <trans-unit id="s0327cb8dc9ccf1b6">
   <source>Participating in the event means committing yourself to going. If you don't want to commit yourself yet, close this dialog and mark yourself as interested.</source>

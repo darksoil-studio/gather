@@ -23,8 +23,12 @@ pub enum EntryTypes {
 #[hdk_link_types]
 pub enum LinkTypes {
     Updates,
-    AllEvents,
-    AllProposals,
+    UpcomingEvents,
+    PastEvents,
+    CancelledEvents,
+    OpenProposals,
+    ExpiredProposals,
+    CancelledProposals,
     MyEvents,
     Interested,
     ProposalToEvent,

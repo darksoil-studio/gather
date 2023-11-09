@@ -7,7 +7,7 @@ import {
 } from '@holochain-open-dev/elements';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { ActionHash } from '@holochain/client';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';

@@ -15,7 +15,7 @@ import {
   toPromise,
 } from '@holochain-open-dev/stores';
 import { ActionHash, AgentPubKey } from '@holochain/client';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -24,11 +24,10 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 import '@holochain-open-dev/profiles/dist/elements/profile-list-item-skeleton.js';
+import '@holochain-open-dev/profiles/dist/elements/profile-list-item.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import '@shoelace-style/shoelace/dist/components/tag/tag.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
-
-import './profile-list-item.js';
 
 import { gatherStoreContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
@@ -63,14 +62,14 @@ export class ParticipantsForEvent extends LitElement {
     () => {
       if (this.eventHash)
         return joinAsync([
-          this.gatherStore.events.get(this.eventHash),
-          this.gatherStore.participantsForEvent.get(this.eventHash),
-          this.gatherStore.interestedInEvent.get(this.eventHash),
+          this.gatherStore.events.get(this.eventHash).latestVersion,
+          this.gatherStore.events.get(this.eventHash).participants,
+          this.gatherStore.events.get(this.eventHash).interested,
         ]);
       return joinAsync([
-        this.gatherStore.proposals.get(this.proposalHash!),
-        this.gatherStore.participantsForProposal.get(this.proposalHash!),
-        this.gatherStore.interestedInProposal.get(this.proposalHash!),
+        this.gatherStore.proposals.get(this.proposalHash!).latestVersion,
+        this.gatherStore.proposals.get(this.proposalHash!).participants,
+        this.gatherStore.proposals.get(this.proposalHash!).interested,
       ]);
     },
     () => [this.eventHash, this.proposalHash]

@@ -59,7 +59,7 @@ test('create and update event', async t => {
 
       // Bob gets the updated event
       const readUpdatedOutput0 = await toPromise(
-        bob.store.events.get(originalActionHash)
+        bob.store.events.get(originalActionHash).latestVersion
       );
       assert.deepEqual(
         contentUpdate,
@@ -106,7 +106,7 @@ test('create and update event', async t => {
 
       // Bob gets the updated event
       const readUpdatedOutput1 = await toPromise(
-        bob.store.events.get(originalActionHash)
+        bob.store.events.get(originalActionHash).latestVersion
       );
       assert.deepEqual(
         contentUpdate,

@@ -4,26 +4,22 @@ import {
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
 import { ActionHash } from '@holochain/client';
-import { consume } from '@lit-labs/context';
-import { localized, msg, str } from '@lit/localize';
+import { styleMap } from 'lit/directives/style-map.js';
+import { consume } from '@lit/context';
+import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
-import {
-  mdiClose,
-  mdiInformationOutline,
-  mdiNotificationClearAll,
-} from '@mdi/js';
+import { mdiInformationOutline, mdiNotificationClearAll } from '@mdi/js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
-import { EventAlert, GatherAlert, GatherStore } from '../gather-store.js';
+import { GatherAlert, GatherStore } from '../gather-store.js';
 import './event-summary.js';
 import { Alert } from '../../../alerts/alerts-client.js';
 import { EventWithStatus, ProposalWithStatus } from '../types.js';
-import { styleMap } from 'lit/directives/style-map.js';
 import { EventAction, messageAndIcon } from '../activity.js';
 
 @localized()

@@ -1,9 +1,15 @@
 import { AssembleStore, CallToAction, Commitment } from '@darksoil/assemble';
 import {
+  allRevisionsOfEntryStore,
   AsyncReadable,
+  collectionStore,
   completed,
+  immutableEntryStore,
   joinAsync,
+  latestVersionOfEntryStore,
   lazyLoadAndPoll,
+  liveLinksTargetsStore,
+  mapAndJoin,
   pipe,
   sliceAndJoin,
   toPromise,
@@ -13,17 +19,18 @@ import {
   LazyHoloHashMap,
   HoloHashMap,
   LazyMap,
+  slice,
 } from '@holochain-open-dev/utils';
 import {
   Cancellation,
   CancellationsStore,
-  UndoneCancellation,
 } from '@holochain-open-dev/cancellations';
 import {
   ActionHash,
   AgentPubKey,
   CreateLink,
   DeleteLink,
+  SignedActionHashed,
 } from '@holochain/client';
 
 import {
@@ -146,16 +153,11 @@ export class GatherStore {
           });
         } else if (signal.app_entry.type === 'Event') {
           if (signal.app_entry.from_proposal) {
-            const participants = await toPromise(
-              this.participantsForProposal.get(
-                signal.app_entry.from_proposal.proposal_hash
-              )
+            const proposal = this.proposals.get(
+              signal.app_entry.from_proposal.proposal_hash
             );
-            const interested = await toPromise(
-              this.interestedInProposal.get(
-                signal.app_entry.from_proposal.proposal_hash
-              )
-            );
+            const participants = await toPromise(proposal.participants);
+            const interested = await toPromise(proposal.interested);
             await alertsStore.client.notifyAlert(
               [
                 ...Array.from(participants.keys()),
@@ -190,7 +192,7 @@ export class GatherStore {
 
           while (lastUpdate) {
             const event: EntryRecord<Event> | undefined =
-              await this.client.getEvent(lastUpdate);
+              await this.client.getLatestEvent(lastUpdate);
             lastUpdate =
               event?.action.type === 'Update'
                 ? event.action.original_action_address
@@ -212,12 +214,15 @@ export class GatherStore {
           const callToAction = await toPromise(
             this.assembleStore.callToActions.get(
               signal.app_entry.call_to_action_hash
-            )
+            ).latestVersion
           );
           const allOpenProposals = await toPromise(
-            sliceAndJoin(
-              this.proposals,
-              (await toPromise(this.allOpenProposals)).map(h => h.hash)
+            mapAndJoin(
+              slice(
+                this.proposals,
+                (await toPromise(this.allOpenProposals)).map(h => h.hash)
+              ),
+              p => p.latestVersion
             )
           );
 
@@ -235,12 +240,9 @@ export class GatherStore {
                   },
                 });
               } else {
-                const participants = await toPromise(
-                  this.participantsForProposal.get(proposalHash)
-                );
-                const interested = await toPromise(
-                  this.interestedInProposal.get(proposalHash)
-                );
+                const proposal = this.proposals.get(proposalHash);
+                const participants = await toPromise(proposal.participants);
+                const interested = await toPromise(proposal.interested);
                 await this.alertsStore.client.notifyAlert(
                   [...Array.from(participants.keys()), ...interested],
                   {
@@ -259,12 +261,15 @@ export class GatherStore {
           const callToAction = await toPromise(
             this.assembleStore.callToActions.get(
               signal.app_entry.call_to_action_hash
-            )
+            ).latestVersion
           );
           const allOpenProposals = await toPromise(
-            sliceAndJoin(
-              this.proposals,
-              (await toPromise(this.allOpenProposals)).map(h => h.hash)
+            mapAndJoin(
+              slice(
+                this.proposals,
+                (await toPromise(this.allOpenProposals)).map(h => h.hash)
+              ),
+              p => p.latestVersion
             )
           );
 
@@ -273,12 +278,9 @@ export class GatherStore {
               proposal.entry.call_to_action_hash.toString() ===
               callToAction.actionHash.toString()
             ) {
-              const participants = await toPromise(
-                this.participantsForProposal.get(proposalHash)
-              );
-              const interested = await toPromise(
-                this.interestedInProposal.get(proposalHash)
-              );
+              const proposal = this.proposals.get(proposalHash);
+              const participants = await toPromise(proposal.participants);
+              const interested = await toPromise(proposal.interested);
               await this.alertsStore.client.notifyAlert(
                 [...Array.from(participants.keys()), ...interested],
                 {
@@ -298,12 +300,15 @@ export class GatherStore {
           const callToAction = await toPromise(
             this.assembleStore.callToActions.get(
               signal.action.hashed.content.base_address
-            )
+            ).latestVersion
           );
           const allOpenProposals = await toPromise(
-            sliceAndJoin(
-              this.proposals,
-              (await toPromise(this.allOpenProposals)).map(h => h.hash)
+            mapAndJoin(
+              slice(
+                this.proposals,
+                (await toPromise(this.allOpenProposals)).map(h => h.hash)
+              ),
+              p => p.latestVersion
             )
           );
 
@@ -319,9 +324,12 @@ export class GatherStore {
             }
           }
           const allUpcomingEvents = await toPromise(
-            sliceAndJoin(
-              this.events,
-              (await toPromise(this.allUpcomingEvents)).map(h => h.hash)
+            mapAndJoin(
+              slice(
+                this.events,
+                (await toPromise(this.allUpcomingEvents)).map(h => h.hash)
+              ),
+              e => e.latestVersion
             )
           );
 
@@ -345,15 +353,12 @@ export class GatherStore {
           // Something was cancelled
           const cancelledHash = signal.app_entry.cancelled_hash;
           try {
-            const event = await toPromise(this.events.get(cancelledHash));
+            const eventStore = this.events.get(cancelledHash);
+            const event = await toPromise(eventStore.latestVersion);
             if ('from_proposal' in event.entry) {
               await this.client.markEventAsCancelled(cancelledHash);
-              const participants = await toPromise(
-                this.participantsForEvent.get(cancelledHash)
-              );
-              const interested = await toPromise(
-                this.interestedInEvent.get(cancelledHash)
-              );
+              const participants = await toPromise(eventStore.participants);
+              const interested = await toPromise(eventStore.interested);
               await this.alertsStore.client.notifyAlert(
                 [...Array.from(participants.keys()), ...interested],
                 {
@@ -371,16 +376,12 @@ export class GatherStore {
             console.log(e);
           }
           try {
-            const proposal = await toPromise(this.proposals.get(cancelledHash));
+            const proposalStore = this.proposals.get(cancelledHash);
+            const proposal = await toPromise(proposalStore.latestVersion);
             if ('hosts' in proposal.entry) {
               await this.client.markProposalAsCancelled(cancelledHash);
-              const proposalHash = cancelledHash;
-              const participants = await toPromise(
-                this.participantsForProposal.get(proposalHash)
-              );
-              const interested = await toPromise(
-                this.interestedInProposal.get(proposalHash)
-              );
+              const participants = await toPromise(proposalStore.participants);
+              const interested = await toPromise(proposalStore.interested);
               await this.alertsStore.client.notifyAlert(
                 [...Array.from(participants.keys()), ...interested],
                 {
@@ -399,14 +400,16 @@ export class GatherStore {
           }
           try {
             const commitment = await toPromise(
-              this.assembleStore.commitments.get(cancelledHash)
+              this.assembleStore.commitments.get(cancelledHash).entry
             );
             if (!commitment.entry.amount) return;
             if (commitment.entry.need_index === 0) {
               const myEventsHashes = await toPromise(this.myEvents);
 
               for (const eventHash of myEventsHashes) {
-                const event = await toPromise(this.events.get(eventHash));
+                const event = await toPromise(
+                  this.events.get(eventHash).latestVersion
+                );
                 if (
                   event.entry.call_to_action_hash.toString() ===
                   commitment.entry.call_to_action_hash.toString()
@@ -443,96 +446,145 @@ export class GatherStore {
 
   /** Event */
 
-  events = new LazyHoloHashMap((eventHash: ActionHash) =>
-    pipe(
-      lazyLoadAndPoll(async () => this.client.getEvent(eventHash), 4000),
-
-      event => {
-        if (!event) throw new Error('Event not found');
-        return event;
-      }
-    )
-  );
-
-  eventsStatus = new LazyHoloHashMap<
-    ActionHash,
-    AsyncReadable<EventWithStatus>
-  >((eventHash: AgentPubKey) =>
-    pipe(
-      this.events.get(eventHash),
-      _ => this.cancellationsStore.cancellationsFor.get(eventHash),
-
-      (cancellations, event) => ({
-        originalActionHash: eventHash,
-        currentEvent: event,
-        status: deriveStatus(event, cancellations),
-      })
-    )
-  );
-
-  proposals = new LazyHoloHashMap((proposalHash: ActionHash) =>
-    pipe(
-      lazyLoadAndPoll(async () => this.client.getProposal(proposalHash), 4000),
-
-      proposal => {
-        if (!proposal) throw new Error('Proposal not found');
-        return proposal;
-      }
-    )
-  );
-
-  proposalsStatus = new LazyHoloHashMap<
-    ActionHash,
-    AsyncReadable<ProposalWithStatus>
-  >((proposalHash: ActionHash) =>
-    pipe(
-      this.proposals.get(proposalHash),
-      proposal =>
+  events = new LazyHoloHashMap((eventHash: ActionHash) => {
+    const latestVersion = latestVersionOfEntryStore(this.client, () =>
+      this.client.getLatestEvent(eventHash)
+    );
+    const cancellationsHashes =
+      this.cancellationsStore.cancellationsFor.get(eventHash).live;
+    return {
+      latestVersion,
+      originalEntry: immutableEntryStore(() =>
+        this.client.getOriginalEvent(eventHash)
+      ),
+      status: pipe(
+        joinAsync([latestVersion, cancellationsHashes]),
+        ([event, cancellations]) => ({
+          originalActionHash: eventHash,
+          currentEvent: event,
+          status: deriveStatus(event, cancellations),
+        })
+      ),
+      allRevisions: allRevisionsOfEntryStore(this.client, () =>
+        this.client.getAllEventRevisions(eventHash)
+      ),
+      participants: pipe(latestVersion, event =>
+        this.participantsForCallToAction.get(event.entry.call_to_action_hash)
+      ),
+      interested: pipe(
         joinAsync([
-          this.cancellationsStore.cancellationsFor.get(proposalHash),
-          this.assembleStore.callToActions.get(
-            proposal.entry.call_to_action_hash
+          liveLinksTargetsStore(
+            this.client,
+            eventHash,
+            () => this.client.getInterestedIn(eventHash),
+            'Interested'
           ),
-          this.assembleStore.assembliesForCallToAction.get(
-            proposal.entry.call_to_action_hash
-          ),
-          this.eventsForProposal.get(proposalHash),
+          latestVersion,
         ]),
-      ([cancellations, callToAction, assemblies, events], proposal) => ({
-        originalActionHash: proposalHash,
-        currentProposal: proposal,
-        status: deriveProposalStatus(
-          proposal,
-          cancellations,
+        ([_participants, event]) => {
+          const stores: Array<AsyncReadable<AgentPubKey[]>> = [
+            pipe(
+              this.participantsForCallToAction.get(
+                event.entry.call_to_action_hash
+              ),
+              map => Array.from(map.keys())
+            ),
+          ];
+          if (event.entry.from_proposal) {
+            stores.push(
+              this.proposals.get(event.entry.from_proposal.proposal_hash)
+                .interested
+            );
+          }
+          return joinAsync(stores);
+        },
+        (p, [interestedInEvent]) => {
+          const participants = new HoloHashMap<AgentPubKey, boolean>();
+          const eventParticipants = p[0];
+
+          for (const eventParticipant of interestedInEvent) {
+            participants.set(eventParticipant, true);
+          }
+
+          if (p[1]) {
+            for (const interestedInProposal of p[1]) {
+              participants.set(interestedInProposal, true);
+            }
+          }
+
+          // Remove all participants that have actually committed to go
+          for (const participant of eventParticipants) {
+            participants.delete(participant);
+          }
+
+          return Array.from(participants.keys());
+        }
+      ),
+      cancellations: pipe(cancellationsHashes, ch =>
+        slice(this.cancellationsStore.cancellations, ch)
+      ),
+    };
+  });
+
+  proposals = new LazyHoloHashMap((proposalHash: ActionHash) => {
+    const latestVersion = latestVersionOfEntryStore(this.client, () =>
+      this.client.getLatestProposal(proposalHash)
+    );
+    const cancellationsHashes =
+      this.cancellationsStore.cancellationsFor.get(proposalHash).live;
+    const events = liveLinksTargetsStore(
+      this.client,
+      proposalHash,
+      () => this.client.getEventsForProposal(proposalHash),
+      'ProposalToEvents'
+    );
+    return {
+      latestVersion,
+      originalEntry: immutableEntryStore(() =>
+        this.client.getOriginalProposal(proposalHash)
+      ),
+      status: pipe(
+        joinAsync([latestVersion, cancellationsHashes, events]),
+        ([proposal]) =>
+          joinAsync([
+            this.assembleStore.callToActions.get(
+              proposal.entry.call_to_action_hash
+            ).latestVersion,
+
+            this.assembleStore.callToActions.get(
+              proposal.entry.call_to_action_hash
+            ).assemblies,
+          ]),
+        ([callToAction, assemblies], [proposal, cancellations, events]) => ({
+          originalActionHash: proposalHash,
+          currentProposal: proposal,
+          status: deriveProposalStatus(
+            proposal,
+            cancellations,
+            callToAction,
+            Array.from(assemblies.keys()),
+            events
+          ),
           callToAction,
-          assemblies,
-          events
-        ),
-        callToAction,
-      })
-    )
-  );
-
-  eventRevisions = new LazyHoloHashMap((eventHash: ActionHash) =>
-    lazyLoadAndPoll(
-      async () => this.client.getAllEventRevisions(eventHash),
-      10000
-    )
-  );
-
-  proposalRevisions = new LazyHoloHashMap((proposalHash: ActionHash) =>
-    lazyLoadAndPoll(
-      async () => this.client.getAllProposalRevisions(proposalHash),
-      10000
-    )
-  );
-
-  eventsForProposal = new LazyHoloHashMap((proposalHash: ActionHash) =>
-    lazyLoadAndPoll(
-      async () => this.client.getEventsForProposal(proposalHash),
-      10000
-    )
-  );
+        })
+      ),
+      allRevisions: allRevisionsOfEntryStore(this.client, () =>
+        this.client.getAllProposalRevisions(proposalHash)
+      ),
+      interested: liveLinksTargetsStore(
+        this.client,
+        proposalHash,
+        () => this.client.getInterestedIn(proposalHash),
+        'Interested'
+      ),
+      participants: pipe(latestVersion, proposal =>
+        this.participantsForCallToAction.get(proposal.entry.call_to_action_hash)
+      ),
+      cancellations: pipe(cancellationsHashes, ch =>
+        slice(this.cancellationsStore.cancellations, ch)
+      ),
+    };
+  });
 
   callToActionActivity = new LazyHoloHashMap<
     ActionHash,
@@ -541,50 +593,49 @@ export class GatherStore {
     pipe(
       joinAsync([
         pipe(
-          this.assembleStore.commitmentsForCallToAction.get(callToActionHash),
-          hashes => sliceAndJoin(this.assembleStore.commitments, hashes),
+          this.assembleStore.callToActions.get(callToActionHash).commitments
+            .cancelled,
           commitments =>
             joinAsync([
-              sliceAndJoin(
-                this.cancellationsStore.cancellationsFor,
-                Array.from(commitments.keys())
-              ),
-              sliceAndJoin(
-                this.cancellationsStore.undoneCancellationsFor,
-                Array.from(commitments.keys())
-              ),
+              mapAndJoin(commitments, c => c.entry),
+              mapAndJoin(commitments, c => c.cancellations.live),
+              mapAndJoin(commitments, c => c.cancellations.undone),
             ]),
           ([
+            _,
             cancellationsHashesByCommitment,
             undoneCancellationsByCommitment,
           ]) => {
             const cancellationsHashes = ([] as ActionHash[]).concat(
               ...Array.from(cancellationsHashesByCommitment.values()),
               ...Array.from(undoneCancellationsByCommitment.values()).map(uc =>
-                uc.map(u => u.cancellation_hash)
+                uc.map(u => u[0].target_address)
               )
             );
-            return sliceAndJoin(
-              this.cancellationsStore.cancellations,
-              cancellationsHashes
+            return mapAndJoin(
+              slice(this.cancellationsStore.cancellations, cancellationsHashes),
+              c => c.latestVersion
             );
           },
-          (cancellations, [_, undoneCancellations], commitments) =>
+          (cancellations, [commitments, _, undoneCancellations]) =>
             [commitments, cancellations, undoneCancellations] as [
               ReadonlyMap<ActionHash, EntryRecord<Commitment>>,
               ReadonlyMap<ActionHash, EntryRecord<Cancellation>>,
-              ReadonlyMap<ActionHash, UndoneCancellation[]>
+              ReadonlyMap<
+                ActionHash,
+                [CreateLink, SignedActionHashed<DeleteLink>[]][]
+              >
             ]
         ),
         pipe(
-          this.assembleStore.satisfactionsForCallToAction.get(callToActionHash),
-          hashes => sliceAndJoin(this.assembleStore.satisfactions, hashes)
+          this.assembleStore.callToActions.get(callToActionHash).satisfactions,
+          satisfactions => mapAndJoin(satisfactions, s => s.latestVersion)
         ),
         pipe(
-          this.assembleStore.assembliesForCallToAction.get(callToActionHash),
-          hashes => sliceAndJoin(this.assembleStore.assemblies, hashes)
+          this.assembleStore.callToActions.get(callToActionHash).assemblies,
+          assemblies => mapAndJoin(assemblies, s => s)
         ),
-        this.assembleStore.callToActions.get(callToActionHash),
+        this.assembleStore.callToActions.get(callToActionHash).latestVersion,
       ]),
       ([
         [commitments, cancellations, undoneCancellations],
@@ -611,11 +662,16 @@ export class GatherStore {
         const undoneCancellationsActivity: EventActivity = [];
         for (const uc of Array.from(undoneCancellations.values())) {
           for (const u of uc) {
-            for (const r of u.undo_records) {
-              const cancellation = cancellations.get(u.cancellation_hash)!;
+            for (const r of u[1]) {
+              const cancellation = cancellations.get(u[0].target_address)!;
               undoneCancellationsActivity.push({
                 type: 'commitment_cancellation_undone',
-                record: new EntryRecord(r),
+                record: new EntryRecord({
+                  signed_action: r,
+                  entry: {
+                    NotApplicable: undefined,
+                  },
+                }),
                 cancellation,
                 commitment: commitments.get(cancellation.entry.cancelled_hash)!,
               });
@@ -671,11 +727,10 @@ export class GatherStore {
   >((proposalHash: ActionHash) =>
     pipe(
       joinAsync([
-        this.proposals.get(proposalHash),
-        this.proposalRevisions.get(proposalHash),
-        pipe(
-          this.cancellationsStore.cancellationsFor.get(proposalHash),
-          hashes => sliceAndJoin(this.cancellationsStore.cancellations, hashes)
+        this.proposals.get(proposalHash).latestVersion,
+        this.proposals.get(proposalHash).allRevisions,
+        pipe(this.proposals.get(proposalHash).cancellations, map =>
+          mapAndJoin(map, c => c.latestVersion)
         ),
       ]),
       ([proposal, revisions, cancellations]) => {
@@ -712,7 +767,7 @@ export class GatherStore {
     AsyncReadable<EventActivity>
   >((proposalHash: ActionHash) =>
     pipe(
-      this.proposals.get(proposalHash),
+      this.proposals.get(proposalHash).latestVersion,
       proposal =>
         joinAsync([
           this.proposalRevisionsAndCancellationsActivity.get(proposalHash),
@@ -735,15 +790,13 @@ export class GatherStore {
   eventActivity = new LazyHoloHashMap<ActionHash, AsyncReadable<EventActivity>>(
     (eventHash: ActionHash) =>
       pipe(
-        this.events.get(eventHash),
+        this.events.get(eventHash).latestVersion,
 
         event =>
           joinAsync([
-            this.eventRevisions.get(eventHash),
-            pipe(
-              this.cancellationsStore.cancellationsFor.get(eventHash),
-              hashes =>
-                sliceAndJoin(this.cancellationsStore.cancellations, hashes)
+            this.events.get(eventHash).allRevisions,
+            pipe(this.events.get(eventHash).cancellations, map =>
+              mapAndJoin(map, c => c.latestVersion)
             ),
             this.callToActionActivity.get(event.entry.call_to_action_hash),
             event.entry.from_proposal
@@ -793,11 +846,9 @@ export class GatherStore {
   participantsForCallToAction = new LazyHoloHashMap(
     (callToActionHash: ActionHash) =>
       pipe(
-        this.assembleStore.uncancelledCommitmentsForCallToAction.get(
-          callToActionHash
-        ),
-        commitmentsHashes =>
-          sliceAndJoin(this.assembleStore.commitments, commitmentsHashes),
+        this.assembleStore.callToActions.get(callToActionHash).commitments
+          .uncancelled,
+        commitments => mapAndJoin(commitments, c => c.entry),
         commitments => {
           const participants = new HoloHashMap<AgentPubKey, ActionHash>();
           const participantCommitments = Array.from(
@@ -814,76 +865,15 @@ export class GatherStore {
       )
   );
 
-  participantsForProposal = new LazyHoloHashMap((proposalHash: ActionHash) =>
-    pipe(this.proposals.get(proposalHash), proposal =>
-      this.participantsForCallToAction.get(proposal.entry.call_to_action_hash)
-    )
-  );
-
-  participantsForEvent = new LazyHoloHashMap((eventHash: ActionHash) =>
-    pipe(this.events.get(eventHash), event =>
-      this.participantsForCallToAction.get(event.entry.call_to_action_hash)
-    )
-  );
-
-  interestedInEvent = new LazyHoloHashMap((eventHash: ActionHash) =>
-    pipe(
-      joinAsync([
-        lazyLoadAndPoll(() => this.client.getInterestedIn(eventHash), 4000),
-
-        this.events.get(eventHash),
-      ]),
-      ([_participants, event]) => {
-        const stores = [
-          pipe(
-            this.participantsForCallToAction.get(
-              event.entry.call_to_action_hash
-            ),
-            map => Array.from(map.keys())
-          ),
-        ];
-        if (event.entry.from_proposal) {
-          stores.push(
-            this.interestedInProposal.get(
-              event.entry.from_proposal.proposal_hash
-            )
-          );
-        }
-        return joinAsync(stores);
-      },
-      (p, [interestedInEvent]) => {
-        const participants = new HoloHashMap<AgentPubKey, boolean>();
-        const eventParticipants = p[0];
-
-        for (const eventParticipant of interestedInEvent) {
-          participants.set(eventParticipant, true);
-        }
-
-        if (p[1]) {
-          for (const interestedInProposal of p[1]) {
-            participants.set(interestedInProposal, true);
-          }
-        }
-
-        // Remove all participants that have actually committed to go
-        for (const participant of eventParticipants) {
-          participants.delete(participant);
-        }
-
-        return Array.from(participants.keys());
-      }
-    )
-  );
-
-  interestedInProposal = new LazyHoloHashMap((proposalHash: ActionHash) =>
-    lazyLoadAndPoll(() => this.client.getInterestedIn(proposalHash), 4000)
-  );
-
   // Will contain an ordered list of the original action hashes for the upcoming events
   allUpcomingEvents: AsyncReadable<Array<IndexedHash>> = pipe(
-    lazyLoadAndPoll(() => this.client.getAllUpcomingEvents(), 4000),
+    collectionStore(
+      this.client,
+      () => this.client.getAllUpcomingEvents(),
+      'UpcomingEvents'
+    ),
     upcomingEventsHashes =>
-      sliceAndJoin(this.eventsStatus, upcomingEventsHashes),
+      mapAndJoin(slice(this.events, upcomingEventsHashes), e => e.status),
     upcomingEvents => {
       const events = [];
       for (const [eventHash, eventWithStatus] of upcomingEvents.entries()) {
@@ -908,7 +898,11 @@ export class GatherStore {
 
   // Will contain an ordered list of the original action hashes for the cancelled events
   allCancelledEvents: AsyncReadable<Array<IndexedHash>> = pipe(
-    lazyLoadAndPoll(() => this.client.getAllCancelledEvents(), 4000),
+    collectionStore(
+      this.client,
+      () => this.client.getAllCancelledEvents(),
+      'CancelledEvents'
+    ),
     hashes =>
       hashes.map(hash => ({
         type: 'event',
@@ -918,7 +912,11 @@ export class GatherStore {
 
   // Will contain an ordered list of the original action hashes for the cancelled events
   allPastEvents: AsyncReadable<Array<IndexedHash>> = pipe(
-    lazyLoadAndPoll(() => this.client.getAllPastEvents(), 4000),
+    collectionStore(
+      this.client,
+      () => this.client.getAllPastEvents(),
+      'PastEvents'
+    ),
     hashes =>
       hashes.map(hash => ({
         type: 'event',
@@ -930,12 +928,9 @@ export class GatherStore {
     proposalHash: ActionHash,
     action: EventActionOnlyHash
   ) {
-    const participants = await toPromise(
-      this.participantsForProposal.get(proposalHash)
-    );
-    const interested = await toPromise(
-      this.interestedInProposal.get(proposalHash)
-    );
+    const proposal = this.proposals.get(proposalHash);
+    const participants = await toPromise(proposal.participants);
+    const interested = await toPromise(proposal.interested);
     await this.alertsStore.client.notifyAlert(
       [...Array.from(participants.keys()), ...interested],
       {
@@ -950,10 +945,9 @@ export class GatherStore {
     eventHash: ActionHash,
     action: EventActionOnlyHash
   ) {
-    const participants = await toPromise(
-      this.participantsForEvent.get(eventHash)
-    );
-    const interested = await toPromise(this.interestedInEvent.get(eventHash));
+    const event = this.events.get(eventHash);
+    const participants = await toPromise(event.participants);
+    const interested = await toPromise(event.interested);
     await this.alertsStore.client.notifyAlert(
       [...Array.from(participants.keys()), ...interested],
       {
@@ -966,9 +960,13 @@ export class GatherStore {
 
   // Will contain an ordered list of the original action hashes for the upcoming events
   allOpenProposals: AsyncReadable<Array<IndexedHash>> = pipe(
-    lazyLoadAndPoll(() => this.client.getAllOpenProposals(), 4000),
+    collectionStore(
+      this.client,
+      () => this.client.getAllOpenProposals(),
+      'OpenProposals'
+    ),
     openProposalsHashes =>
-      sliceAndJoin(this.proposalsStatus, openProposalsHashes),
+      mapAndJoin(slice(this.proposals, openProposalsHashes), p => p.status),
     openProposals => {
       const proposals = [];
       for (const [
@@ -1008,19 +1006,31 @@ export class GatherStore {
 
   // Will contain an ordered list of the original action hashes for the cancelled events
   allCancelledProposals: AsyncReadable<Array<IndexedHash>> = pipe(
-    lazyLoadAndPoll(() => this.client.getAllCancelledProposals(), 4000),
+    collectionStore(
+      this.client,
+      () => this.client.getAllCancelledProposals(),
+      'CancelledProposals'
+    ),
     hashes => hashes.map(hash => ({ hash, type: 'proposal' }))
   );
 
   // Will contain an ordered list of the original action hashes for the cancelled events
   allExpiredProposals: AsyncReadable<Array<IndexedHash>> = pipe(
-    lazyLoadAndPoll(() => this.client.getAllExpiredProposals(), 4000),
+    collectionStore(
+      this.client,
+      () => this.client.getAllExpiredProposals(),
+      'ExpiredProposals'
+    ),
     hashes => hashes.map(hash => ({ hash, type: 'proposal' }))
   );
 
   /** My events */
 
-  myEvents = lazyLoadAndPoll(() => this.client.getMyEvents(), 4000);
+  myEvents = collectionStore(
+    this.client,
+    () => this.client.getMyEvents(),
+    'MyEvents'
+  );
 
   myPastEvents: AsyncReadable<Array<IndexedHash>> = pipe(
     joinAsync([this.myEvents, this.allPastEvents]),
@@ -1132,20 +1142,26 @@ export class GatherStore {
         (actionHash: ActionHash) => {
           switch (actionType) {
             case 'proposal_created':
-              return pipe(this.proposals.get(actionHash), proposal => ({
-                type: 'proposal_created',
-                record: proposal,
-              }));
+              return pipe(
+                this.proposals.get(actionHash).originalEntry,
+                proposal => ({
+                  type: 'proposal_created',
+                  record: proposal,
+                })
+              );
             case 'proposal_updated':
-              return pipe(this.proposals.get(actionHash), proposal => ({
-                type: 'proposal_updated',
-                record: proposal,
-              }));
+              return pipe(
+                this.proposals.get(actionHash).latestVersion,
+                proposal => ({
+                  type: 'proposal_updated',
+                  record: proposal,
+                })
+              );
             case 'proposal_cancelled':
               return pipe(
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
-                ),
+                ).originalEntry,
                 cancellations => ({
                   type: 'proposal_cancelled',
                   record: cancellations,
@@ -1153,31 +1169,34 @@ export class GatherStore {
               );
             case 'proposal_expired':
               return pipe(
-                this.proposals.get(actionHash),
+                this.proposals.get(actionHash).latestVersion,
                 proposal =>
                   this.assembleStore.callToActions.get(
                     proposal.entry.call_to_action_hash
-                  ),
+                  ).latestVersion,
                 callToAction => ({
                   type: 'proposal_expired',
                   timestamp: callToAction.entry.expiration_time!,
                 })
               );
             case 'event_created':
-              return pipe(this.events.get(actionHash), event => ({
+              return pipe(this.events.get(actionHash).originalEntry, event => ({
                 type: 'event_created',
                 record: event,
               }));
             case 'event_updated':
-              return pipe(this.events.get(actionHash), event => ({
-                type: 'event_updated',
-                record: event,
-              }));
+              return pipe(
+                this.events.get(actionHash).originalEntry, // TODO: this is a bit hacky, since we are treating an update for an event as if it was the original create, but it should work
+                event => ({
+                  type: 'event_updated',
+                  record: event,
+                })
+              );
             case 'event_cancelled':
               return pipe(
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
-                ),
+                ).originalEntry,
                 cancellations => ({
                   type: 'event_cancelled',
                   record: cancellations,
@@ -1185,11 +1204,11 @@ export class GatherStore {
               );
             case 'commitment_created':
               return pipe(
-                this.assembleStore.commitments.get(actionHash),
+                this.assembleStore.commitments.get(actionHash).entry,
                 commitment =>
                   this.assembleStore.callToActions.get(
                     commitment.entry.call_to_action_hash
-                  ),
+                  ).latestVersion,
                 (callToAction, commitment) => ({
                   type: 'commitment_created',
                   record: commitment,
@@ -1200,15 +1219,15 @@ export class GatherStore {
               return pipe(
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
-                ),
+                ).originalEntry,
                 cancellation =>
                   this.assembleStore.commitments.get(
                     cancellation.entry.cancelled_hash
-                  ),
+                  ).entry,
                 commitment =>
                   this.assembleStore.callToActions.get(
                     commitment.entry.call_to_action_hash
-                  ),
+                  ).latestVersion,
                 (callToAction, commitment, cancellation) => ({
                   type: 'commitment_cancelled',
                   record: cancellation,
@@ -1218,11 +1237,11 @@ export class GatherStore {
               );
             case 'satisfaction_created':
               return pipe(
-                this.assembleStore.satisfactions.get(actionHash),
+                this.assembleStore.satisfactions.get(actionHash).latestVersion, // TODO: maybe add original entry here?
                 satisfaction =>
                   this.assembleStore.callToActions.get(
                     satisfaction!.entry.call_to_action_hash
-                  ),
+                  ).latestVersion,
                 (callToAction, satisfaction) => ({
                   type: 'satisfaction_created',
                   record: satisfaction!,
@@ -1230,33 +1249,26 @@ export class GatherStore {
                 })
               );
             case 'satisfaction_deleted':
-              console.log('hey');
               return pipe(
-                this.assembleStore.satisfactions.get(actionHash), // TODO: remove this hack
-                deleteAction => {
-                  console.log(deleteAction);
-                  return this.assembleStore.satisfactions.get(
+                this.assembleStore.satisfactions.get(actionHash).latestVersion, // TODO: remove this hack
+                deleteAction =>
+                  this.assembleStore.satisfactions.get(
                     (deleteAction!.action as DeleteLink).link_add_address
-                  );
-                },
+                  ).latestVersion,
                 createLinkRecord =>
                   this.assembleStore.satisfactions.get(
                     (createLinkRecord!.action as CreateLink).target_address
-                  ),
-
+                  ).latestVersion,
                 satisfaction =>
                   this.assembleStore.callToActions.get(
                     satisfaction!.entry.call_to_action_hash
-                  ),
-                (callToAction, satisfaction, _, deleteAction) => {
-                  console.log('aaaa');
-                  return {
-                    type: 'satisfaction_deleted',
-                    record: deleteAction as unknown as EntryRecord<void>,
-                    satisfaction: satisfaction!,
-                    callToAction,
-                  };
-                }
+                  ).latestVersion,
+                (callToAction, satisfaction, _, deleteAction) => ({
+                  type: 'satisfaction_deleted',
+                  record: deleteAction as unknown as EntryRecord<void>,
+                  satisfaction: satisfaction!,
+                  callToAction,
+                })
               );
             case 'assembly_created':
               return pipe(
@@ -1292,8 +1304,8 @@ export class GatherStore {
       );
 
       return joinAsync([
-        sliceAndJoin(this.eventsStatus, eventsHashes),
-        sliceAndJoin(this.proposalsStatus, proposalsHashes),
+        mapAndJoin(slice(this.events, eventsHashes), e => e.status),
+        mapAndJoin(slice(this.proposals, proposalsHashes), p => p.status),
         joinAsync(actions),
       ]);
     },
@@ -1326,8 +1338,8 @@ export class GatherStore {
       );
 
       return joinAsync([
-        sliceAndJoin(this.eventsStatus, eventsHashes),
-        sliceAndJoin(this.proposalsStatus, proposalsHashes),
+        mapAndJoin(slice(this.events, eventsHashes), e => e.status),
+        mapAndJoin(slice(this.proposals, proposalsHashes), p => p.status),
         joinAsync(actions),
       ]);
     },

@@ -15,7 +15,7 @@ pub fn create_proposal(proposal: Proposal) -> ExternResult<Record> {
     create_link(
         path.path_entry_hash()?,
         proposal_hash.clone(),
-        LinkTypes::AllProposals,
+        LinkTypes::OpenProposals,
         (),
     )?;
 
@@ -30,7 +30,7 @@ pub fn create_proposal(proposal: Proposal) -> ExternResult<Record> {
 }
 
 #[hdk_extern]
-pub fn get_proposal(original_proposal_hash: ActionHash) -> ExternResult<Option<Record>> {
+pub fn get_latest_proposal(original_proposal_hash: ActionHash) -> ExternResult<Option<Record>> {
     let links = get_links(original_proposal_hash.clone(), LinkTypes::Updates, None)?;
     let latest_link = links
         .into_iter()
@@ -40,6 +40,19 @@ pub fn get_proposal(original_proposal_hash: ActionHash) -> ExternResult<Option<R
         None => original_proposal_hash.clone(),
     };
     let Some(details) =     get_details(latest_proposal_hash, GetOptions::default())? else {return Ok(None);};
+    let record = match details {
+        Details::Record(details) => Ok(details.record),
+        _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(
+            "Malformed get details response"
+        )))),
+    }?;
+
+    Ok(Some(record))
+}
+
+#[hdk_extern]
+pub fn get_original_proposal(original_proposal_hash: ActionHash) -> ExternResult<Option<Record>> {
+    let Some(details) =     get_details(original_proposal_hash, GetOptions::default())? else {return Ok(None);};
     let record = match details {
         Details::Record(details) => Ok(details.record),
         _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(

@@ -4,7 +4,7 @@ import {
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
 import { ActionHash, Record } from '@holochain/client';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg, str } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
 import { StoreSubscriber } from '@holochain-open-dev/stores';

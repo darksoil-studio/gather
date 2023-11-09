@@ -15,7 +15,7 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
     create_link(
         path.path_entry_hash()?,
         event_hash.clone(),
-        LinkTypes::AllEvents,
+        LinkTypes::UpcomingEvents,
         (),
     )?;
 
@@ -28,7 +28,11 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
     )?;
 
     if let Some(from_proposal) = event.from_proposal {
-        remove_from_collection(&from_proposal.proposal_hash, all_open_proposals())?;
+        remove_from_collection(
+            &from_proposal.proposal_hash,
+            all_open_proposals(),
+            LinkTypes::OpenProposals,
+        )?;
         create_link(
             from_proposal.proposal_hash,
             event_hash,
@@ -41,7 +45,20 @@ pub fn create_event(event: Event) -> ExternResult<Record> {
 }
 
 #[hdk_extern]
-pub fn get_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>> {
+pub fn get_original_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>> {
+    let Some(details) =     get_details(original_event_hash, GetOptions::default())? else {return Ok(None);};
+    let record = match details {
+        Details::Record(details) => Ok(details.record),
+        _ => Err(wasm_error!(WasmErrorInner::Guest(String::from(
+            "Malformed get details response"
+        )))),
+    }?;
+
+    Ok(Some(record))
+}
+
+#[hdk_extern]
+pub fn get_latest_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>> {
     let links = get_links(original_event_hash.clone(), LinkTypes::Updates, None)?;
     let latest_link = links
         .into_iter()

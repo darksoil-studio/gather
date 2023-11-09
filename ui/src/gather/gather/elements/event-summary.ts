@@ -10,7 +10,7 @@ import {
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
 import { ActionHash } from '@holochain/client';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
@@ -23,13 +23,12 @@ import '@shoelace-style/shoelace/dist/components/card/card.js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 
-import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
+import '@holochain-open-dev/profiles/dist/elements/agents-avatars.js';
 import '@holochain-open-dev/file-storage/dist/elements/show-image.js';
 
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { Event } from '../types.js';
-import './agents-avatars.js';
 
 @localized()
 @customElement('event-summary')
@@ -54,7 +53,7 @@ export class EventSummary extends LitElement {
    */
   _event = new StoreSubscriber(
     this,
-    () => this.gatherStore.events.get(this.eventHash),
+    () => this.gatherStore.events.get(this.eventHash).latestVersion,
     () => [this.eventHash]
   );
 
@@ -63,7 +62,7 @@ export class EventSummary extends LitElement {
    */
   _participants = new StoreSubscriber(
     this,
-    () => this.gatherStore.participantsForEvent.get(this.eventHash),
+    () => this.gatherStore.events.get(this.eventHash).participants,
     () => [this.eventHash]
   );
 

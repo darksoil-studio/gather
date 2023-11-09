@@ -1,10 +1,11 @@
 import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
-import { ActionHash } from '@holochain/client';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
+import { mdiInformationOutline } from '@mdi/js';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
@@ -14,8 +15,6 @@ import { GatherStore } from '../gather-store.js';
 import './proposal-summary.js';
 import './event-summary.js';
 import { defaultFilter, Filter } from './events-filter.js';
-import { styleMap } from 'lit/directives/style-map.js';
-import { mdiInformationOutline } from '@mdi/js';
 import { IndexedHash } from '../types.js';
 
 @localized()
@@ -50,9 +49,8 @@ export class MyEvents extends LitElement {
           return this.gatherStore.myOpenProposals;
         if (this.filter.status === 'past')
           return this.gatherStore.myExpiredProposals;
-        if (this.filter.status === 'cancelled')
-          return this.gatherStore.myCancelledProposals;
       }
+      return this.gatherStore.myCancelledProposals;
     },
     () => [this.filter]
   );

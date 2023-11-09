@@ -4,7 +4,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { localized, msg } from '@lit/localize';
 import { classMap } from 'lit/directives/class-map.js';
 import { mdiChevronDown } from '@mdi/js';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 
 import '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
 import '@shoelace-style/shoelace/dist/components/radio-button/radio-button.js';

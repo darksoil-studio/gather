@@ -2,12 +2,14 @@ import { sharedStyles } from '@holochain-open-dev/elements';
 import { css, html, LitElement } from 'lit';
 import {
   joinAsync,
+  mapAndJoin,
   sliceAndJoin,
   StoreSubscriber,
 } from '@holochain-open-dev/stores';
+import { slice } from '@holochain-open-dev/utils';
 import { ActionHash, decodeHashFromBase64 } from '@holochain/client';
 import { customElement, property } from 'lit/decorators.js';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized } from '@lit/localize';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
@@ -36,8 +38,14 @@ export class GatherEventsCalendar extends LitElement {
     this,
     () =>
       joinAsync([
-        sliceAndJoin(this.gatherStore.events, this.events),
-        sliceAndJoin(this.gatherStore.proposals, this.proposals!),
+        mapAndJoin(
+          slice(this.gatherStore.events, this.events),
+          e => e.latestVersion
+        ),
+        mapAndJoin(
+          slice(this.gatherStore.proposals, this.proposals),
+          p => p.latestVersion
+        ),
       ]),
     () => [this.gatherStore, this.events, this.proposals]
   );

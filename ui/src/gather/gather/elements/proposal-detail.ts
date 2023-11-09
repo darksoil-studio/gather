@@ -1,6 +1,6 @@
 import { hashProperty, wrapPathInSvg } from '@holochain-open-dev/elements';
 import { ActionHash, AgentPubKey } from '@holochain/client';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
 import { joinAsync, StoreSubscriber } from '@holochain-open-dev/stores';
@@ -77,8 +77,8 @@ export class ProposalDetail extends LitElement {
     this,
     () =>
       joinAsync([
-        this.gatherStore.proposalsStatus.get(this.proposalHash),
-        this.gatherStore.participantsForProposal.get(this.proposalHash),
+        this.gatherStore.proposals.get(this.proposalHash).status,
+        this.gatherStore.proposals.get(this.proposalHash).participants,
       ]),
     () => [this.proposalHash]
   );

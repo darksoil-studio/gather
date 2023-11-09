@@ -5,7 +5,7 @@ import {
 } from '@holochain-open-dev/elements';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { ActionHash } from '@holochain/client';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { mdiBell, mdiClose } from '@mdi/js';
 import { css, html, LitElement } from 'lit';
@@ -32,8 +32,8 @@ export class InterestedButton extends LitElement {
     this,
     () => {
       if (this.proposalHash)
-        return this.gatherStore.interestedInProposal.get(this.proposalHash);
-      return this.gatherStore.interestedInEvent.get(this.eventHash!);
+        return this.gatherStore.proposals.get(this.proposalHash).interested;
+      return this.gatherStore.events.get(this.eventHash!).interested;
     },
     () => [this.proposalHash, this.eventHash]
   );

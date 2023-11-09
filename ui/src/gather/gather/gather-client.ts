@@ -30,10 +30,25 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return new EntryRecord(record);
   }
 
-  async getEvent(
+  async getLatestEvent(
     eventHash: ActionHash
   ): Promise<EntryRecord<Event> | undefined> {
-    const output: any | undefined = await this.callZome('get_event', eventHash);
+    const output: any | undefined = await this.callZome(
+      'get_latest_event',
+      eventHash
+    );
+    if (!output) return undefined;
+
+    return new EntryRecord(output);
+  }
+
+  async getOriginalEvent(
+    eventHash: ActionHash
+  ): Promise<EntryRecord<Event> | undefined> {
+    const output: any | undefined = await this.callZome(
+      'get_original_event',
+      eventHash
+    );
     if (!output) return undefined;
 
     return new EntryRecord(output);
@@ -71,11 +86,23 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return new EntryRecord(record);
   }
 
-  async getProposal(
+  async getLatestProposal(
     proposalHash: ActionHash
   ): Promise<EntryRecord<Proposal> | undefined> {
     const output: any | undefined = await this.callZome(
-      'get_proposal',
+      'get_latest_proposal',
+      proposalHash
+    );
+    if (!output) return undefined;
+
+    return new EntryRecord(output);
+  }
+
+  async getOriginalProposal(
+    proposalHash: ActionHash
+  ): Promise<EntryRecord<Proposal> | undefined> {
+    const output: any | undefined = await this.callZome(
+      'get_original_proposal',
       proposalHash
     );
     if (!output) return undefined;

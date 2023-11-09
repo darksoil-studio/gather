@@ -5,7 +5,7 @@ import {
 } from '@holochain-open-dev/elements';
 import { EntryRecord } from '@holochain-open-dev/utils';
 import { ActionHash, AgentPubKey } from '@holochain/client';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html, css } from 'lit';
 import {
@@ -91,12 +91,14 @@ export class EventDetail extends LitElement {
     this,
     () =>
       joinAsync([
-        this.gatherStore.eventsStatus.get(this.eventHash),
-        this.gatherStore.participantsForEvent.get(this.eventHash),
-        pipe(this.gatherStore.events.get(this.eventHash), event =>
-          this.gatherStore.assembleStore.callToActions.get(
-            event.entry.call_to_action_hash
-          )
+        this.gatherStore.events.get(this.eventHash).status,
+        this.gatherStore.events.get(this.eventHash).participants,
+        pipe(
+          this.gatherStore.events.get(this.eventHash).latestVersion,
+          event =>
+            this.gatherStore.assembleStore.callToActions.get(
+              event.entry.call_to_action_hash
+            ).latestVersion
         ),
       ]),
     () => [this.eventHash]

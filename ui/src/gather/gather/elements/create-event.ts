@@ -3,7 +3,7 @@ import {
   onSubmit,
   sharedStyles,
 } from '@holochain-open-dev/elements';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -20,7 +20,7 @@ import '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@holochain-open-dev/file-storage/dist/elements/upload-files.js';
 import '@holochain-open-dev/elements/dist/elements/sl-datetime-input.js';
-import '@holochain-open-dev/profiles/dist/elements/search-agent.js';
+import '@holochain-open-dev/profiles/dist/elements/search-agents.js';
 
 import '@darksoil/assemble/dist/elements/call-to-action-need-form.js';
 import '@darksoil/assemble/dist/elements/call-to-action-needs-form.js';
@@ -33,8 +33,6 @@ import { EntryRecord } from '@holochain-open-dev/utils';
 import { gatherStoreContext, isMobileContext } from '../context.js';
 import { GatherStore } from '../gather-store.js';
 import { Event, Proposal } from '../types.js';
-
-import './search-agents.js';
 
 @localized()
 @customElement('create-event')
