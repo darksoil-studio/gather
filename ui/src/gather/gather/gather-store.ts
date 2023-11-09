@@ -7,11 +7,9 @@ import {
   immutableEntryStore,
   joinAsync,
   latestVersionOfEntryStore,
-  lazyLoadAndPoll,
   liveLinksTargetsStore,
   mapAndJoin,
   pipe,
-  sliceAndJoin,
   toPromise,
 } from '@holochain-open-dev/stores';
 import {
@@ -53,6 +51,7 @@ import {
   EventActionTypes,
   EventActivity,
 } from './activity.js';
+import { liveLinksAgentPubKeysTargetsStore } from './stores.js';
 
 // export function filterFutureEvents(
 //   events: HoloHashMap<ActionHash, EntryRecord<Event>>
@@ -101,12 +100,12 @@ export function deriveProposalStatus(
       type: 'actual_event',
       eventHash: events[0],
     };
+  if (cancellations.length > 0) return { type: 'cancelled_proposal' };
   if (assemblies.length > 0)
     return {
       type: 'fulfilled_proposal',
       assemblyHash: assemblies[0],
     };
-  if (cancellations.length > 0) return { type: 'cancelled_proposal' };
   if (
     !!callToAction.entry.expiration_time &&
     callToAction.entry.expiration_time < Date.now() * 1000
@@ -143,14 +142,19 @@ export class GatherStore {
     client.onSignal(async signal => {
       if (signal.type === 'EntryCreated') {
         if (signal.app_entry.type === 'Proposal') {
-          await alertsStore.client.notifyAlert(signal.app_entry.hosts, {
-            type: 'proposal_alert',
-            proposalHash: signal.action.hashed.hash,
-            action: {
-              type: 'proposal_created',
-              actionHash: signal.action.hashed.hash,
-            },
-          });
+          await alertsStore.client.notifyAlert(
+            signal.app_entry.hosts.filter(
+              host => host.toString() !== this.client.client.myPubKey.toString()
+            ),
+            {
+              type: 'proposal_alert',
+              proposalHash: signal.action.hashed.hash,
+              action: {
+                type: 'proposal_created',
+                actionHash: signal.action.hashed.hash,
+              },
+            }
+          );
         } else if (signal.app_entry.type === 'Event') {
           if (signal.app_entry.from_proposal) {
             const proposal = this.proposals.get(
@@ -163,7 +167,10 @@ export class GatherStore {
                 ...Array.from(participants.keys()),
                 ...interested,
                 ...signal.app_entry.hosts,
-              ],
+              ].filter(
+                agent =>
+                  agent.toString() !== this.client.client.myPubKey.toString()
+              ),
               {
                 type: 'event_alert',
                 eventHash: signal.action.hashed.hash,
@@ -240,9 +247,11 @@ export class GatherStore {
                   },
                 });
               } else {
-                const proposal = this.proposals.get(proposalHash);
-                const participants = await toPromise(proposal.participants);
-                const interested = await toPromise(proposal.interested);
+                const proposalStore = this.proposals.get(proposalHash);
+                const participants = await toPromise(
+                  proposalStore.participants
+                );
+                const interested = await toPromise(proposalStore.interested);
                 await this.alertsStore.client.notifyAlert(
                   [...Array.from(participants.keys()), ...interested],
                   {
@@ -278,9 +287,9 @@ export class GatherStore {
               proposal.entry.call_to_action_hash.toString() ===
               callToAction.actionHash.toString()
             ) {
-              const proposal = this.proposals.get(proposalHash);
-              const participants = await toPromise(proposal.participants);
-              const interested = await toPromise(proposal.interested);
+              const proposalStore = this.proposals.get(proposalHash);
+              const participants = await toPromise(proposalStore.participants);
+              const interested = await toPromise(proposalStore.interested);
               await this.alertsStore.client.notifyAlert(
                 [...Array.from(participants.keys()), ...interested],
                 {
@@ -473,7 +482,7 @@ export class GatherStore {
       ),
       interested: pipe(
         joinAsync([
-          liveLinksTargetsStore(
+          liveLinksAgentPubKeysTargetsStore(
             this.client,
             eventHash,
             () => this.client.getInterestedIn(eventHash),
@@ -481,7 +490,7 @@ export class GatherStore {
           ),
           latestVersion,
         ]),
-        ([_participants, event]) => {
+        ([_interestedInEvent, event]) => {
           const stores: Array<AsyncReadable<AgentPubKey[]>> = [
             pipe(
               this.participantsForCallToAction.get(
@@ -555,7 +564,10 @@ export class GatherStore {
               proposal.entry.call_to_action_hash
             ).assemblies,
           ]),
-        ([callToAction, assemblies], [proposal, cancellations, events]) => ({
+        (
+          [callToAction, assemblies],
+          [proposal, cancellations, eventsHashes]
+        ) => ({
           originalActionHash: proposalHash,
           currentProposal: proposal,
           status: deriveProposalStatus(
@@ -563,7 +575,7 @@ export class GatherStore {
             cancellations,
             callToAction,
             Array.from(assemblies.keys()),
-            events
+            eventsHashes
           ),
           callToAction,
         })
@@ -571,7 +583,7 @@ export class GatherStore {
       allRevisions: allRevisionsOfEntryStore(this.client, () =>
         this.client.getAllProposalRevisions(proposalHash)
       ),
-      interested: liveLinksTargetsStore(
+      interested: liveLinksAgentPubKeysTargetsStore(
         this.client,
         proposalHash,
         () => this.client.getInterestedIn(proposalHash),

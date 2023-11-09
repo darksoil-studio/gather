@@ -4,11 +4,13 @@ import {
   AgentPubKey,
   AppAgentClient,
   CreateLink,
+  DeleteLink,
   SignedActionHashed,
 } from '@holochain/client';
 import { encode, decode } from '@msgpack/msgpack';
+import { AlertsSignal } from './types.js';
 
-export class AlertsClient<T> extends ZomeClient<void> {
+export class AlertsClient<T> extends ZomeClient<AlertsSignal> {
   constructor(
     public client: AppAgentClient,
     public roleName: string,
@@ -18,14 +20,16 @@ export class AlertsClient<T> extends ZomeClient<void> {
   }
   /** Alerts */
 
-  async getUnreadAlerts(): Promise<Array<Alert<T>>> {
-    const alerts = await this.callZome('get_unread_alerts', null);
-    return alerts.map(createLinkToAlert);
+  async getUnreadAlerts(): Promise<Array<SignedActionHashed<CreateLink>>> {
+    return this.callZome('get_unread_alerts', null);
   }
 
-  async getReadAlerts(): Promise<Array<Alert<T>>> {
-    const alerts = await this.callZome('get_read_alerts', null);
-    return alerts.map(createLinkToAlert);
+  async getReadAlerts(): Promise<
+    Array<
+      [SignedActionHashed<CreateLink>, Array<SignedActionHashed<DeleteLink>>]
+    >
+  > {
+    return this.callZome('get_read_alerts', null);
   }
 
   async markAlertsAsRead(actionHashes: ActionHash[]): Promise<void> {

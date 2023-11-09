@@ -578,6 +578,7 @@ export class ProposalDetail extends LitElement {
         position: relative;
         display: flex;
         flex-direction: column;
+        align-items: center;
       }
       sl-tab {
         background-color: white;

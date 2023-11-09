@@ -80,7 +80,7 @@ test('event: create and pass', async t => {
       upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 1);
 
-      await pause(30000);
+      await pause(30_000);
 
       upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 0);

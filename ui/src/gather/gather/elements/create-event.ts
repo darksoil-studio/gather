@@ -187,7 +187,7 @@ export class CreateEvent extends LitElement {
 
   pagesToValidate = [2, 3];
 
-  renderNextButton() {
+  renderNextButton(pageIndex: number) {
     return html`
       <sl-button
         @click=${() => {
@@ -196,7 +196,7 @@ export class CreateEvent extends LitElement {
             | undefined;
           if (form) {
             if (
-              this.pagesToValidate.includes(this.currentPage) &&
+              this.pagesToValidate.includes(pageIndex) &&
               !form.reportValidity()
             )
               return;
@@ -243,7 +243,7 @@ export class CreateEvent extends LitElement {
         </sl-radio-group>
 
         <div class="row" style="gap: 8px; justify-content: end">
-          ${this.renderNextButton()}
+          ${this.renderNextButton(pageIndex)}
         </div>
       </div>
     `;
@@ -281,7 +281,7 @@ export class CreateEvent extends LitElement {
         </div>
 
         <div class="row" style="gap: 8px; justify-content: end">
-          ${this.renderBackButton()} ${this.renderNextButton()}
+          ${this.renderBackButton()} ${this.renderNextButton(pageIndex)}
         </div>
       </div>
     `;
@@ -318,9 +318,9 @@ export class CreateEvent extends LitElement {
           .min=${pageIndex === this.currentPage
             ? new Date().toISOString()
             : undefined}
-          .required=${pageIndex === this.currentPage &&
-          (!this.isProposal || !this.timeTbd)}
-          .disabled=${this.isProposal && this.timeTbd}
+          .required=${!this.isProposal || !this.timeTbd}
+          .disabled=${pageIndex > this.currentPage ||
+          (this.isProposal && this.timeTbd)}
           .label=${msg('Start Time')}
           style="flex: 1"
           id="start-time"
@@ -328,9 +328,9 @@ export class CreateEvent extends LitElement {
         ></sl-datetime-input>
         <sl-datetime-input
           name="end_time"
-          .required=${pageIndex === this.currentPage &&
-          (!this.isProposal || !this.timeTbd)}
-          .disabled=${this.isProposal && this.timeTbd}
+          .required=${!this.isProposal || !this.timeTbd}
+          .disabled=${pageIndex > this.currentPage ||
+          (this.isProposal && this.timeTbd)}
           .label=${msg('End Time')}
           style="flex: 1"
           .min=${pageIndex === this.currentPage
@@ -365,7 +365,7 @@ export class CreateEvent extends LitElement {
         ></sl-input>
 
         <div class="row" style="gap: 8px; justify-content: end">
-          ${this.renderBackButton()} ${this.renderNextButton()}
+          ${this.renderBackButton()} ${this.renderNextButton(pageIndex)}
         </div>
       </div>
     `;
@@ -399,7 +399,7 @@ export class CreateEvent extends LitElement {
         <sl-input name="cost" .label=${msg('Cost')} style="flex: 1"></sl-input>
 
         <div class="row" style="justify-content: end; gap: 16px">
-          ${this.renderBackButton()} ${this.renderNextButton()}
+          ${this.renderBackButton()} ${this.renderNextButton(pageIndex)}
         </div>
       </div>
     `;
@@ -436,7 +436,8 @@ export class CreateEvent extends LitElement {
                     'expiration-switch'
                   ) as SlSwitch
                 )?.checked}
-                .disabled=${!(
+                .disabled=${pageIndex > this.currentPage ||
+                !(
                   this.shadowRoot?.getElementById(
                     'expiration-switch'
                   ) as SlSwitch

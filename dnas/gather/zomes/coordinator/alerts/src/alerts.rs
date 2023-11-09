@@ -81,7 +81,7 @@ pub fn mark_alerts_as_read(alerts_action_hashes: Vec<ActionHash>) -> ExternResul
 }
 
 #[hdk_extern]
-pub fn get_read_alerts(_: ()) -> ExternResult<Vec<SignedActionHashed>> {
+pub fn get_read_alerts(_: ()) -> ExternResult<Vec<(SignedActionHashed, Vec<SignedActionHashed>)>> {
     let agent_pub_key = agent_info()?;
     let links_details = get_link_details(
         agent_pub_key.agent_initial_pubkey,
@@ -93,7 +93,6 @@ pub fn get_read_alerts(_: ()) -> ExternResult<Vec<SignedActionHashed>> {
         .into_inner()
         .into_iter()
         .filter(|link_detail| link_detail.1.len() > 0)
-        .map(|(link, _)| link)
         .collect();
 
     Ok(links)

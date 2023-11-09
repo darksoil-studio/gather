@@ -38,8 +38,15 @@ import {
 } from '@mdi/js';
 import { decode } from '@msgpack/msgpack';
 
-import { configureLocalization, localized, msg } from '@lit/localize';
+import { localized, msg } from '@lit/localize';
 import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
+import { ResizeController } from '@lit-labs/observers/resize-controller.js';
+import {
+  CancellationsClient,
+  CancellationsStore,
+  cancellationsStoreContext,
+} from '@holochain-open-dev/cancellations';
+import { EntryRecord } from '@holochain-open-dev/utils';
 
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 
@@ -63,15 +70,9 @@ import {
 } from './gather/gather/context.js';
 import { GatherStore } from './gather/gather/gather-store.js';
 import { GatherClient } from './gather/gather/gather-client.js';
-import { ResizeController } from '@lit-labs/observers/resize-controller.js';
 import { MOBILE_WIDTH_PX } from './gather/gather/utils.js';
 import { AlertsClient } from './alerts/alerts-client.js';
 import { AlertsStore } from './alerts/alerts-store.js';
-import {
-  CancellationsClient,
-  CancellationsStore,
-  cancellationsStoreContext,
-} from '@holochain-open-dev/cancellations';
 import { setLocale } from './locales.js';
 
 export async function sendRequest(request: any) {
@@ -130,7 +131,7 @@ export class HolochainApp extends LitElement {
   @property()
   _isMobile: boolean = false;
 
-  _myProfile!: StoreSubscriber<AsyncStatus<Profile | undefined>>;
+  _myProfile!: StoreSubscriber<AsyncStatus<EntryRecord<Profile> | undefined>>;
 
   _client!: AppAgentClient;
 
@@ -168,7 +169,7 @@ export class HolochainApp extends LitElement {
         output: response => decode(response as any),
       });
     } catch (e) {
-      await setLocale();
+      // await setLocale();
       // console.log('we are in the normal launcher env');
       this._client = await AppAgentWebsocket.connect(
         new URL(`ws://localhost`),
@@ -227,7 +228,7 @@ export class HolochainApp extends LitElement {
           }}
         >
           <agent-avatar .agentPubKey=${this._client.myPubKey}></agent-avatar>
-          <span style="margin: 0 16px;">${profile?.nickname}</span>
+          <span style="margin: 0 16px;">${profile?.entry.nickname}</span>
         </div>`;
       case 'error':
         return html`<display-error
