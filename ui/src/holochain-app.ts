@@ -142,15 +142,20 @@ export class HolochainApp extends LitElement {
       },
     });
     try {
-      const envresponse = await fetch('/__HC_ENVIRONMENT__.json');
+      const appRuntimeInfo: any = await Promise.race([
+        sendRequest({
+          type: 'get-app-runtime-info',
+        }),
+        new Promise((_resolve, reject) =>
+          setTimeout(() => reject(new Error('')), 1000)
+        ),
+      ]);
 
-      const env = await envresponse.json();
       await setLocale();
 
-      const port = env.APP_INTERFACE_PORT;
       this._client = await AppAgentWebsocket.connect(
-        new URL(`ws://localhost:${port}`),
-        env.INSTALLED_APP_ID,
+        new URL(`ws://localhost:${appRuntimeInfo.runtimeInfo.app_port}`),
+        appRuntimeInfo.appId,
         60000
       );
 
