@@ -8,7 +8,7 @@ export async function setLocale() {
   // const locales = ['es-419'];
 
   const sourceLocale = 'en';
-  const targetLocales = ['es-419'];
+  const targetLocales = ['es', 'de', 'sv', 'ca'];
   const allLocales = [sourceLocale, ...targetLocales];
   const localization = configureLocalization({
     sourceLocale,
@@ -16,7 +16,16 @@ export async function setLocale() {
     // Step 1: make this an async method
     loadLocale: async locale => {
       // Step 2: Load both the templates of the app and the library (assuming the library also publishes its templates)
-      const t = await Promise.all([import(`../locales/${locale}.js`)]);
+      const t = await Promise.all([
+        import(`../locales/${locale}.js`),
+        import(
+          `../node_modules/@holochain-open-dev/profiles/locales/${locale}.js`
+        ),
+        import(
+          `../node_modules/@holochain-open-dev/cancellations/locales/${locale}.js`
+        ),
+        import(`../node_modules/@darksoil/assemble/locales/${locale}.js`),
+      ]);
       const templates = t.reduce(
         (acc, next) => ({ ...acc.templates, ...next.templates }),
         {}

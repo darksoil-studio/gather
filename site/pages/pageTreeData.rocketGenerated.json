@@ -3,12 +3,6 @@
   "h1": "darksoil studio",
   "headlinesWithId": [
     {
-      "text": "install the prototype",
-      "id": "install-the-prototype",
-      "level": 2,
-      "rawText": "how to install the prototype"
-    },
-    {
       "text": "darksoil.studio",
       "id": "darksoil",
       "level": 2,
@@ -43,5 +37,5 @@
     "block-blue": "@rocket/spark/block-blue.js::BlockBlue",
     "block-features": "@rocket/spark/block-features.js::BlockFeatures"
   },
-  "description": "We create little interoperable apps for place-based groups to fulfill their basic needs"
+  "description": "Co-create emergent events in your local community"
 }

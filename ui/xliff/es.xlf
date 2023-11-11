@@ -136,411 +136,548 @@
 </trans-unit>
 <trans-unit id="s0327cb8dc9ccf1b6">
   <source>Participating in the event means committing yourself to going. If you don't want to commit yourself yet, close this dialog and mark yourself as interested.</source>
+  <target>Participar en el evento significa que te comprometes a ir al evento. Si no quieres comprometerte aún, cierra este diálogo y indica que solo estás interesado.</target>
 </trans-unit>
 <trans-unit id="s60edf80b54e37944">
   <source>Are you sure you want to commit yourself to participating in the event?</source>
+  <target>¿Estás seguro que quieres compromerte a participar en el evento?</target>
 </trans-unit>
 <trans-unit id="s5770839ab2d3abdd">
   <source>Commit to Participate</source>
+  <target>Comprometerme a Participar</target>
 </trans-unit>
 <trans-unit id="s00b7e89a0ef4e33d">
   <source>Commit To Participate</source>
+  <target>Comprometerme a Participar</target>
+  <target></target>
 </trans-unit>
 <trans-unit id="s977745420bc1279a">
   <source>Error updating the event</source>
+  <target>Error actualizando el evento</target>
 </trans-unit>
 <trans-unit id="s248a29e035cabd71">
   <source>Edit Event</source>
+  <target>Editar Evento</target>
 </trans-unit>
 <trans-unit id="s99f110d27e30b289">
   <source>Title</source>
+  <target>Título</target>
 </trans-unit>
 <trans-unit id="s63d894b1ddb06289">
   <source>Description</source>
+  <target>Descripción</target>
 </trans-unit>
 <trans-unit id="s167f53f89012d24c">
   <source>Start Time</source>
+  <target>Hora de inicio</target>
 </trans-unit>
 <trans-unit id="s58c17428301e0137">
-  <source>End Time</source>
+  <source>Hora de final</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="see2fcaedf9743ec6">
   <source>Location</source>
+  <target>Lugar</target>
 </trans-unit>
 <trans-unit id="s367d079d1aed1358">
   <source>Cost</source>
+  <target>Coste</target>
 </trans-unit>
 <trans-unit id="s81ec7a6847534d5e">
   <source>Go Back</source>
+  <target>Ir atrás</target>
 </trans-unit>
 <trans-unit id="s33f85f24c0f5f008">
   <source>Save</source>
+  <target>Guardar</target>
 </trans-unit>
 <trans-unit id="s09134b07b5aacab4">
   <source>By</source>
+  <target>Por</target>
 </trans-unit>
 <trans-unit id="s3bb786d3b55ba37c">
   <source>Cancelled</source>
+  <target>Cancelado</target>
 </trans-unit>
 <trans-unit id="sb5b397ba72373753">
   <source>Upcoming Event</source>
+  <target>Evento Próximo</target>
 </trans-unit>
 <trans-unit id="sba1804aea21f8ba5">
   <source>Past Event</source>
+  <target>Evento Pasado</target>
 </trans-unit>
 <trans-unit id="s6078c6fe38dfac9d">
   <source>See Activity</source>
+  <target>Ver Actividad</target>
 </trans-unit>
 <trans-unit id="se44a1146a7e00fd1">
   <source>Edit event</source>
+  <target>Editar evento</target>
 </trans-unit>
 <trans-unit id="s1c10dc7960f4f91b">
   <source>Cancel Event</source>
+  <target>Cancelar Evento</target>
 </trans-unit>
 <trans-unit id="sae39c20e7be97fea">
   <source>Cancel Participation</source>
+  <target>Cancelar Participación</target>
 </trans-unit>
 <trans-unit id="sb98307c3a9febdbf">
   <source>Participate</source>
+  <target>Participar</target>
 </trans-unit>
 <trans-unit id="s8300c274e78248db">
   <source>Max. participants reached</source>
+  <target>Máx. número de participantes alcanzado</target>
 </trans-unit>
 <trans-unit id="sc00589186947477c">
   <source>Event has been cancelled</source>
+  <target>El evento ha sido cancelado</target>
 </trans-unit>
 <trans-unit id="s8f90406e9a94abe6">
   <source>location</source>
+  <target>lugar</target>
 </trans-unit>
 <trans-unit id="s1e5485ef2e9f9384">
   <source>time</source>
+  <target>hora</target>
 </trans-unit>
 <trans-unit id="s0bef0691197c9f78">
   <source>cost</source>
+  <target>coste</target>
 </trans-unit>
 <trans-unit id="sd0ea7366ebc403ff">
   <source>Event</source>
+  <target>Evento</target>
 </trans-unit>
 <trans-unit id="s0d9e6884f8c4ba1a">
   <source>Needs</source>
+  <target>Necesidades</target>
 </trans-unit>
 <trans-unit id="s6c76b294d740446c">
   <source>Activity</source>
+  <target>Actividad</target>
 </trans-unit>
 <trans-unit id="s1501bf9dde6ec4f5">
   <source>My Commitments</source>
+  <target>Mis Compromisos</target>
 </trans-unit>
 <trans-unit id="sd0c08b7e6f460e06">
   <source>Cancel My Participation</source>
+  <target>Cancelar Mi Participación</target>
 </trans-unit>
 <trans-unit id="s64e6ddd1ae7b70b8">
   <source>Are you sure you want to cancel your participation? All event participants will be notified.</source>
+  <target>¿Estás seguro que quieres cancelar tu participación? Se enviará una notificación a todos los participantes del evento.</target>
 </trans-unit>
 <trans-unit id="sf49167be05ec33de">
   <source>Are you sure you want to cancel this event? This cannot be reversed. All participants will be notified.</source>
+  <target>¿Estás seguro que quieres cancelar este evento? Esto es irreversible. Se enviará una notificación a todos los participantes del evento.</target>
 </trans-unit>
 <trans-unit id="sf713b09ae35d0ed7">
   <source>Error creating the event</source>
+  <target>Error creando el evento</target>
 </trans-unit>
 <trans-unit id="s901534fa3a466fac">
   <source>Error updating the proposal</source>
+  <target>Error actualizando la propuesta</target>
 </trans-unit>
 <trans-unit id="s693af032f4e41005">
   <source>Create Event</source>
+  <target>Crear Evento</target>
 </trans-unit>
 <trans-unit id="s54b4f4cd104f108d">
   <source>Edit Proposal</source>
+  <target>Editar Propuesta</target>
 </trans-unit>
 <trans-unit id="s6c700e19e1a16875">
   <source>TBD</source>
+  <target>Por Determinar</target>
 </trans-unit>
 <trans-unit id="sa2d605e3cbf15bea">
   <source>Update Proposal</source>
+  <target>Actualizar Propuesta</target>
 </trans-unit>
 <trans-unit id="s3f12c94c375c9b6b">
   <source>Time or location are still To Be Defined</source>
+  <target>Hora o lugar aún están por determinar</target>
 </trans-unit>
 <trans-unit id="s23e49ba9e86115f5">
   <source>There are still unsatisfied needs</source>
+  <target>Aún hay necesidades insatisfechas</target>
 </trans-unit>
 <trans-unit id="sd923f95605fed7b2">
   <source>Expired</source>
+  <target>Expirada</target>
 </trans-unit>
 <trans-unit id="sa82b90b4bbe9cfea">
   <source>Proposal Succeeded</source>
+  <target>Propuesta Exitosa</target>
 </trans-unit>
 <trans-unit id="se98b8fa0b2f48785">
   <source>Open Proposal</source>
+  <target>Propuesta Abierta</target>
 </trans-unit>
 <trans-unit id="s1750382a1ab70f59">
   <source>: expires</source>
+  <target>: expira</target>
 </trans-unit>
 <trans-unit id="sc55f600f74e9e883">
   <source>Cancel Proposal</source>
+  <target>Cancelar Propuesta</target>
 </trans-unit>
 <trans-unit id="s983bfb45690cd03c">
   <source>Proposal has been cancelled</source>
+  <target>La propuesta ha sido cancelada</target>
 </trans-unit>
 <trans-unit id="s94a6cd06edbd91d0">
   <source>To Be Defined</source>
+  <target>Por Determinar</target>
 </trans-unit>
 <trans-unit id="sb8dd4c5b6f008cfa">
   <source>Edit the proposal and decide on a time and location to create the event.</source>
+  <target>Edita la propuesta y decide en una hora y un lugar para crear el evento.</target>
 </trans-unit>
 <trans-unit id="sa52d4bbde1f4fa3f">
   <source>Proposal</source>
+  <target>Propuesta</target>
 </trans-unit>
 <trans-unit id="s5904bcf4eb136f1b">
   <source>Unsatisfied Needs</source>
+  <target>Necesidades insatisfechas</target>
 </trans-unit>
 <trans-unit id="s236d5bc559c85934">
   <source>Are you sure? All participants will be notified.</source>
+  <target>¿Estás seguro? Se enviará una notificación a todos los participantes.</target>
 </trans-unit>
 <trans-unit id="sfed60b9731d6872a">
   <source>Are you sure you want to cancel this proposal? This cannot be reversed. All participants will be notified.</source>
+  <target>¿Estás seguro que quieres cancelar esta propuesta? Esto es irreversible. Se enviará una notificatión a todos los participantes.</target>
 </trans-unit>
 <trans-unit id="s6af7f6092d50656e">
   <source>Error fetching the proposal</source>
+  <target>Error buscando la propuesta</target>
 </trans-unit>
 <trans-unit id="s20eac6aa1151d621">
   <source>No other agents selected yet.</source>
+  <target>No hay ningún agente seleccionado aún.</target>
 </trans-unit>
 <trans-unit id="sa071b45b42b5dbe7">
   <source>Error creating the proposal</source>
+  <target>Error creando la propuesta</target>
 </trans-unit>
 <trans-unit id="sc16e00a7a8b2fde2">
   <source>Back</source>
+  <target>Atrás</target>
 </trans-unit>
 <trans-unit id="s0fbf6dc6a1966408">
   <source>Next</source>
+  <target>Siguiente</target>
 </trans-unit>
 <trans-unit id="s85c2182e0c46a0a1">
   <source>Do you just want to propose an event, or do you want to create an actual event?</source>
+  <target>¿Quieres solo proponer un evento, o quieres crear un evento directamente?</target>
 </trans-unit>
 <trans-unit id="s38e5d0d2dbf52fb9">
   <source>Proposals will only become actual events if the minimum required needs for the events are fulfilled by other people's commitments, and when a specific time and place for the event has been decided.</source>
+  <target>Las propuestas solo se convierten en eventos reales si sus necesidades mínimas requeridas se satisfacen con los compromisos de sus participantes, y cuando se ha decidido su lugar y hora.</target>
 </trans-unit>
 <trans-unit id="s3319a31f9be571ed">
   <source>Propose Event</source>
+  <target>Proponer Evento</target>
 </trans-unit>
 <trans-unit id="sfae8c6e1b5f558f4">
   <source>Hosts</source>
+  <target>Anfitriones</target>
 </trans-unit>
 <trans-unit id="s410d1f301d20474d">
   <source>Who hosts this event? Hosts are able to update the event details (time, location, etc.), and accept needs that require host approval.</source>
+  <target>¿Quiénes son los anfitriones de este evento? Los anfitriones pueden editar los detalles del evento (lugar, hora, etc.), y aceptar compromisos para las necesidades que requiren aprovación de parte de los anfitriones.</target>
 </trans-unit>
 <trans-unit id="sb695f268d0f2d568">
   <source>As the creator of the event, you will be automatically added as a host.</source>
+  <target>Como creador del evento, serás automáticamente añadido como anfitrión.</target>
 </trans-unit>
 <trans-unit id="sb211f52f5eea7512">
   <source>No other hosts selected: you are the only host.</source>
+  <target>No se ha añadido ningún otro anfitrión: eres el único anfitrión.</target>
 </trans-unit>
 <trans-unit id="s682a8ca0230b562e">
   <source>Add Host</source>
+  <target>Añadir Anfitrión</target>
 </trans-unit>
 <trans-unit id="s48e186fb300e5464">
   <source>Time</source>
+  <target>Hora</target>
 </trans-unit>
 <trans-unit id="se4e14510540304ac">
   <source>If you leave the time as To Be Defined, you'll be able to set it later at any point. However, it must be set before converting the event proposal into an actual event.</source>
+  <target>Si dejas la hora Por Determinar, podrás determinarla en cualquier momento en el futuro. Sin embargo, debe estar determinada antes de convertir la propuesta en un evento de verdad.</target>
 </trans-unit>
 <trans-unit id="se0a024485975a869">
   <source>Leave as "To Be Defined"</source>
+  <target>Dejar Por Determinar</target>
 </trans-unit>
 <trans-unit id="s4a269c2eff60f38a">
   <source>If you leave the location as To Be Defined, you'll be able to set it later at any point. However, it must be set before converting the event proposal into an actual event.</source>
+  <target>Si dejas el lugar Por Determinar, podrás determinarlo en cualquier momento en el futuro. Sin embargo, debe estar determinado antes de convertir la propuesta en un evento de verdad.</target>
 </trans-unit>
 <trans-unit id="s86c2f47ead756152">
   <source>Event Image</source>
+  <target>Imagen del Evento</target>
 </trans-unit>
 <trans-unit id="s17ef13882125d28c">
   <source>Expiration Date</source>
+  <target>Fecha de Expiración</target>
 </trans-unit>
 <trans-unit id="s196ae8349dbc22ed">
   <source>Event proposals that have an expiration date will not become actual events if the minimum required participants and needs are not satisfied by the expiration date.</source>
+  <target>Propuestas con una fecha de expiración no se convertirán en eventos de verdad si el número mínimo de participantes y necesidades requeridos no se han satisfecho antes de la fecha de expiración.</target>
 </trans-unit>
 <trans-unit id="s1f4f0c19444e1bc4">
   <source>Set an expiration time</source>
+  <target>Añadir una fecha de expiración</target>
 </trans-unit>
 <trans-unit id="s14295e5285e1e090">
   <source>When creating an event, you can't specify any need as minimum required, but you can still accept contributions from participants.</source>
+  <target>Al crear un evento, no se pueden specificar ninguna necesidad con un mínimo requerido, pero si que se pueden aceptar contribuciones por parte de los participantes.</target>
 </trans-unit>
 <trans-unit id="s93f6ac833d0ab2b9">
   <source>Requires hosts approval</source>
+  <target>Requiere la aceptación de un anfitrión</target>
 </trans-unit>
 <trans-unit id="s462cc027abc98129">
   <source>Create Proposal</source>
+  <target>Crear Propuesta</target>
 </trans-unit>
 <trans-unit id="s1d3b1f2fc808422a">
   <source>No participants yet</source>
+  <target>Aún no hay ningún participante</target>
 </trans-unit>
 <trans-unit id="s1a6a3cfd037f8360">
   <source>Error fetching the event</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s049c80bb0a4a113e">
   <source>Satisfied Needs</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s93f0dde4aebaadbb">
   <source>Unsatisfied needs</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s44dc99549834bede">
   <source>Satisfied needs</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sf497ea75a3dd1359">
   <source>All upcoming events and proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sfefc6bb1d8368f6b">
   <source>All past events and proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sc823349a3c313cbe">
   <source>All cancelled events and proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sa21184b47eb2359f">
   <source>All upcoming events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s204bcedcaf6206a1">
   <source>All past events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s35399997947420a4">
   <source>All cancelled events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s34ecb860e75653a3">
   <source>All open proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s0ff7ff769071b38e">
   <source>All expired proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s381cfa8e3679b2e4">
   <source>All cancelled proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sb645c92d5c55b756">
   <source>My upcoming events and proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s9ee7e4a89e4c27d0">
   <source>My past events and proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s81125a7ddbccd553">
   <source>My cancelled events and proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s2b4966447a91d89c">
   <source>My upcoming events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s58633bce670128fe">
   <source>My past events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s8d67ab40360b3089">
   <source>My cancelled events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s71882f5a017756d6">
   <source>My open proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s68a6604e6ecc54b1">
   <source>My expired proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s1bbb8832767a8887">
   <source>My cancelled proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sd2223afb7d6b100d">
   <source>Type</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sf993bb199fefbe04">
   <source>All</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sc265a3e29e1206e4">
   <source>Events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sa0f1ffa6f3454f24">
   <source>Proposals</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sad3e3c8146fc920f">
   <source>Status</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s1f7698c061c208c9">
   <source>Open</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s4627a9667a335f23">
   <source>Upcoming</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s2e422c19ed3903bd">
   <source>Past</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s7f59f507e02a2f38">
   <source>View</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s3d249bb480032121">
   <source>List</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sbb980b38227e171f">
   <source>Calendar</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s7c95876637f6a9d7">
   <source>Filter</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s59d8fe4f60895c05">
   <source>No proposals found.</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="seb6ade2f1b5872cf">
   <source>No events found.</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="se31341d3088f8f30">
   <source>Error fetching events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s001afc329eb2d6e0">
   <source>A new proposal was created and you were added as one of its hosts.</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s38bb8d6be7dc616e">
   <source>A new event was created and you were added as one of its hosts.</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s5ba3830e8aeefaa7">
   <source>You have no unread alerts.</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s3aea02e11df984b4">
   <source>You have no read alerts.</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sbd9432daa8267326">
   <source>Error fetching my alerts</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s95495b96399beb43">
   <source>Error dismissing the alerts</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s912fc556ca22aff0">
   <source>Dismiss All</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s0e09d3a9d4918302">
   <source>There no unread alerts</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s40044a467a880f82">
   <source>Unread</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s740d542bbe696de5">
   <source>Read</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s63f4188ef2f4f205">
   <source>Unread alerts</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s656876771e108220">
   <source>Read alerts</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sffdcc47c1ec17387">
   <source>Error fetching your profile</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s639c68c3284a2269">
   <source>Update Profile</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="sface44df32238223">
   <source>Your Profile</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s8641b6c3688a0cec">
   <source>Edit Profile</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s93bb9a4511fa9115">
   <source>All Events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s0f500c92c5f036f0">
   <source>My Events</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s88d1c1e15ca1aade">
   <source>Alerts</source>
+  <target></target>
 </trans-unit>
 <trans-unit id="s3836bfbcb3e7f52a">
   <source>Gather</source>

@@ -16,29 +16,25 @@ export async function registerCustomElements() {
 }
 /* END - Rocket auto generated - do not touch */
 
-  import "#src/elements/custom-social-link.js";
-  import { LayoutHome } from "@rocket/spark";
-  import { layoutData } from "#src/layouts/layoutData.js";
+  import '#src/elements/custom-social-link.js';
+  import { LayoutHome } from '@rocket/spark';
+  import { layoutData } from '#src/layouts/layoutData.js';
 
   export const layout = new LayoutHome({
     ...layoutData,
   });
 
-  export const title = "gather";
+  export const title = 'gather';
   export const description =
-    "We create little interoperable apps for place-based groups to fulfill their basic needs";
-
+    'Co-create emergent events in your local community';
 </script>
 <div class="parallax">
   <div class="parallax__layer parallax__layer--back darksoil-background"></div>
   <div class="parallax__layer parallax__layer--base">
-
     <rocket-content-area>
-      <h2  class="area-headline">
-        gather<br />
-      </h2>
+      <h2 class="area-headline">gather<br /></h2>
 
-      <rocket-columns>
+      <rocket-columns style="align-items: center">
         <rocket-card>
           <p class="poem">
             I can see that you are free<br />
@@ -55,63 +51,48 @@ export async function registerCustomElements() {
             care about.
           </p>
         </rocket-card>
-       </rocket-columns>
+        <div class="column">
+          <p>
+            Although gather is just in its infancy, there is already a prototype
+            that you can install and use!
+          </p>
+          <br />
+          <div class="row" style="gap: 16px">
+            <a
+              class="cta"
+              href="https://github.com/darksoil-studio/gather/releases/download/v0.0.4/gather_0.0.4_x64_en-US.msi"
+              style="flex: 1; text-align: center"
+              >Windows</a
+            >
+            <a
+              class="cta"
+              href="https://github.com/darksoil-studio/gather/releases/download/v0.0.4/gather_0.0.4_x64.dmg"
+              style="flex: 1; text-align: center"
+              >MacOs</a
+            >
+            <a
+              class="cta"
+              href="https://github.com/darksoil-studio/gather/releases/download/v0.0.4/gather_0.0.4_amd64.AppImage"
+              style="flex: 1; text-align: center"
+              >Linux</a
+            >
+          </div>
+        </div>
+      </rocket-columns>
     </rocket-content-area>
 
     <rocket-content-area>
-      <h2 id="install-the-prototype" link-text="install the prototype">
-        how to install the prototype
-      </h2>
-      <rocket-columns>
-      <div class="column">
-      <p>
-        Although gather is just in its infancy, there is already a prototype that you can install and use!
-        <br />
-        <br />
-        <ol>
-              <li>
-                Download and install the Holochain Launcher for
-                  <a href="https://github.com/holochain/launcher/releases/download/v0.9.4/Holochain.Launcher_0.9.4_x64_en-US.msi">Windows</a>, 
-                  <a href="https://github.com/holochain/launcher/releases/download/v0.9.4/Holochain.Launcher_0.9.4_x64.dmg">macOS</a> or 
-                  <a href="https://github.com/holochain/launcher/releases/download/v0.9.4/holochain-launcher_0.9.4_amd64.AppImage">Linux</a>.
-                <div>If you get stuck, you can find installation instructions in the <a target="_blank" href="https://github.com/holochain/launcher/releases/latest">release notes</a> of the Holochain Launcher on GitHub.</div>
-              </li>
-              <li>
-                Start the Holochain Launcher and go through the setup process.
-              </li>
-              <li>
-                Once started, click on "Install App" in the bottom right corner of the Holochain Launcher window. You
-                will enter the App Library. Since Holochain is Peer-to-Peer it will take a while until data is synchronized
-                with other peers. It depends on the speed of your internet connection and the speed of the internet connection of other peers.
-              </li>
-              <li>
-                After a while you should see apps appearing in the App Library, one of which is the app "gather". Click on "Install".
-              </li>
-              <li>
-                The default "App Id" is "gather", which is already good, but you can change it if you want. Leave the "network seed" field empty.
-              </li>
-              <li>
-                Click on "Install".
-              </li>
-              <li>
-                Now gather should show up in the list of apps and you can click on the Icon that shows "Open App"
-                when you hover over it. You should now be good to go!
-              </li>
-        </ol>
-      </p>
-      </div>
-        <img src="../public/screenshot.png" style="width: 518px; height: 419px"/>
-       </rocket-columns>
-    </rocket-content-area>
-    <rocket-content-area>
       <rocket-columns>
         <div>
-          <h2 id="darksoil" link-text="darksoil.studio">a darksoil studio project</h2>
+          <h2 id="darksoil" link-text="darksoil.studio">
+            a darksoil studio project
+          </h2>
           <p>
             gather is a darksoil studio project.
             <br />
             <br />
-            Learn more about darksoil at <a href="https://darksoil.studio">darksoil.studio</a>.
+            Learn more about darksoil at
+            <a href="https://darksoil.studio">darksoil.studio</a>.
           </p>
         </div>
       </rocket-columns>
