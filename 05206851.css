@@ -7,10 +7,10 @@ body {
   --theme-on-primary: #ffffff;
   --theme-dark: #1b1b1b;
   --theme-on-dark: #ffffff;
-  --theme-light: #6d6d6d;
+  --theme-light: #ea580c;
   --theme-on-dark: #ffffff;
-  --theme-secondary: #073809;
-  --theme-secondary-light: #8bc34a;
+  --theme-secondary: #ea580c;
+  --theme-secondary-light: #f97316;
   --default-headline-color: white;
 }
 
@@ -45,6 +45,10 @@ rocket-header-scroll-menu a {
 
 a.cta {
   background-color: var(--theme-secondary-light);
+}
+
+a.cta:hover {
+  background-color: var(--theme-secondary);
 }
 
 rocket-header-scroll-menu {
@@ -89,7 +93,7 @@ body {
 }
 .parallax__layer--back {
   transform: translateZ(-9px) scale(11);
-  height: 2500px;
+  height: 1700px;
 }
 .darksoil-background {
   filter: brightness(40%);
