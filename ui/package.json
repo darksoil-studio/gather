@@ -33,7 +33,7 @@
     "lit": "^3.0.0"
   },
   "devDependencies": {
-    "@lit/localize-tools": "^0.6.3",
+    "@lit/localize-tools": "^0.7.1",
     "@open-wc/eslint-config": "^2.0.0",
     "@types/lodash-es": "^4.17.5",
     "@types/node": "14.11.1",

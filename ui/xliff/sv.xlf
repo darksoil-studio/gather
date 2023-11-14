@@ -2,10 +2,6 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
 <file target-language="sv" source-language="en" original="lit-localize-inputs" datatype="plaintext">
 <body>
-<trans-unit id="sc5c9f04c2d0a5f1d">
-  <source>Error fetching the profile</source>
-  <target>Fel vid hämtande av profil</target>
-</trans-unit>
 <trans-unit id="s52b1b9ae95705b3c">
   <source>Proposal was created.</source>
   <target>Förslaget skapades.</target>
@@ -274,10 +270,6 @@
   <source>Are you sure you want to cancel your participation? All event participants will be notified.</source>
   <target>Är du säker på att du vill ta bort ditt deltagande? Alla eventets deltagare kommer bli notifierade.</target>
 </trans-unit>
-<trans-unit id="sf49167be05ec33de">
-  <source>Are you sure you want to cancel this event? All participants will be notified.</source>
-  <target>Är du säker på att du vill ställa in detta event? Alla deltagare kommer att bli notifierade.</target>
-</trans-unit>
 <trans-unit id="sf713b09ae35d0ed7">
   <source>Error creating the event</source>
   <target>Fel vid skapade av eventet</target>
@@ -354,17 +346,9 @@
   <source>Are you sure? All participants will be notified.</source>
   <target>Är du säker? Alla deltagare kommer bli notifierade.</target>
 </trans-unit>
-<trans-unit id="sfed60b9731d6872a">
-  <source>Are you sure you want to cancel this proposal? All participants will be notified.</source>
-  <target>Är du säker på att du vill ta bort detta förslag? Alla deltagare kommer att bli notifierade.</target>
-</trans-unit>
 <trans-unit id="s6af7f6092d50656e">
   <source>Error fetching the proposal</source>
   <target>Fel vid hämtningen av förslaget</target>
-</trans-unit>
-<trans-unit id="s20eac6aa1151d621">
-  <source>No other agents selected yet.</source>
-  <target>Inga andra agenter har valts än.</target>
 </trans-unit>
 <trans-unit id="sa071b45b42b5dbe7">
   <source>Error creating the proposal</source>
@@ -685,6 +669,30 @@
 <trans-unit id="s3836bfbcb3e7f52a">
   <source>Gather</source>
   <target>Samlas</target>
+</trans-unit>
+<trans-unit id="s549a7159c456dbaa">
+  <source>Are you sure you want to cancel this event? All participants will be notified.</source>
+  <target>Är du säker på att du vill ställa in detta event? Alla deltagare kommer att bli notifierade.</target>
+</trans-unit>
+<trans-unit id="s7ed5813b695c4c1e">
+  <source>Are you sure you want to cancel this proposal? All participants will be notified.</source>
+  <target>Är du säker på att du vill ta bort detta förslag? Alla deltagare kommer att bli notifierade.</target>
+</trans-unit>
+<trans-unit id="s168c0a22a89ea1ff">
+  <source>Proposal was uncancelled!</source>
+  <target>Förslaget är tillbaka!</target>
+</trans-unit>
+<trans-unit id="s32bf3ade121b733f">
+  <source>Event was uncancelled!</source>
+  <target>Eventet är inte längre avbokat!</target>
+</trans-unit>
+<trans-unit id="se968d37bb60b3344">
+  <source>Error fetching the participants for the proposal</source>
+  <target>Fel vid hämtning av deltagare för förslaget</target>
+</trans-unit>
+<trans-unit id="s3a98b0872fc2d6d9">
+  <source>Error fetching the unread alerts count</source>
+  <target>Fel vid hämtning av antalet notifikationer</target>
 </trans-unit>
 </body>
 </file>
