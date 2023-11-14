@@ -275,8 +275,8 @@
   <target>Är du säker på att du vill ta bort ditt deltagande? Alla eventets deltagare kommer bli notifierade.</target>
 </trans-unit>
 <trans-unit id="sf49167be05ec33de">
-  <source>Are you sure you want to cancel this event? This cannot be reversed. All participants will be notified.</source>
-  <target>Är du säker på att du vill ställa in detta event? Detta kan inte ångras. Alla deltagare kommer att bli notifierade.</target>
+  <source>Are you sure you want to cancel this event? All participants will be notified.</source>
+  <target>Är du säker på att du vill ställa in detta event? Alla deltagare kommer att bli notifierade.</target>
 </trans-unit>
 <trans-unit id="sf713b09ae35d0ed7">
   <source>Error creating the event</source>
@@ -355,8 +355,8 @@
   <target>Är du säker? Alla deltagare kommer bli notifierade.</target>
 </trans-unit>
 <trans-unit id="sfed60b9731d6872a">
-  <source>Are you sure you want to cancel this proposal? This cannot be reversed. All participants will be notified.</source>
-  <target>Är du säker på att du vill ta bort detta förslag? Detta kan inte ångras. Alla deltagare kommer att bli notifierade.</target>
+  <source>Are you sure you want to cancel this proposal? All participants will be notified.</source>
+  <target>Är du säker på att du vill ta bort detta förslag? Alla deltagare kommer att bli notifierade.</target>
 </trans-unit>
 <trans-unit id="s6af7f6092d50656e">
   <source>Error fetching the proposal</source>

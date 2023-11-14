@@ -166,6 +166,10 @@ export class GatherClient extends ZomeClient<GatherSignal> {
 
   /** All Proposals */
 
+  markProposalAsOpen(proposalHash: ActionHash): Promise<void> {
+    return this.callZome('mark_proposal_as_open', proposalHash);
+  }
+
   markProposalAsExpired(proposalHash: ActionHash): Promise<void> {
     return this.callZome('mark_proposal_as_expired', proposalHash);
   }

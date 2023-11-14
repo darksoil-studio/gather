@@ -122,7 +122,10 @@ export class EventSummary extends LitElement {
                 <span style="white-space: pre-line"
                   >${new Date(
                     event.entry.time.start_time / 1000
-                  ).toLocaleString()}</span
+                  ).toLocaleString([], {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })}</span
                 >
               </div>
             </div>

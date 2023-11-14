@@ -1,6 +1,8 @@
 import {
   hashProperty,
   notifyError,
+  renderAsyncStatus,
+  withSpinnerAndDisplayError,
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
 import { EntryRecord } from '@holochain-open-dev/utils';
@@ -13,6 +15,7 @@ import {
   pipe,
   sliceAndJoin,
   StoreSubscriber,
+  subscribe,
 } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -158,126 +161,173 @@ export class EventDetail extends LitElement {
     return html`<sl-tag variant="success">${msg('Past Event')}</sl-tag>`;
   }
 
-  renderActions(
-    event: EventWithStatus,
-    participants: AgentPubKey[],
-    callToAction: EntryRecord<CallToAction>
-  ) {
-    const myPubKeyStr = this.gatherStore.client.client.myPubKey.toString();
-    const iAmHost = !!event.currentEvent.entry.hosts.find(
-      h => h.toString() === myPubKeyStr
-    );
-    const iAmParticipant = participants.find(i => i.toString() === myPubKeyStr);
-    const eventStatus = event.status;
+  renderActions(event: EventWithStatus) {
+    return html`${subscribe(
+      joinAsync([
+        this.gatherStore.events.get(this.eventHash).participants,
+        pipe(
+          this.gatherStore.events.get(this.eventHash).callToAction,
+          c => c.latestVersion
+        ),
+      ]),
+      renderAsyncStatus({
+        completed: ([participantsMap, callToAction]) => {
+          const participants = Array.from(participantsMap.keys());
+          const myPubKeyStr =
+            this.gatherStore.client.client.myPubKey.toString();
+          const iAmHost = !!event.currentEvent.entry.hosts.find(
+            h => h.toString() === myPubKeyStr
+          );
+          const iAmParticipant = participants.find(
+            i => i.toString() === myPubKeyStr
+          );
+          const eventStatus = event.status;
 
-    const buttons = !this._isMobile
-      ? [
-          html`
-            <sl-button
-              variant="default"
-              pill
-              @click=${() => {
-                (
-                  this.shadowRoot?.querySelector('sl-drawer') as SlDrawer
-                ).show();
-              }}
-            >
-              <sl-icon .src=${wrapPathInSvg(mdiTimeline)}></sl-icon>
-              ${msg('See Activity')}
-            </sl-button>
-          `,
-        ]
-      : [];
+          const buttons = !this._isMobile
+            ? [
+                html`
+                  <sl-button
+                    variant="default"
+                    pill
+                    @click=${() => {
+                      (
+                        this.shadowRoot?.querySelector('sl-drawer') as SlDrawer
+                      ).show();
+                    }}
+                  >
+                    <sl-icon .src=${wrapPathInSvg(mdiTimeline)}></sl-icon>
+                    ${msg('See Activity')}
+                  </sl-button>
+                `,
+              ]
+            : [];
 
-    if (eventStatus === 'upcoming_event') {
-      if (iAmHost) {
-        buttons.push(html`
-          <sl-button
-            variant="default"
-            pill
-            @click=${() => {
-              this._editing = true;
-            }}
+          if (eventStatus === 'upcoming_event') {
+            if (iAmHost) {
+              buttons.push(html`
+                <sl-button
+                  variant="default"
+                  pill
+                  @click=${() => {
+                    this._editing = true;
+                  }}
+                >
+                  <sl-icon
+                    slot="prefix"
+                    .src=${wrapPathInSvg(mdiPencil)}
+                  ></sl-icon>
+                  ${msg('Edit event')}
+                </sl-button>
+
+                <sl-button
+                  pill
+                  variant="danger"
+                  @click=${() => {
+                    (
+                      this.shadowRoot?.getElementById(
+                        'cancel-event'
+                      ) as CreateCancellationDialog
+                    ).show();
+                  }}
+                >
+                  <sl-icon
+                    slot="prefix"
+                    .src=${wrapPathInSvg(mdiCancel)}
+                  ></sl-icon>
+                  ${msg('Cancel Event')}
+                </sl-button>
+              `);
+            }
+            if (iAmParticipant) {
+              buttons.push(html`
+                <sl-button
+                  variant="warning"
+                  pill
+                  @click=${() =>
+                    (
+                      this.shadowRoot?.getElementById(
+                        'cancel-participation'
+                      ) as CreateCancellationDialog
+                    ).show()}
+                >
+                  <sl-icon
+                    slot="prefix"
+                    .src=${wrapPathInSvg(mdiCancel)}
+                  ></sl-icon>
+                  ${msg('Cancel Participation')}
+                </sl-button>
+              `);
+            } else {
+              const isMaximumPeopleReached =
+                !!callToAction.entry.needs[0].max_possible &&
+                participants.length >= callToAction.entry.needs[0].max_possible;
+              const participateButton = html`
+                <sl-button
+                  variant="primary"
+                  pill
+                  .disabled=${isMaximumPeopleReached}
+                  @click=${() =>
+                    (
+                      this.shadowRoot?.querySelector(
+                        'participate-dialog'
+                      ) as ParticipateDialog
+                    ).show()}
+                >
+                  <sl-icon
+                    slot="prefix"
+                    .src=${wrapPathInSvg(mdiAccountPlus)}
+                  ></sl-icon>
+                  ${msg('Participate')}
+                </sl-button>
+              `;
+
+              const participateButtonWithTooltip = isMaximumPeopleReached
+                ? html`<sl-tooltip .content=${msg('Max. participants reached')}
+                    >${participateButton}</sl-tooltip
+                  >`
+                : participateButton;
+
+              buttons.push(html`
+                <interested-button
+                  .eventHash=${this.eventHash}
+                ></interested-button>
+                ${participateButtonWithTooltip}
+              `);
+            }
+          }
+
+          return html`<div
+            class="column"
+            style="position:absolute; right: 16px; bottom: 16px; gap: 8px"
           >
-            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
-            ${msg('Edit event')}
-          </sl-button>
-
-          <sl-button
-            pill
-            variant="danger"
-            @click=${() => {
-              (
-                this.shadowRoot?.getElementById(
-                  'cancel-event'
-                ) as CreateCancellationDialog
-              ).show();
-            }}
-          >
-            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
-            ${msg('Cancel Event')}
-          </sl-button>
-        `);
-      }
-      if (iAmParticipant) {
-        buttons.push(html`
-          <sl-button
-            variant="warning"
-            pill
-            @click=${() =>
-              (
-                this.shadowRoot?.getElementById(
-                  'cancel-participation'
-                ) as CreateCancellationDialog
-              ).show()}
-          >
-            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
-            ${msg('Cancel Participation')}
-          </sl-button>
-        `);
-      } else {
-        const isMaximumPeopleReached =
-          !!callToAction.entry.needs[0].max_possible &&
-          participants.length >= callToAction.entry.needs[0].max_possible;
-        const participateButton = html`
-          <sl-button
-            variant="primary"
-            pill
-            .disabled=${isMaximumPeopleReached}
-            @click=${() =>
-              (
-                this.shadowRoot?.querySelector(
-                  'participate-dialog'
-                ) as ParticipateDialog
-              ).show()}
-          >
-            <sl-icon
-              slot="prefix"
-              .src=${wrapPathInSvg(mdiAccountPlus)}
-            ></sl-icon>
-            ${msg('Participate')}
-          </sl-button>
-        `;
-
-        const participateButtonWithTooltip = isMaximumPeopleReached
-          ? html`<sl-tooltip .content=${msg('Max. participants reached')}
-              >${participateButton}</sl-tooltip
-            >`
-          : participateButton;
-
-        buttons.push(html`
-          <interested-button .eventHash=${this.eventHash}></interested-button>
-          ${participateButtonWithTooltip}
-        `);
-      }
-    }
-
-    return html`<div
-      class="column"
-      style="position:absolute; right: 16px; bottom: 16px; gap: 8px"
-    >
-      ${buttons.map(b => b)}
-    </div> `;
+            <create-cancellation-dialog
+              id="cancel-participation"
+              .label=${msg('Cancel My Participation')}
+              .warning=${msg(
+                'Are you sure you want to cancel your participation? All event participants will be notified.'
+              )}
+              .cancelledHash=${participantsMap.get(
+                this.gatherStore.client.client.myPubKey
+              )}
+            ></create-cancellation-dialog>
+            ${buttons.map(b => b)}
+          </div> `;
+        },
+        pending: () =>
+          html`<div class="column" style="gap: 8px">
+            ${Array(3).map(
+              () =>
+                html`<sl-skeleton
+                  style="border-radius: 8px; width: 80px; height: 30px"
+                ></sl-skeleton>`
+            )}
+          </div>`,
+        error: e =>
+          html`<display-errori .error=${e} .headline=${msg(
+            'Error fetching the participants for the proposal'
+          )}></display-error>`,
+      })
+    )}`;
   }
 
   renderDetail(event: EventWithStatus) {
@@ -331,11 +381,17 @@ export class EventDetail extends LitElement {
             <span
               >${new Date(
                 event.currentEvent.entry.time.start_time / 1000
-              ).toLocaleString()}
+              ).toLocaleString([], {
+                dateStyle: 'short',
+                timeStyle: 'short',
+              })}
               -
               ${new Date(
                 (event.currentEvent.entry.time as any).end_time / 1000
-              ).toLocaleString()}</span
+              ).toLocaleString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}</span
             >
           </div>
 
@@ -358,11 +414,7 @@ export class EventDetail extends LitElement {
     `;
   }
 
-  renderEvent(
-    event: EventWithStatus,
-    participants: AgentPubKey[],
-    callToAction: EntryRecord<CallToAction>
-  ) {
+  renderEvent(event: EventWithStatus) {
     if (this._editing) {
       return html` <edit-event
         .originalEventHash=${this.eventHash}
@@ -454,7 +506,7 @@ export class EventDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(event, participants, callToAction)}
+            ${this.renderActions(event)}
           </sl-tab-panel>
           <sl-tab-panel name="participants" style="position: relative">
             <div class="flex-scrollable-parent">
@@ -471,7 +523,7 @@ export class EventDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(event, participants, callToAction)}
+            ${this.renderActions(event)}
           </sl-tab-panel>
           <sl-tab-panel name="needs" style="position: relative">
             <div class="flex-scrollable-parent">
@@ -489,7 +541,7 @@ export class EventDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(event, participants, callToAction)}
+            ${this.renderActions(event)}
           </sl-tab-panel>
           <sl-tab-panel name="activity">
             <div class="flex-scrollable-parent">
@@ -540,58 +592,30 @@ export class EventDetail extends LitElement {
           </div>
         </div>
       </div>
-      ${this.renderActions(event, participants, callToAction)}
+      ${this.renderActions(event)}
     `;
   }
 
   render() {
-    switch (this._event.value.status) {
-      case 'pending':
-        return html`<div
-          style="display: flex; flex: 1; align-items: center; justify-content: center"
-        >
-          <sl-spinner style="font-size: 2rem"></sl-spinner>
-        </div>`;
-      case 'complete':
-        const event = this._event.value.value;
-        const participants = event[1];
-        const callToAction = event[2];
-
-        const myParticipationCommitment = participants.get(
-          this.gatherStore.client.client.myPubKey
-        );
-
-        return html` ${myParticipationCommitment
-            ? html`
-                <create-cancellation-dialog
-                  id="cancel-participation"
-                  .label=${msg('Cancel My Participation')}
-                  .warning=${msg(
-                    'Are you sure you want to cancel your participation? All event participants will be notified.'
-                  )}
-                  .cancelledHash=${myParticipationCommitment}
-                ></create-cancellation-dialog>
-              `
-            : html``}
-          <create-cancellation-dialog
+    return html`${subscribe(
+      this.gatherStore.events.get(this.eventHash).status,
+      withSpinnerAndDisplayError({
+        completed: event => html` <create-cancellation-dialog
             id="cancel-event"
             .label=${msg('Cancel Event')}
             .warning=${msg(
-              'Are you sure you want to cancel this event? This cannot be reversed. All participants will be notified.'
+              'Are you sure you want to cancel this event? All participants will be notified.'
             )}
             .cancelledHash=${this.eventHash}
           ></create-cancellation-dialog>
           <participate-dialog .eventHash=${this.eventHash}></participate-dialog>
-          ${this.renderEvent(
-            event[0],
-            Array.from(event[1].keys()),
-            callToAction
-          )}`;
-      case 'error':
-        return html`<display-error
-          .error=${this._event.value.error}
-        ></display-error>`;
-    }
+          ${this.renderEvent(event)}`,
+        error: {
+          tooltip: false,
+          label: msg('Error fetching the event'),
+        },
+      })
+    )}`;
   }
 
   static styles = [

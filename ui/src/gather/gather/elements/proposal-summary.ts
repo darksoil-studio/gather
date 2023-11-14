@@ -129,7 +129,10 @@ export class ProposalSummary extends LitElement {
                   >${proposal.currentProposal.entry.time
                     ? new Date(
                         proposal.currentProposal.entry.time.start_time / 1000
-                      ).toLocaleString()
+                      ).toLocaleString([], {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })
                     : msg('To Be Defined')}</span
                 >
               </div>

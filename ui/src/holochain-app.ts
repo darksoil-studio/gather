@@ -25,7 +25,12 @@ import {
 } from '@holochain/client';
 import { provide } from '@lit/context';
 import { LitElement, css, html } from 'lit';
-import { AsyncStatus, StoreSubscriber } from '@holochain-open-dev/stores';
+import {
+  AsyncStatus,
+  pipe,
+  StoreSubscriber,
+  subscribe,
+} from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -39,7 +44,11 @@ import {
 import { decode } from '@msgpack/msgpack';
 
 import { localized, msg } from '@lit/localize';
-import { sharedStyles, wrapPathInSvg } from '@holochain-open-dev/elements';
+import {
+  renderAsyncStatus,
+  sharedStyles,
+  wrapPathInSvg,
+} from '@holochain-open-dev/elements';
 import { ResizeController } from '@lit-labs/observers/resize-controller.js';
 import {
   CancellationsClient,
@@ -53,6 +62,7 @@ import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import '@shoelace-style/shoelace/dist/components/button/button.js';
 import '@shoelace-style/shoelace/dist/components/drawer/drawer.js';
 import '@shoelace-style/shoelace/dist/components/tab/tab.js';
+import '@shoelace-style/shoelace/dist/components/badge/badge.js';
 import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
 import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js';
 
@@ -237,6 +247,7 @@ export class HolochainApp extends LitElement {
         </div>`;
       case 'error':
         return html`<display-error
+          style="flex: 0"
           .headline=${msg('Error fetching your profile')}
           .error=${this._myProfile.value.error}
           tooltip
@@ -446,8 +457,33 @@ export class HolochainApp extends LitElement {
             })}
             style="gap: 8px; align-items: center"
           >
-            <sl-icon .src=${wrapPathInSvg(mdiAlertCircleOutline)}></sl-icon
-            ><span> ${msg('Alerts')}</span>
+            ${subscribe(
+              pipe(this._gatherStore.alertsStore.unreadAlerts, ua => ua.length),
+              renderAsyncStatus({
+                completed: v =>
+                  v > 0
+                    ? html`
+                        <sl-badge variant="primary" pill pulse>${v}</sl-badge>
+                      `
+                    : html`
+                        <sl-icon
+                          .src=${wrapPathInSvg(mdiAlertCircleOutline)}
+                        ></sl-icon>
+                      `,
+                pending: () => html`
+                  <sl-icon
+                    .src=${wrapPathInSvg(mdiAlertCircleOutline)}
+                  ></sl-icon>
+                `,
+                error: e =>
+                  html`<display-error
+                    tooltip
+                    .error=${e}
+                    .headline=${msg('Error fetching the unread alerts count')}
+                  ></display-error>`,
+              })
+            )}
+            <span> ${msg('Alerts')} </span>
           </div></sl-tab
         >
 

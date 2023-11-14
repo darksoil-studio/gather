@@ -7,9 +7,11 @@ import {
   immutableEntryStore,
   joinAsync,
   latestVersionOfEntryStore,
+  liveLinksAgentPubKeysTargetsStore,
   liveLinksTargetsStore,
   mapAndJoin,
   pipe,
+  sliceAndJoin,
   toPromise,
 } from '@holochain-open-dev/stores';
 import {
@@ -51,31 +53,6 @@ import {
   EventActionTypes,
   EventActivity,
 } from './activity.js';
-import { liveLinksAgentPubKeysTargetsStore } from './stores.js';
-
-// export function filterFutureEvents(
-//   events: HoloHashMap<ActionHash, EntryRecord<Event>>
-// ): Array<ActionHash> {
-//   return Array.from(events.entries())
-//     .filter(([h, event]) => !isPast(event.entry))
-//     .sort(
-//       ([h1, event1], [h2, event2]) =>
-//         event1.entry.start_time - event2.entry.start_time
-//     )
-//     .map(([h, _]) => h);
-// }
-
-// export function filterPastEvents(
-//   events: HoloHashMap<ActionHash, EntryRecord<Event>>
-// ): Array<ActionHash> {
-//   return Array.from(events.entries())
-//     .filter(([h, event]) => isPast(event.entry))
-//     .sort(
-//       ([h1, event1], [h2, event2]) =>
-//         event2.entry.start_time - event1.entry.start_time
-//     )
-//     .map(([h, _]) => h);
-// }
 
 export function deriveStatus(
   event: EntryRecord<Event>,
@@ -338,7 +315,10 @@ export class GatherStore {
                 this.events,
                 (await toPromise(this.allUpcomingEvents)).map(h => h.hash)
               ),
-              e => e.latestVersion
+              e => e.latestVersion,
+              {
+                errors: 'filter_out',
+              }
             )
           );
 
@@ -448,6 +428,36 @@ export class GatherStore {
       } else if (signal.type === 'EntryDeleted') {
         if (signal.original_app_entry.type === 'Cancellation') {
           // Some cancellation was undone
+
+          const cancelledHash = signal.original_app_entry.cancelled_hash;
+          try {
+            const eventStore = this.events.get(cancelledHash);
+            const event = await toPromise(eventStore.latestVersion);
+            if ('from_proposal' in event.entry) {
+              await this.client.markEventAsUpcoming(cancelledHash);
+              await this.notifyOfEventAction(cancelledHash, {
+                type: 'event_uncancelled',
+                actionHash: signal.action.hashed.content.deletes_address,
+              });
+              return;
+            }
+          } catch (e) {
+            console.log(e);
+          }
+          try {
+            const proposalStore = this.proposals.get(cancelledHash);
+            const proposal = await toPromise(proposalStore.latestVersion);
+            if ('hosts' in proposal.entry) {
+              await this.client.markProposalAsOpen(cancelledHash);
+              await this.notifyOfProposalAction(cancelledHash, {
+                type: 'proposal_uncancelled',
+                actionHash: signal.action.hashed.content.deletes_address,
+              });
+              return;
+            }
+          } catch (e) {
+            console.log(e);
+          }
         }
       }
     });
@@ -459,7 +469,7 @@ export class GatherStore {
     const latestVersion = latestVersionOfEntryStore(this.client, () =>
       this.client.getLatestEvent(eventHash)
     );
-    const cancellationsHashes =
+    const liveCancellations =
       this.cancellationsStore.cancellationsFor.get(eventHash).live;
     return {
       latestVersion,
@@ -467,11 +477,11 @@ export class GatherStore {
         this.client.getOriginalEvent(eventHash)
       ),
       status: pipe(
-        joinAsync([latestVersion, cancellationsHashes]),
+        joinAsync([latestVersion, liveCancellations]),
         ([event, cancellations]) => ({
           originalActionHash: eventHash,
           currentEvent: event,
-          status: deriveStatus(event, cancellations),
+          status: deriveStatus(event, Array.from(cancellations.keys())),
         })
       ),
       allRevisions: allRevisionsOfEntryStore(this.client, () =>
@@ -529,8 +539,9 @@ export class GatherStore {
           return Array.from(participants.keys());
         }
       ),
-      cancellations: pipe(cancellationsHashes, ch =>
-        slice(this.cancellationsStore.cancellations, ch)
+      cancellations: this.cancellationsStore.cancellationsFor.get(eventHash),
+      callToAction: pipe(latestVersion, e =>
+        this.assembleStore.callToActions.get(e.entry.call_to_action_hash)
       ),
     };
   });
@@ -539,7 +550,7 @@ export class GatherStore {
     const latestVersion = latestVersionOfEntryStore(this.client, () =>
       this.client.getLatestProposal(proposalHash)
     );
-    const cancellationsHashes =
+    const liveCancellationsHashes =
       this.cancellationsStore.cancellationsFor.get(proposalHash).live;
     const events = liveLinksTargetsStore(
       this.client,
@@ -553,7 +564,7 @@ export class GatherStore {
         this.client.getOriginalProposal(proposalHash)
       ),
       status: pipe(
-        joinAsync([latestVersion, cancellationsHashes, events]),
+        joinAsync([latestVersion, liveCancellationsHashes, events]),
         ([proposal]) =>
           joinAsync([
             this.assembleStore.callToActions.get(
@@ -572,7 +583,7 @@ export class GatherStore {
           currentProposal: proposal,
           status: deriveProposalStatus(
             proposal,
-            cancellations,
+            Array.from(cancellations.keys()),
             callToAction,
             Array.from(assemblies.keys()),
             eventsHashes
@@ -592,11 +603,81 @@ export class GatherStore {
       participants: pipe(latestVersion, proposal =>
         this.participantsForCallToAction.get(proposal.entry.call_to_action_hash)
       ),
-      cancellations: pipe(cancellationsHashes, ch =>
-        slice(this.cancellationsStore.cancellations, ch)
-      ),
+      cancellations: this.cancellationsStore.cancellationsFor.get(proposalHash),
     };
   });
+
+  commitmentActivity = new LazyHoloHashMap<
+    ActionHash,
+    AsyncReadable<EventActivity>
+  >(commitmentHash =>
+    pipe(
+      joinAsync([
+        pipe(
+          this.assembleStore.commitments.get(commitmentHash).entry,
+          c =>
+            this.assembleStore.callToActions.get(c.entry.call_to_action_hash)
+              .latestVersion,
+          (callToAction, commitment) => ({
+            callToAction,
+            commitment,
+          })
+        ),
+        pipe(
+          this.assembleStore.commitments.get(commitmentHash).cancellations.live,
+          liveCancellations =>
+            mapAndJoin(liveCancellations, c => c.latestVersion)
+        ),
+        pipe(
+          this.assembleStore.commitments.get(commitmentHash).cancellations
+            .undone,
+          undoneCancellations =>
+            mapAndJoin(undoneCancellations, c =>
+              joinAsync([c.latestVersion, c.deletes])
+            )
+        ),
+      ]),
+      ([commitment, cancellations, undoneCancellations]) => {
+        const commitmentActivity: EventActivity = [
+          {
+            type: 'commitment_created',
+            record: commitment.commitment,
+            callToAction: commitment.callToAction,
+          },
+        ];
+        const cancellationsActivity: EventActivity = Array.from(
+          cancellations.values()
+        ).map(c => ({
+          type: 'commitment_cancelled',
+          record: c,
+          commitment: commitment.commitment,
+          callToAction: commitment.callToAction,
+        }));
+
+        const undoneCancellationsActivity: EventActivity = [];
+        for (const uc of Array.from(undoneCancellations.values())) {
+          for (const r of uc[1]) {
+            undoneCancellationsActivity.push({
+              type: 'commitment_cancellation_undone',
+              record: new EntryRecord({
+                signed_action: r,
+                entry: {
+                  NotApplicable: undefined,
+                },
+              }),
+              cancellation: uc[0],
+              commitment: commitment.commitment,
+            });
+          }
+        }
+        return [
+          ...commitmentActivity,
+          ...cancellationsActivity,
+          ...undoneCancellationsActivity,
+        ];
+      }
+    )
+  );
 
   callToActionActivity = new LazyHoloHashMap<
     ActionHash,
@@ -605,39 +686,17 @@ export class GatherStore {
     pipe(
       joinAsync([
         pipe(
-          this.assembleStore.callToActions.get(callToActionHash).commitments
-            .cancelled,
-          commitments =>
-            joinAsync([
-              mapAndJoin(commitments, c => c.entry),
-              mapAndJoin(commitments, c => c.cancellations.live),
-              mapAndJoin(commitments, c => c.cancellations.undone),
-            ]),
-          ([
-            _,
-            cancellationsHashesByCommitment,
-            undoneCancellationsByCommitment,
-          ]) => {
-            const cancellationsHashes = ([] as ActionHash[]).concat(
-              ...Array.from(cancellationsHashesByCommitment.values()),
-              ...Array.from(undoneCancellationsByCommitment.values()).map(uc =>
-                uc.map(u => u[0].target_address)
-              )
-            );
-            return mapAndJoin(
-              slice(this.cancellationsStore.cancellations, cancellationsHashes),
-              c => c.latestVersion
-            );
-          },
-          (cancellations, [commitments, _, undoneCancellations]) =>
-            [commitments, cancellations, undoneCancellations] as [
-              ReadonlyMap<ActionHash, EntryRecord<Commitment>>,
-              ReadonlyMap<ActionHash, EntryRecord<Cancellation>>,
-              ReadonlyMap<
-                ActionHash,
-                [CreateLink, SignedActionHashed<DeleteLink>[]][]
-              >
-            ]
+          joinAsync([
+            this.assembleStore.callToActions.get(callToActionHash).commitments
+              .cancelled,
+            this.assembleStore.callToActions.get(callToActionHash).commitments
+              .uncancelled,
+          ]),
+          ([cancelledCommitments, uncancelledCommitments]) =>
+            sliceAndJoin(this.commitmentActivity, [
+              ...Array.from(cancelledCommitments.keys()),
+              ...Array.from(uncancelledCommitments.keys()),
+            ])
         ),
         pipe(
           this.assembleStore.callToActions.get(callToActionHash).satisfactions,
@@ -649,48 +708,7 @@ export class GatherStore {
         ),
         this.assembleStore.callToActions.get(callToActionHash).latestVersion,
       ]),
-      ([
-        [commitments, cancellations, undoneCancellations],
-        satisfactions,
-        assemblies,
-        callToAction,
-      ]) => {
-        const commitmentActivity: EventActivity = Array.from(
-          commitments.values()
-        ).map(c => ({
-          type: 'commitment_created',
-          record: c,
-          callToAction,
-        }));
-        const cancellationsActivity: EventActivity = Array.from(
-          cancellations.values()
-        ).map(c => ({
-          type: 'commitment_cancelled',
-          record: c,
-          commitment: commitments.get(c.entry.cancelled_hash)!,
-          callToAction,
-        }));
-
-        const undoneCancellationsActivity: EventActivity = [];
-        for (const uc of Array.from(undoneCancellations.values())) {
-          for (const u of uc) {
-            for (const r of u[1]) {
-              const cancellation = cancellations.get(u[0].target_address)!;
-              undoneCancellationsActivity.push({
-                type: 'commitment_cancellation_undone',
-                record: new EntryRecord({
-                  signed_action: r,
-                  entry: {
-                    NotApplicable: undefined,
-                  },
-                }),
-                cancellation,
-                commitment: commitments.get(cancellation.entry.cancelled_hash)!,
-              });
-            }
-          }
-        }
-
+      ([commitmentsActivity, satisfactions, assemblies, callToAction]) => {
         const satisfactionsActivity: EventActivity = Array.from(
           satisfactions.values()
         ).map(c => ({
@@ -718,12 +736,13 @@ export class GatherStore {
             : [];
 
         let activity: EventActivity = [
-          ...commitmentActivity,
-          ...cancellationsActivity,
           ...satisfactionsActivity,
           ...assembliesActivity,
           ...expiredActivity,
         ];
+        for (const [_, commitmentActivity] of commitmentsActivity.entries()) {
+          activity = [...activity, ...commitmentActivity];
+        }
 
         activity = activity.sort(
           (r1, r2) => actionTimestamp(r2) - actionTimestamp(r1)
@@ -741,11 +760,14 @@ export class GatherStore {
       joinAsync([
         this.proposals.get(proposalHash).latestVersion,
         this.proposals.get(proposalHash).allRevisions,
-        pipe(this.proposals.get(proposalHash).cancellations, map =>
+        pipe(this.proposals.get(proposalHash).cancellations.live, map =>
           mapAndJoin(map, c => c.latestVersion)
         ),
+        pipe(this.proposals.get(proposalHash).cancellations.undone, map =>
+          mapAndJoin(map, c => joinAsync([c.latestVersion, c.deletes]))
+        ),
       ]),
-      ([proposal, revisions, cancellations]) => {
+      ([proposal, revisions, liveCancellations, undoneCancellations]) => {
         let activity: EventActivity = [
           { type: 'proposal_created', record: proposal },
         ];
@@ -754,16 +776,42 @@ export class GatherStore {
           record: c,
         }));
         const cancellationsActivity: EventActivity = Array.from(
-          cancellations.values()
+          liveCancellations.values()
         ).map(c => ({
           type: 'proposal_cancelled',
           record: c,
         }));
+        let undoneCancellationsActivity: EventActivity = [];
+        for (const [
+          cancellation,
+          undoneRecords,
+        ] of undoneCancellations.values()) {
+          undoneCancellationsActivity = undoneCancellationsActivity.concat([
+            {
+              type: 'proposal_cancelled',
+              record: cancellation,
+            },
+            ...undoneRecords.map(
+              deleteAction =>
+                ({
+                  type: 'proposal_uncancelled',
+                  record: new EntryRecord({
+                    signed_action: deleteAction,
+                    entry: {
+                      NotApplicable: undefined,
+                    },
+                  }),
+                  proposal,
+                } as EventAction)
+            ),
+          ]);
+        }
 
         activity = [
           ...activity,
           ...revisionsActivity,
           ...cancellationsActivity,
+          ...undoneCancellationsActivity,
         ];
 
         activity = activity.sort(
@@ -807,8 +855,11 @@ export class GatherStore {
         event =>
           joinAsync([
             this.events.get(eventHash).allRevisions,
-            pipe(this.events.get(eventHash).cancellations, map =>
+            pipe(this.events.get(eventHash).cancellations.live, map =>
               mapAndJoin(map, c => c.latestVersion)
+            ),
+            pipe(this.events.get(eventHash).cancellations.undone, map =>
+              mapAndJoin(map, c => joinAsync([c.latestVersion, c.deletes]))
             ),
             this.callToActionActivity.get(event.entry.call_to_action_hash),
             event.entry.from_proposal
@@ -819,7 +870,13 @@ export class GatherStore {
           ]),
 
         (
-          [revisions, cancellations, callToActionActivity, proposalActivity],
+          [
+            revisions,
+            cancellations,
+            undoneCancellations,
+            callToActionActivity,
+            proposalActivity,
+          ],
           event
         ) => {
           let activity: EventActivity = [
@@ -837,12 +894,39 @@ export class GatherStore {
             type: 'event_cancelled',
             record: c,
           }));
+
+          let undoneCancellationsActivity: EventActivity = [];
+          for (const [
+            cancellation,
+            undoneRecords,
+          ] of undoneCancellations.values()) {
+            undoneCancellationsActivity = undoneCancellationsActivity.concat([
+              {
+                type: 'event_cancelled',
+                record: cancellation,
+              },
+              ...undoneRecords.map(
+                deleteAction =>
+                  ({
+                    type: 'event_uncancelled',
+                    record: new EntryRecord({
+                      signed_action: deleteAction,
+                      entry: {
+                        NotApplicable: undefined,
+                      },
+                    }),
+                    event,
+                  } as EventAction)
+              ),
+            ]);
+          }
           activity = [
             ...activity,
             ...revisionsActivity,
             ...cancellationsActivity,
             ...callToActionActivity,
             ...proposalActivity,
+            ...undoneCancellationsActivity,
           ];
 
           activity = activity.sort(
@@ -885,7 +969,9 @@ export class GatherStore {
       'UpcomingEvents'
     ),
     upcomingEventsHashes =>
-      mapAndJoin(slice(this.events, upcomingEventsHashes), e => e.status),
+      mapAndJoin(slice(this.events, upcomingEventsHashes), e => e.status, {
+        errors: 'filter_out',
+      }),
     upcomingEvents => {
       const events = [];
       for (const [eventHash, eventWithStatus] of upcomingEvents.entries()) {
@@ -978,7 +1064,9 @@ export class GatherStore {
       'OpenProposals'
     ),
     openProposalsHashes =>
-      mapAndJoin(slice(this.proposals, openProposalsHashes), p => p.status),
+      mapAndJoin(slice(this.proposals, openProposalsHashes), p => p.status, {
+        errors: 'filter_out',
+      }),
     openProposals => {
       const proposals = [];
       for (const [
@@ -1174,9 +1262,28 @@ export class GatherStore {
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
                 ).originalEntry,
-                cancellations => ({
+                cancellation => ({
                   type: 'proposal_cancelled',
-                  record: cancellations,
+                  record: cancellation,
+                })
+              );
+            case 'proposal_uncancelled':
+              return pipe(
+                this.assembleStore.cancellationsStore.cancellations.get(
+                  actionHash
+                ).deletes,
+                deletes =>
+                  this.proposals.get(deletes[0].hashed.content.deletes_address)
+                    .latestVersion,
+                (proposal, deletes) => ({
+                  type: 'proposal_uncancelled',
+                  record: new EntryRecord<void>({
+                    signed_action: deletes[0],
+                    entry: {
+                      NotApplicable: undefined,
+                    },
+                  }),
+                  proposal,
                 })
               );
             case 'proposal_expired':
@@ -1212,6 +1319,25 @@ export class GatherStore {
                 cancellations => ({
                   type: 'event_cancelled',
                   record: cancellations,
+                })
+              );
+            case 'event_uncancelled':
+              return pipe(
+                this.assembleStore.cancellationsStore.cancellations.get(
+                  actionHash
+                ).deletes,
+                deletes =>
+                  this.events.get(deletes[0].hashed.content.deletes_address)
+                    .latestVersion,
+                (event, deletes) => ({
+                  type: 'event_uncancelled',
+                  record: new EntryRecord<void>({
+                    signed_action: deletes[0],
+                    entry: {
+                      NotApplicable: undefined,
+                    },
+                  }),
+                  event,
                 })
               );
             case 'commitment_created':

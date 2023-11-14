@@ -272,8 +272,8 @@
   <target>¿Estás seguro que quieres cancelar tu participación? Se enviará una notificación a todos los participantes del evento.</target>
 </trans-unit>
 <trans-unit id="sf49167be05ec33de">
-  <source>Are you sure you want to cancel this event? This cannot be reversed. All participants will be notified.</source>
-  <target>¿Estás seguro que quieres cancelar este evento? Esto es irreversible. Se enviará una notificación a todos los participantes del evento.</target>
+  <source>Are you sure you want to cancel this event? All participants will be notified.</source>
+  <target>¿Estás seguro que quieres cancelar este evento? Se enviará una notificación a todos los participantes del evento.</target>
 </trans-unit>
 <trans-unit id="sf713b09ae35d0ed7">
   <source>Error creating the event</source>
@@ -352,8 +352,8 @@
   <target>¿Estás seguro? Se enviará una notificación a todos los participantes.</target>
 </trans-unit>
 <trans-unit id="sfed60b9731d6872a">
-  <source>Are you sure you want to cancel this proposal? This cannot be reversed. All participants will be notified.</source>
-  <target>¿Estás seguro que quieres cancelar esta propuesta? Esto es irreversible. Se enviará una notificatión a todos los participantes.</target>
+  <source>Are you sure you want to cancel this proposal? All participants will be notified.</source>
+  <target>¿Estás seguro que quieres cancelar esta propuesta? Se enviará una notificatión a todos los participantes.</target>
 </trans-unit>
 <trans-unit id="s6af7f6092d50656e">
   <source>Error fetching the proposal</source>

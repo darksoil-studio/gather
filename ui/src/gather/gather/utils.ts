@@ -1,5 +1,11 @@
 import { CallToAction } from '@darksoil/assemble';
-import { EntryRecord } from '@holochain-open-dev/utils';
+import {
+  AsyncReadable,
+  joinAsync,
+  pipe,
+  Readable,
+} from '@holochain-open-dev/stores';
+import { EntryRecord, HoloHashMap, mapValues } from '@holochain-open-dev/utils';
 import {
   AppAgentWebsocket,
   CallZomeRequest,
@@ -8,6 +14,7 @@ import {
   HoloHash,
 } from '@holochain/client';
 import { Event as EventCalendarEvent } from '@scoped-elements/event-calendar/dist/types.js';
+import { cloneDeepWith } from 'lodash-es';
 import { Event, Proposal } from './types.js';
 
 export function isExpired(callToAction: CallToAction) {
@@ -92,4 +99,51 @@ export function installLogger(appAgentWebsocket: AppAgentWebsocket) {
     console.log('Request result', request, result);
     return result;
   };
+}
+
+export function deepJoinAsync<T>(object: T) {
+  const stores: Array<AsyncReadable<any>> = [];
+  cloneDeepWith(object, value => {
+    if ('subscribe' in value) {
+      stores.push(value);
+      return stores.length - 1;
+    }
+  });
+  return pipe(joinAsync(stores), values => {
+    return cloneDeepWith(object, value => {
+      if ('subscribe' in value) {
+        const storeIndex = stores.findIndex(s => value === s);
+        if (storeIndex !== -1) {
+          return values[storeIndex];
+        }
+      }
+    });
+  });
+}
+
+export type AsyncStoreValue<T> = T extends AsyncReadable<infer U> ? U : never;
+
+export function joinAsyncValues<
+  T extends Record<string, AsyncReadable<any> | unknown>
+>(object: T) {
+  const stores: Array<AsyncReadable<unknown>> = [];
+  for (const [key, value] of Object.entries(object)) {
+    if ('subscribe' in (value as AsyncReadable<unknown>)) {
+      stores.push(value as AsyncReadable<unknown>);
+    }
+  }
+  return pipe(joinAsync(stores), values => {
+    const obj: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(values)) {
+      if ('subscribe' in (value as AsyncReadable<unknown>)) {
+        const storeIndex = stores.findIndex(s => value === s);
+        if (storeIndex !== -1) {
+          obj[key] = values[storeIndex] as AsyncStoreValue<typeof value>;
+        }
+      } else {
+        obj[key] = value;
+      }
+    }
+    return obj;
+  });
 }

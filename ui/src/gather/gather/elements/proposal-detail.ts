@@ -1,9 +1,18 @@
-import { hashProperty, wrapPathInSvg } from '@holochain-open-dev/elements';
+import {
+  hashProperty,
+  renderAsyncStatus,
+  withSpinnerAndDisplayError,
+  wrapPathInSvg,
+} from '@holochain-open-dev/elements';
 import { ActionHash, AgentPubKey } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
-import { LitElement, html, css } from 'lit';
-import { joinAsync, StoreSubscriber } from '@holochain-open-dev/stores';
+import { LitElement, html, css, PropertyValueMap } from 'lit';
+import {
+  joinAsync,
+  StoreSubscriber,
+  subscribe,
+} from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import {
@@ -73,19 +82,6 @@ export class ProposalDetail extends LitElement {
   /**
    * @internal
    */
-  _proposal = new StoreSubscriber(
-    this,
-    () =>
-      joinAsync([
-        this.gatherStore.proposals.get(this.proposalHash).status,
-        this.gatherStore.proposals.get(this.proposalHash).participants,
-      ]),
-    () => [this.proposalHash]
-  );
-
-  /**
-   * @internal
-   */
   @state()
   _editing = false;
 
@@ -98,7 +94,6 @@ export class ProposalDetail extends LitElement {
   /**
    * @internal
    */
-  @consume({ context: isMobileContext, subscribe: true })
   @property()
   _isMobile!: boolean;
 
@@ -129,128 +124,171 @@ export class ProposalDetail extends LitElement {
     >`;
   }
 
-  renderActions(proposal: ProposalWithStatus, participants: AgentPubKey[]) {
-    const proposalStatus = proposal.status.type;
+  renderActions(proposal: ProposalWithStatus) {
+    return html`${subscribe(
+      this.gatherStore.proposals.get(this.proposalHash).participants,
+      renderAsyncStatus({
+        completed: participantsMap => {
+          const participants = Array.from(participantsMap.keys());
+          const proposalStatus = proposal.status.type;
 
-    const myPubKeyStr = this.gatherStore.client.client.myPubKey.toString();
-    const iAmParticipant = participants.find(i => i.toString() === myPubKeyStr);
-    const iAmHost = !!proposal.currentProposal.entry.hosts.find(
-      h => h.toString() === myPubKeyStr
-    );
+          const myPubKeyStr =
+            this.gatherStore.client.client.myPubKey.toString();
+          const iAmParticipant = participants.find(
+            i => i.toString() === myPubKeyStr
+          );
+          const iAmHost = !!proposal.currentProposal.entry.hosts.find(
+            h => h.toString() === myPubKeyStr
+          );
 
-    const buttons = !this._isMobile
-      ? [
-          html`
-            <sl-button
-              variant="default"
-              pill
-              @click=${() => {
-                (
-                  this.shadowRoot?.querySelector('sl-drawer') as SlDrawer
-                ).show();
-              }}
-            >
-              <sl-icon .src=${wrapPathInSvg(mdiTimeline)}></sl-icon>
-              ${msg('See Activity')}
-            </sl-button>
-          `,
-        ]
-      : [];
+          const buttons = !this._isMobile
+            ? [
+                html`
+                  <sl-button
+                    variant="default"
+                    pill
+                    @click=${() => {
+                      (
+                        this.shadowRoot?.querySelector('sl-drawer') as SlDrawer
+                      ).show();
+                    }}
+                  >
+                    <sl-icon .src=${wrapPathInSvg(mdiTimeline)}></sl-icon>
+                    ${msg('See Activity')}
+                  </sl-button>
+                `,
+              ]
+            : [];
 
-    if (
-      proposalStatus === 'open_proposal' ||
-      proposalStatus === 'fulfilled_proposal'
-    ) {
-      if (iAmHost) {
-        buttons.push(html`
-          <sl-button
-            variant="default"
-            pill
-            @click=${() => {
-              this._editing = true;
-            }}
+          if (
+            proposalStatus === 'open_proposal' ||
+            proposalStatus === 'fulfilled_proposal'
+          ) {
+            if (iAmHost) {
+              buttons.push(html`
+                <sl-button
+                  variant="default"
+                  pill
+                  @click=${() => {
+                    this._editing = true;
+                  }}
+                >
+                  <sl-icon
+                    slot="prefix"
+                    .src=${wrapPathInSvg(mdiPencil)}
+                  ></sl-icon>
+                  ${msg('Edit Proposal')}
+                </sl-button>
+                <sl-button
+                  variant="danger"
+                  pill
+                  @click=${() => {
+                    (
+                      this.shadowRoot?.getElementById(
+                        'cancel-proposal'
+                      ) as CreateCancellationDialog
+                    ).show();
+                  }}
+                >
+                  <sl-icon
+                    slot="prefix"
+                    .src=${wrapPathInSvg(mdiCancel)}
+                  ></sl-icon>
+                  ${msg('Cancel Proposal')}
+                </sl-button>
+              `);
+            }
+            if (iAmParticipant) {
+              buttons.push(html`
+                <sl-button
+                  variant="warning"
+                  pill
+                  @click=${() =>
+                    (
+                      this.shadowRoot?.getElementById(
+                        'cancel-participation'
+                      ) as CreateCancellationDialog
+                    ).show()}
+                >
+                  <sl-icon
+                    slot="prefix"
+                    .src=${wrapPathInSvg(mdiCancel)}
+                  ></sl-icon>
+                  ${msg('Cancel Participation')}
+                </sl-button>
+              `);
+            } else {
+              const isMaximumPeopleReached =
+                !!proposal.callToAction.entry.needs[0].max_possible &&
+                participants.length >=
+                  proposal.callToAction.entry.needs[0].max_possible;
+              const participateButton = html`
+                <sl-button
+                  variant="primary"
+                  pill
+                  .disabled=${isMaximumPeopleReached}
+                  @click=${() =>
+                    (
+                      this.shadowRoot?.querySelector(
+                        'participate-dialog'
+                      ) as ParticipateDialog
+                    ).show()}
+                >
+                  <sl-icon
+                    slot="prefix"
+                    .src=${wrapPathInSvg(mdiAccountPlus)}
+                  ></sl-icon>
+                  ${msg('Participate')}
+                </sl-button>
+              `;
+
+              const participateButtonWithTooltip = isMaximumPeopleReached
+                ? html`<sl-tooltip .content=${msg('Max. participants reached')}
+                    >${participateButton}</sl-tooltip
+                  >`
+                : participateButton;
+
+              buttons.push(html`
+                <interested-button
+                  .proposalHash=${this.proposalHash}
+                ></interested-button>
+                ${participateButtonWithTooltip}
+              `);
+            }
+          }
+
+          return html`<div
+            class="column"
+            style="position:absolute; right: 16px; bottom: 16px; gap: 8px"
           >
-            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiPencil)}></sl-icon>
-            ${msg('Edit Proposal')}
-          </sl-button>
-          <sl-button
-            variant="danger"
-            pill
-            @click=${() => {
-              (
-                this.shadowRoot?.getElementById(
-                  'cancel-proposal'
-                ) as CreateCancellationDialog
-              ).show();
-            }}
-          >
-            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
-            ${msg('Cancel Proposal')}
-          </sl-button>
-        `);
-      }
-      if (iAmParticipant) {
-        buttons.push(html`
-          <sl-button
-            variant="warning"
-            pill
-            @click=${() =>
-              (
-                this.shadowRoot?.getElementById(
-                  'cancel-participation'
-                ) as CreateCancellationDialog
-              ).show()}
-          >
-            <sl-icon slot="prefix" .src=${wrapPathInSvg(mdiCancel)}></sl-icon>
-            ${msg('Cancel Participation')}
-          </sl-button>
-        `);
-      } else {
-        const isMaximumPeopleReached =
-          !!proposal.callToAction.entry.needs[0].max_possible &&
-          participants.length >=
-            proposal.callToAction.entry.needs[0].max_possible;
-        const participateButton = html`
-          <sl-button
-            variant="primary"
-            pill
-            .disabled=${isMaximumPeopleReached}
-            @click=${() =>
-              (
-                this.shadowRoot?.querySelector(
-                  'participate-dialog'
-                ) as ParticipateDialog
-              ).show()}
-          >
-            <sl-icon
-              slot="prefix"
-              .src=${wrapPathInSvg(mdiAccountPlus)}
-            ></sl-icon>
-            ${msg('Participate')}
-          </sl-button>
-        `;
-
-        const participateButtonWithTooltip = isMaximumPeopleReached
-          ? html`<sl-tooltip .content=${msg('Max. participants reached')}
-              >${participateButton}</sl-tooltip
-            >`
-          : participateButton;
-
-        buttons.push(html`
-          <interested-button
-            .proposalHash=${this.proposalHash}
-          ></interested-button>
-          ${participateButtonWithTooltip}
-        `);
-      }
-    }
-
-    return html`<div
-      class="column"
-      style="position:absolute; right: 16px; bottom: 16px; gap: 8px"
-    >
-      ${buttons.map(b => b)}
-    </div> `;
+            <create-cancellation-dialog
+              id="cancel-participation"
+              .label=${msg('Cancel My Participation')}
+              .warning=${msg(
+                'Are you sure? All participants will be notified.'
+              )}
+              .cancelledHash=${participantsMap.get(
+                this.gatherStore.client.client.myPubKey
+              )}
+            ></create-cancellation-dialog>
+            ${buttons.map(b => b)}
+          </div> `;
+        },
+        pending: () =>
+          html`<div class="column" style="gap: 8px">
+            ${Array(3).map(
+              () =>
+                html`<sl-skeleton
+                  style="border-radius: 8px; width: 80px; height: 30px"
+                ></sl-skeleton>`
+            )}
+          </div>`,
+        error: e =>
+          html`<display-errori .error=${e} .headline=${msg(
+            'Error fetching the participants for the proposal'
+          )}></display-error>`,
+      })
+    )}`;
   }
 
   renderDetail(proposal: ProposalWithStatus) {
@@ -303,12 +341,18 @@ export class ProposalDetail extends LitElement {
                   <span
                     >${new Date(
                       proposal.currentProposal.entry.time!.start_time / 1000
-                    ).toLocaleString()}
+                    ).toLocaleString([], {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })}
                     -
                     ${new Date(
                       (proposal.currentProposal.entry.time as any).end_time /
                         1000
-                    ).toLocaleString()}</span
+                    ).toLocaleString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}</span
                   >
                 `
               : html`<span>${msg('To Be Defined')}</span>`}
@@ -338,7 +382,7 @@ export class ProposalDetail extends LitElement {
     `;
   }
 
-  renderProposal(proposal: ProposalWithStatus, participants: AgentPubKey[]) {
+  renderProposal(proposal: ProposalWithStatus) {
     if (this._editing) {
       return html` <edit-proposal
         .originalProposalHash=${this.proposalHash}
@@ -426,7 +470,7 @@ export class ProposalDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(proposal, participants)}
+            ${this.renderActions(proposal)}
           </sl-tab-panel>
           <sl-tab-panel name="participants" style="position: relative">
             <div class="flex-scrollable-parent">
@@ -443,7 +487,7 @@ export class ProposalDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(proposal, participants)}
+            ${this.renderActions(proposal)}
           </sl-tab-panel>
           <sl-tab-panel name="needs" style="position: relative">
             <div class="flex-scrollable-parent">
@@ -461,7 +505,7 @@ export class ProposalDetail extends LitElement {
                 </div>
               </div>
             </div>
-            ${this.renderActions(proposal, participants)}
+            ${this.renderActions(proposal)}
           </sl-tab-panel>
           <sl-tab-panel name="activity">
             <div class="flex-scrollable-parent">
@@ -512,63 +556,42 @@ export class ProposalDetail extends LitElement {
           </div>
         </div>
       </div>
-      ${this.renderActions(proposal, participants)}
+      ${this.renderActions(proposal)}
     `;
   }
 
   render() {
-    switch (this._proposal.value.status) {
-      case 'pending':
-        return html`<div
-          style="display: flex; flex: 1; align-items: center; justify-content: center"
-        >
-          <sl-spinner style="font-size: 2rem"></sl-spinner>
-        </div>`;
-      case 'complete':
-        const proposal = this._proposal.value.value[0];
-        const participants = this._proposal.value.value[1];
-        if (proposal.status.type === 'actual_event') {
-          return html`<event-detail
-            style="flex: 1"
-            .eventHash=${proposal.status.eventHash}
-          ></event-detail>`;
-        }
+    return html`${subscribe(
+      this.gatherStore.proposals.get(this.proposalHash).status,
+      withSpinnerAndDisplayError({
+        completed: proposal => {
+          if (proposal.status.type === 'actual_event') {
+            return html`<event-detail
+              style="flex: 1"
+              .eventHash=${proposal.status.eventHash}
+            ></event-detail>`;
+          }
 
-        const myParticipationCommitment = participants.get(
-          this.gatherStore.client.client.myPubKey
-        );
+          return html` <create-cancellation-dialog
+              id="cancel-proposal"
+              .label=${msg('Cancel Proposal')}
+              .warning=${msg(
+                'Are you sure you want to cancel this proposal? All participants will be notified.'
+              )}
+              .cancelledHash=${this.proposalHash}
+            ></create-cancellation-dialog>
 
-        return html` ${myParticipationCommitment
-            ? html`
-                <create-cancellation-dialog
-                  id="cancel-participation"
-                  .label=${msg('Cancel My Participation')}
-                  .warning=${msg(
-                    'Are you sure? All participants will be notified.'
-                  )}
-                  .cancelledHash=${myParticipationCommitment}
-                ></create-cancellation-dialog>
-              `
-            : html``}
-          <create-cancellation-dialog
-            id="cancel-proposal"
-            .label=${msg('Cancel Proposal')}
-            .warning=${msg(
-              'Are you sure you want to cancel this proposal? This cannot be reversed. All participants will be notified.'
-            )}
-            .cancelledHash=${this.proposalHash}
-          ></create-cancellation-dialog>
-
-          <participate-dialog
-            .proposalHash=${this.proposalHash}
-          ></participate-dialog>
-          ${this.renderProposal(proposal, Array.from(participants.keys()))}`;
-      case 'error':
-        return html`<display-error
-          .headline=${msg('Error fetching the proposal')}
-          .error=${this._proposal.value.error}
-        ></display-error>`;
-    }
+            <participate-dialog
+              .proposalHash=${this.proposalHash}
+            ></participate-dialog>
+            ${this.renderProposal(proposal)}`;
+        },
+        error: {
+          tooltip: false,
+          label: msg('Error fetching the proposal'),
+        },
+      })
+    )}`;
   }
 
   static styles = [

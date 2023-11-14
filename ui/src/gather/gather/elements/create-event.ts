@@ -321,6 +321,7 @@ export class CreateEvent extends LitElement {
           .required=${!this.isProposal || !this.timeTbd}
           .disabled=${pageIndex > this.currentPage ||
           (this.isProposal && this.timeTbd)}
+          .defaultValue=${new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)}
           .label=${msg('Start Time')}
           style="flex: 1"
           id="start-time"
@@ -331,6 +332,7 @@ export class CreateEvent extends LitElement {
           .required=${!this.isProposal || !this.timeTbd}
           .disabled=${pageIndex > this.currentPage ||
           (this.isProposal && this.timeTbd)}
+          .defaultValue=${new Date(Date.now() + (1 + 24 * 2) * 60 * 60 * 1000)}
           .label=${msg('End Time')}
           style="flex: 1"
           .min=${pageIndex === this.currentPage
@@ -436,6 +438,7 @@ export class CreateEvent extends LitElement {
                     'expiration-switch'
                   ) as SlSwitch
                 )?.checked}
+                .defaultValue=${new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)}
                 .disabled=${pageIndex > this.currentPage ||
                 !(
                   this.shadowRoot?.getElementById(

@@ -1,5 +1,8 @@
-import { lazyLoadAndPoll, pipe } from '@holochain-open-dev/stores';
-import { deletedLinksStore, liveLinksStore } from '../gather/gather/stores.js';
+import {
+  liveLinksStore,
+  deletedLinksStore,
+  pipe,
+} from '@holochain-open-dev/stores';
 
 import { AlertsClient, createLinkToAlert } from './alerts-client.js';
 

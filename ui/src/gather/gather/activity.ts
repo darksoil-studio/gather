@@ -8,6 +8,7 @@ import { Cancellation } from '@holochain-open-dev/cancellations';
 import { wrapPathInSvg } from '@holochain-open-dev/elements';
 import { msg, str } from '@lit/localize';
 import {
+  mdiAccountGroup,
   mdiAlert,
   mdiCancel,
   mdiCheckBold,
@@ -16,6 +17,7 @@ import {
   mdiHandshake,
   mdiPartyPopper,
   mdiUndo,
+  mdiUndoVariant,
   mdiUpdate,
 } from '@mdi/js';
 import { EntryRecord } from '@holochain-open-dev/utils';
@@ -36,6 +38,11 @@ export type EventAction =
       record: EntryRecord<Cancellation>;
     }
   | {
+      type: 'proposal_uncancelled';
+      record: EntryRecord<void>;
+      proposal: EntryRecord<Proposal>;
+    }
+  | {
       type: 'proposal_expired';
       timestamp: number;
     }
@@ -50,6 +57,11 @@ export type EventAction =
   | {
       type: 'event_cancelled';
       record: EntryRecord<Cancellation>;
+    }
+  | {
+      type: 'event_uncancelled';
+      record: EntryRecord<void>;
+      event: EntryRecord<Event>;
     }
   | {
       type: 'commitment_created';
@@ -107,6 +119,10 @@ export type EventActionOnlyHash =
       actionHash: ActionHash;
     }
   | {
+      type: 'proposal_uncancelled';
+      actionHash: ActionHash;
+    }
+  | {
       type: 'proposal_expired';
       actionHash: ActionHash;
       timestamp: number;
@@ -121,6 +137,10 @@ export type EventActionOnlyHash =
     }
   | {
       type: 'event_cancelled';
+      actionHash: ActionHash;
+    }
+  | {
+      type: 'event_uncancelled';
       actionHash: ActionHash;
     }
   | {
@@ -163,6 +183,11 @@ export function messageAndIcon(action: EventAction) {
         secondary: action.record.entry.reason,
         icon: wrapPathInSvg(mdiCancel),
       };
+    case 'proposal_uncancelled':
+      return {
+        message: msg('Proposal was uncancelled!'),
+        icon: wrapPathInSvg(mdiUndoVariant),
+      };
     case 'proposal_expired':
       return {
         message: msg(
@@ -187,6 +212,11 @@ export function messageAndIcon(action: EventAction) {
         message: msg('Event was cancelled because:'),
         secondary: action.record.entry.reason,
         icon: wrapPathInSvg(mdiCancel),
+      };
+    case 'event_uncancelled':
+      return {
+        message: msg('Event was uncancelled!'),
+        icon: wrapPathInSvg(mdiUndoVariant),
       };
     case 'event_updated':
       return {
@@ -232,7 +262,7 @@ export function messageAndIcon(action: EventAction) {
           message: msg(
             'The minimum required participants for the event has been reached.'
           ),
-          icon: wrapPathInSvg(mdiHandshake),
+          icon: wrapPathInSvg(mdiAccountGroup),
         };
       }
       return {

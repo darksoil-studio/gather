@@ -74,6 +74,25 @@ pub fn get_all_past_events(_: ()) -> ExternResult<Vec<ActionHash>> {
     get_from_path(all_past_events(), LinkTypes::PastEvents)
 }
 #[hdk_extern]
+pub fn mark_proposal_as_open(proposal_hash: ActionHash) -> ExternResult<()> {
+    // No reason why the proposal can go from expired to open,
+    // Only remove from cancelled
+
+    remove_from_collection(
+        &proposal_hash,
+        all_cancelled_proposals(),
+        LinkTypes::CancelledProposals,
+    )?;
+    let path = all_open_proposals();
+    create_link(
+        path.path_entry_hash()?,
+        proposal_hash.clone(),
+        LinkTypes::OpenProposals,
+        (),
+    )?;
+    Ok(())
+}
+#[hdk_extern]
 pub fn mark_proposal_as_expired(proposal_hash: ActionHash) -> ExternResult<()> {
     remove_from_collection(
         &proposal_hash,
@@ -130,12 +149,11 @@ pub fn get_all_cancelled_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
 /** Helpers */
 
 fn get_from_path(path: Path, link_type: LinkTypes) -> ExternResult<Vec<ActionHash>> {
-    let links = get_links(path.path_entry_hash()?, link_type, None)?;
+    let mut links = get_links(path.path_entry_hash()?, link_type, None)?;
+    links.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     let hashes: Vec<ActionHash> = links
         .into_iter()
         .filter_map(|link| link.target.into_action_hash())
-        .collect::<HashSet<ActionHash>>()
-        .into_iter()
         .collect();
     Ok(hashes)
 }
