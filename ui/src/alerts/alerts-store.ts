@@ -2,9 +2,10 @@ import {
   liveLinksStore,
   deletedLinksStore,
   pipe,
+  createLinkToLink,
 } from '@holochain-open-dev/stores';
 
-import { AlertsClient, createLinkToAlert } from './alerts-client.js';
+import { AlertsClient, linkToAlert } from './alerts-client.js';
 
 export class AlertsStore<T> {
   constructor(public client: AlertsClient<T>) {}
@@ -16,7 +17,7 @@ export class AlertsStore<T> {
       () => this.client.getUnreadAlerts(),
       'MyAlerts'
     ),
-    createLinks => createLinks.map(cl => createLinkToAlert<T>(cl))
+    link => link.map(l => linkToAlert<T>(l))
   );
 
   readAlerts = pipe(
@@ -26,6 +27,7 @@ export class AlertsStore<T> {
       () => this.client.getReadAlerts(),
       'MyAlerts'
     ),
-    createLinks => createLinks.map(cl => createLinkToAlert<T>(cl[0]))
+    createLinks =>
+      createLinks.map(cl => linkToAlert<T>(createLinkToLink(cl[0])))
   );
 }

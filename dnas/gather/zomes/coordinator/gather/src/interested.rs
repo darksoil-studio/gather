@@ -44,13 +44,6 @@ pub fn remove_myself_as_interested(event_or_proposal_hash: ActionHash) -> Extern
 }
 
 #[hdk_extern]
-pub fn get_interested_in(event_or_proposal_hash: ActionHash) -> ExternResult<Vec<AgentPubKey>> {
-    let links = get_links(event_or_proposal_hash.clone(), LinkTypes::Interested, None)?;
-
-    let agent_pub_keys = links
-        .into_iter()
-        .filter_map(|link| link.target.into_agent_pub_key())
-        .collect();
-
-    Ok(agent_pub_keys)
+pub fn get_interested_in(event_or_proposal_hash: ActionHash) -> ExternResult<Vec<Link>> {
+    get_links(event_or_proposal_hash.clone(), LinkTypes::Interested, None)
 }

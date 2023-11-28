@@ -7,8 +7,7 @@ import {
   immutableEntryStore,
   joinAsync,
   latestVersionOfEntryStore,
-  liveLinksAgentPubKeysTargetsStore,
-  liveLinksTargetsStore,
+  liveLinksStore,
   mapAndJoin,
   pipe,
   sliceAndJoin,
@@ -20,6 +19,8 @@ import {
   HoloHashMap,
   LazyMap,
   slice,
+  HashType,
+  retype,
 } from '@holochain-open-dev/utils';
 import {
   Cancellation,
@@ -30,7 +31,6 @@ import {
   AgentPubKey,
   CreateLink,
   DeleteLink,
-  SignedActionHashed,
 } from '@holochain/client';
 
 import {
@@ -492,11 +492,14 @@ export class GatherStore {
       ),
       interested: pipe(
         joinAsync([
-          liveLinksAgentPubKeysTargetsStore(
-            this.client,
-            eventHash,
-            () => this.client.getInterestedIn(eventHash),
-            'Interested'
+          pipe(
+            liveLinksStore(
+              this.client,
+              eventHash,
+              () => this.client.getInterestedIn(eventHash),
+              'Interested'
+            ),
+            links => links.map(l => retype(l.target, HashType.AGENT))
           ),
           latestVersion,
         ]),
@@ -552,7 +555,7 @@ export class GatherStore {
     );
     const liveCancellationsHashes =
       this.cancellationsStore.cancellationsFor.get(proposalHash).live;
-    const events = liveLinksTargetsStore(
+    const events = liveLinksStore(
       this.client,
       proposalHash,
       () => this.client.getEventsForProposal(proposalHash),
@@ -577,7 +580,7 @@ export class GatherStore {
           ]),
         (
           [callToAction, assemblies],
-          [proposal, cancellations, eventsHashes]
+          [proposal, cancellations, eventsLinks]
         ) => ({
           originalActionHash: proposalHash,
           currentProposal: proposal,
@@ -586,7 +589,7 @@ export class GatherStore {
             Array.from(cancellations.keys()),
             callToAction,
             Array.from(assemblies.keys()),
-            eventsHashes
+            eventsLinks.map(l => l.target)
           ),
           callToAction,
         })
@@ -594,11 +597,14 @@ export class GatherStore {
       allRevisions: allRevisionsOfEntryStore(this.client, () =>
         this.client.getAllProposalRevisions(proposalHash)
       ),
-      interested: liveLinksAgentPubKeysTargetsStore(
-        this.client,
-        proposalHash,
-        () => this.client.getInterestedIn(proposalHash),
-        'Interested'
+      interested: pipe(
+        liveLinksStore(
+          this.client,
+          proposalHash,
+          () => this.client.getInterestedIn(proposalHash),
+          'Interested'
+        ),
+        links => links.map(l => retype(l.target, HashType.AGENT))
       ),
       participants: pipe(latestVersion, proposal =>
         this.participantsForCallToAction.get(proposal.entry.call_to_action_hash)
@@ -769,7 +775,7 @@ export class GatherStore {
       ]),
       ([proposal, revisions, liveCancellations, undoneCancellations]) => {
         let activity: EventActivity = [
-          { type: 'proposal_created', record: proposal },
+          { type: 'proposal_created', record: revisions[0] },
         ];
         const revisionsActivity: EventActivity = revisions.slice(1).map(c => ({
           type: 'proposal_updated',
@@ -968,10 +974,17 @@ export class GatherStore {
       () => this.client.getAllUpcomingEvents(),
       'UpcomingEvents'
     ),
-    upcomingEventsHashes =>
-      mapAndJoin(slice(this.events, upcomingEventsHashes), e => e.status, {
-        errors: 'filter_out',
-      }),
+    upcomingEvents =>
+      mapAndJoin(
+        slice(
+          this.events,
+          upcomingEvents.map(link => link.target)
+        ),
+        e => e.status,
+        {
+          errors: 'filter_out',
+        }
+      ),
     upcomingEvents => {
       const events = [];
       for (const [eventHash, eventWithStatus] of upcomingEvents.entries()) {
@@ -1001,10 +1014,10 @@ export class GatherStore {
       () => this.client.getAllCancelledEvents(),
       'CancelledEvents'
     ),
-    hashes =>
-      hashes.map(hash => ({
+    links =>
+      links.map(link => ({
         type: 'event',
-        hash,
+        hash: link.target,
       }))
   );
 
@@ -1015,10 +1028,10 @@ export class GatherStore {
       () => this.client.getAllPastEvents(),
       'PastEvents'
     ),
-    hashes =>
-      hashes.map(hash => ({
+    links =>
+      links.map(link => ({
         type: 'event',
-        hash,
+        hash: link.target,
       }))
   );
 
@@ -1063,10 +1076,17 @@ export class GatherStore {
       () => this.client.getAllOpenProposals(),
       'OpenProposals'
     ),
-    openProposalsHashes =>
-      mapAndJoin(slice(this.proposals, openProposalsHashes), p => p.status, {
-        errors: 'filter_out',
-      }),
+    openProposalsLinks =>
+      mapAndJoin(
+        slice(
+          this.proposals,
+          openProposalsLinks.map(l => l.target)
+        ),
+        p => p.status,
+        {
+          errors: 'filter_out',
+        }
+      ),
     openProposals => {
       const proposals = [];
       for (const [
@@ -1111,7 +1131,7 @@ export class GatherStore {
       () => this.client.getAllCancelledProposals(),
       'CancelledProposals'
     ),
-    hashes => hashes.map(hash => ({ hash, type: 'proposal' }))
+    links => links.map(link => ({ hash: link.target, type: 'proposal' }))
   );
 
   // Will contain an ordered list of the original action hashes for the cancelled events
@@ -1121,15 +1141,14 @@ export class GatherStore {
       () => this.client.getAllExpiredProposals(),
       'ExpiredProposals'
     ),
-    hashes => hashes.map(hash => ({ hash, type: 'proposal' }))
+    links => links.map(link => ({ hash: link.target, type: 'proposal' }))
   );
 
   /** My events */
 
-  myEvents = collectionStore(
-    this.client,
-    () => this.client.getMyEvents(),
-    'MyEvents'
+  myEvents = pipe(
+    collectionStore(this.client, () => this.client.getMyEvents(), 'MyEvents'),
+    links => links.map(l => l.target)
   );
 
   myPastEvents: AsyncReadable<Array<IndexedHash>> = pipe(
@@ -1395,7 +1414,8 @@ export class GatherStore {
                   ).latestVersion,
                 createLinkRecord =>
                   this.assembleStore.satisfactions.get(
-                    (createLinkRecord!.action as CreateLink).target_address
+                    (createLinkRecord!.action as any as CreateLink)
+                      .target_address
                   ).latestVersion,
                 satisfaction =>
                   this.assembleStore.callToActions.get(

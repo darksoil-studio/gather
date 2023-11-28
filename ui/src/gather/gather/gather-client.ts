@@ -4,6 +4,7 @@ import {
   AgentPubKey,
   AppAgentClient,
   CreateLink,
+  Link,
   Record,
   SignedActionHashed,
 } from '@holochain/client';
@@ -134,7 +135,7 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return new EntryRecord(record);
   }
 
-  getEventsForProposal(proposalHash: ActionHash): Promise<Array<ActionHash>> {
+  getEventsForProposal(proposalHash: ActionHash): Promise<Array<Link>> {
     return this.callZome('get_events_for_proposal', proposalHash);
   }
 
@@ -152,15 +153,15 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('mark_event_as_past', eventHash);
   }
 
-  getAllUpcomingEvents(): Promise<Array<ActionHash>> {
+  getAllUpcomingEvents(): Promise<Array<Link>> {
     return this.callZome('get_all_upcoming_events', null);
   }
 
-  getAllCancelledEvents(): Promise<Array<ActionHash>> {
+  getAllCancelledEvents(): Promise<Array<Link>> {
     return this.callZome('get_all_cancelled_events', null);
   }
 
-  getAllPastEvents(): Promise<Array<ActionHash>> {
+  getAllPastEvents(): Promise<Array<Link>> {
     return this.callZome('get_all_past_events', null);
   }
 
@@ -178,21 +179,21 @@ export class GatherClient extends ZomeClient<GatherSignal> {
     return this.callZome('mark_proposal_as_cancelled', proposalHash);
   }
 
-  async getAllOpenProposals(): Promise<Array<ActionHash>> {
+  async getAllOpenProposals(): Promise<Array<Link>> {
     return this.callZome('get_all_open_proposals', null);
   }
 
-  getAllCancelledProposals(): Promise<Array<ActionHash>> {
+  getAllCancelledProposals(): Promise<Array<Link>> {
     return this.callZome('get_all_cancelled_proposals', null);
   }
 
-  getAllExpiredProposals(): Promise<Array<ActionHash>> {
+  getAllExpiredProposals(): Promise<Array<Link>> {
     return this.callZome('get_all_expired_proposals', null);
   }
 
   /** My Events  */
 
-  async getMyEvents(): Promise<Array<ActionHash>> {
+  async getMyEvents(): Promise<Array<Link>> {
     return this.callZome('get_my_events', null);
   }
 
@@ -206,9 +207,7 @@ export class GatherClient extends ZomeClient<GatherSignal> {
 
   /** Interested */
 
-  async getInterestedIn(
-    eventOrProposalHash: ActionHash
-  ): Promise<Array<AgentPubKey>> {
+  async getInterestedIn(eventOrProposalHash: ActionHash): Promise<Array<Link>> {
     return this.callZome('get_interested_in', eventOrProposalHash);
   }
 

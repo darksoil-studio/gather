@@ -64,9 +64,11 @@ export class MyAlerts extends LitElement {
         'A new proposal was created and you were added as one of its hosts.'
       );
     } else if (action.type === 'event_created') {
-      info.message = msg(
-        'A new event was created and you were added as one of its hosts.'
-      );
+      if (!action.record.entry.from_proposal) {
+        info.message = msg(
+          'A new event was created and you were added as one of its hosts.'
+        );
+      }
     }
 
     return html`
@@ -80,7 +82,7 @@ export class MyAlerts extends LitElement {
           })}
           @click=${() => {
             this.gatherStore.alertsStore.client.markAlertsAsRead([
-              alert.createLink.hashed.hash,
+              alert.link.create_link_hash,
             ]);
             if (alert.alert.type === 'event_alert') {
               this.dispatchEvent(
@@ -210,7 +212,7 @@ export class MyAlerts extends LitElement {
     this.committing = true;
     try {
       await this.gatherStore.alertsStore.client.markAlertsAsRead(
-        alerts.map(a => a.createLink.hashed.hash)
+        alerts.map(a => a.link.create_link_hash)
       );
 
       this.dispatchEvent(

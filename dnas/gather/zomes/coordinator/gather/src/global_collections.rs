@@ -5,7 +5,7 @@ pub fn all_upcoming_events() -> Path {
     Path::from("all_upcoming_events")
 }
 #[hdk_extern]
-pub fn get_all_upcoming_events(_: ()) -> ExternResult<Vec<ActionHash>> {
+pub fn get_all_upcoming_events(_: ()) -> ExternResult<Vec<Link>> {
     get_from_path(all_upcoming_events(), LinkTypes::UpcomingEvents)
 }
 #[hdk_extern]
@@ -63,14 +63,14 @@ pub fn all_cancelled_events() -> Path {
     Path::from("all_cancelled_events")
 }
 #[hdk_extern]
-pub fn get_all_cancelled_events(_: ()) -> ExternResult<Vec<ActionHash>> {
+pub fn get_all_cancelled_events(_: ()) -> ExternResult<Vec<Link>> {
     get_from_path(all_cancelled_events(), LinkTypes::CancelledEvents)
 }
 pub fn all_past_events() -> Path {
     Path::from("all_past_events")
 }
 #[hdk_extern]
-pub fn get_all_past_events(_: ()) -> ExternResult<Vec<ActionHash>> {
+pub fn get_all_past_events(_: ()) -> ExternResult<Vec<Link>> {
     get_from_path(all_past_events(), LinkTypes::PastEvents)
 }
 #[hdk_extern]
@@ -128,34 +128,30 @@ pub fn all_open_proposals() -> Path {
     Path::from("all_open_proposals")
 }
 #[hdk_extern]
-pub fn get_all_open_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
+pub fn get_all_open_proposals(_: ()) -> ExternResult<Vec<Link>> {
     get_from_path(all_open_proposals(), LinkTypes::OpenProposals)
 }
 pub fn all_expired_proposals() -> Path {
     Path::from("all_expired_proposals")
 }
 #[hdk_extern]
-pub fn get_all_expired_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
+pub fn get_all_expired_proposals(_: ()) -> ExternResult<Vec<Link>> {
     get_from_path(all_expired_proposals(), LinkTypes::ExpiredProposals)
 }
 pub fn all_cancelled_proposals() -> Path {
     Path::from("all_cancelled_proposals")
 }
 #[hdk_extern]
-pub fn get_all_cancelled_proposals(_: ()) -> ExternResult<Vec<ActionHash>> {
+pub fn get_all_cancelled_proposals(_: ()) -> ExternResult<Vec<Link>> {
     get_from_path(all_cancelled_proposals(), LinkTypes::CancelledProposals)
 }
 
 /** Helpers */
 
-fn get_from_path(path: Path, link_type: LinkTypes) -> ExternResult<Vec<ActionHash>> {
+fn get_from_path(path: Path, link_type: LinkTypes) -> ExternResult<Vec<Link>> {
     let mut links = get_links(path.path_entry_hash()?, link_type, None)?;
     links.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
-    let hashes: Vec<ActionHash> = links
-        .into_iter()
-        .filter_map(|link| link.target.into_action_hash())
-        .collect();
-    Ok(hashes)
+    Ok(links)
 }
 
 pub fn remove_from_collection(

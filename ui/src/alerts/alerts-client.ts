@@ -5,6 +5,7 @@ import {
   AppAgentClient,
   CreateLink,
   DeleteLink,
+  Link,
   SignedActionHashed,
 } from '@holochain/client';
 import { encode, decode } from '@msgpack/msgpack';
@@ -20,7 +21,7 @@ export class AlertsClient<T> extends ZomeClient<AlertsSignal> {
   }
   /** Alerts */
 
-  async getUnreadAlerts(): Promise<Array<SignedActionHashed<CreateLink>>> {
+  async getUnreadAlerts(): Promise<Array<Link>> {
     return this.callZome('get_unread_alerts', null);
   }
 
@@ -47,18 +48,16 @@ export class AlertsClient<T> extends ZomeClient<AlertsSignal> {
     });
   }
 }
-export function createLinkToAlert<T>(
-  createLink: SignedActionHashed<CreateLink>
-): Alert<T> {
+export function linkToAlert<T>(link: Link): Alert<T> {
   return {
-    createLink,
-    alert: decode(createLink.hashed.content.tag) as T,
-    timestamp: createLink.hashed.content.timestamp,
+    link,
+    alert: decode(link.tag) as T,
+    timestamp: link.timestamp,
   };
 }
 
 export interface Alert<T> {
-  createLink: SignedActionHashed<CreateLink>;
+  link: Link;
   timestamp: number;
   alert: T;
 }

@@ -105,11 +105,6 @@ pub fn update_proposal(input: UpdateProposalInput) -> ExternResult<Record> {
 }
 
 #[hdk_extern]
-pub fn get_events_for_proposal(proposal_hash: ActionHash) -> ExternResult<Vec<ActionHash>> {
-    let links = get_links(proposal_hash, LinkTypes::ProposalToEvent, None)?;
-    let hashes: Vec<ActionHash> = links
-        .into_iter()
-        .filter_map(|link| link.target.into_action_hash())
-        .collect();
-    Ok(hashes)
+pub fn get_events_for_proposal(proposal_hash: ActionHash) -> ExternResult<Vec<Link>> {
+    get_links(proposal_hash, LinkTypes::ProposalToEvent, None)
 }
