@@ -13,3 +13,5 @@ hdk = { workspace = true }
 serde = { workspace = true }
 
 alerts_integrity = { workspace = true }
+hc_zome_trait_notifications = { workspace = true }
+hc_zome_traits = { workspace = true }

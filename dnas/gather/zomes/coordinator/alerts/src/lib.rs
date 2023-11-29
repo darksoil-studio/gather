@@ -1,6 +1,9 @@
-pub mod alerts;
 use alerts_integrity::*;
+use hc_zome_trait_notifications::*;
+use hc_zome_traits::*;
 use hdk::prelude::*;
+
+pub mod alerts;
 
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
@@ -78,4 +81,18 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
         }
         _ => Ok(()),
     }
+}
+
+struct AlertsNotifications;
+
+#[implement_zome_trait_as_externs]
+impl PendingNotifications for AlertsNotifications {
+    fn get_pending_notifications(_: ()) -> ExternResult<Vec<PendingNotification>> {
+        Ok(vec![])
+    }
+}
+
+#[implemented_zome_traits]
+pub enum ZomeTraits {
+    PendingNotifications(AlertsNotifications),
 }

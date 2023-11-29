@@ -77,6 +77,8 @@ name = "alerts"
 version = "0.0.1"
 dependencies = [
  "alerts_integrity",
+ "hc_zome_trait_notifications",
+ "hc_zome_traits",
  "hdk",
  "serde",
 ]
@@ -596,6 +598,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "blake"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee55e9ca33be1f257d8356cfb29b10b1c8f86dc38cf1344ca01525464356cd0c"
+dependencies = [
+ "cc",
+ "libc",
+]
+
+[[package]]
 name = "blake2b_simd"
 version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -973,6 +985,15 @@ name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
+
+[[package]]
+name = "convert_case"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec182b0ca2f35d8fc196cf3404988fd8b8c739a4d270ff118a398feb0cbec1ca"
+dependencies = [
+ "unicode-segmentation",
+]
 
 [[package]]
 name = "core-foundation"
@@ -1381,7 +1402,7 @@ version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321"
 dependencies = [
- "convert_case",
+ "convert_case 0.4.0",
  "proc-macro2",
  "quote",
  "rustc_version",
@@ -2265,6 +2286,7 @@ dependencies = [
 name = "hc_zome_trait_notifications"
 version = "0.1.0"
 dependencies = [
+ "hc_zome_traits",
  "hdk",
  "serde",
 ]
@@ -2272,6 +2294,13 @@ dependencies = [
 [[package]]
 name = "hc_zome_traits"
 version = "0.1.0"
+dependencies = [
+ "blake",
+ "convert_case 0.6.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.39",
+]
 
 [[package]]
 name = "hdi"

@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 hdk = { workspace = true }
 serde = "1"
+hc_zome_traits = { path = "../hc_zome_traits" }
