@@ -1,5 +1,5 @@
 use alerts_integrity::*;
-use hc_zome_trait_notifications::*;
+use hc_zome_trait_pending_notifications::*;
 use hc_zome_traits::*;
 use hdk::prelude::*;
 

@@ -77,7 +77,7 @@ name = "alerts"
 version = "0.0.1"
 dependencies = [
  "alerts_integrity",
- "hc_zome_trait_notifications",
+ "hc_zome_trait_pending_notifications",
  "hc_zome_traits",
  "hdk",
  "serde",
@@ -2283,7 +2283,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hc_zome_trait_notifications"
+name = "hc_zome_trait_pending_notifications"
 version = "0.1.0"
 dependencies = [
  "hc_zome_traits",
