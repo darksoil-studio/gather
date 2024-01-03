@@ -87,8 +87,24 @@ struct AlertsNotifications;
 
 #[implement_zome_trait_as_externs]
 impl PendingNotifications for AlertsNotifications {
-    fn get_pending_notifications(_: ()) -> ExternResult<Vec<PendingNotification>> {
-        Ok(vec![])
+    fn get_notification(input: GetNotificationInput) -> ExternResult<Option<Notification>> {
+        let Some(alert_record) = get(input.notification_hash, GetOptions::default())? else {
+            return Ok(None);
+        };
+
+        let Action::CreateLink(create_link) = alert_record.action().clone() else {
+          return Err(wasm_error!(WasmErrorInner::Guest(format!("Notification hash is not for a create link"))));
+        };
+
+        Ok(Some(Notification {
+            title: String::from("hey"),
+            body: String::from("ho"),
+            hrl_to_navigate_to_on_click: HrlWithContext {
+                hrl: (dna_info()?.dna_hash, input.notification_hash),
+                context: SerializedBytes::from(UnsafeBytes::from(vec![])),
+            },
+            pending: true,
+        }))
     }
 }
 

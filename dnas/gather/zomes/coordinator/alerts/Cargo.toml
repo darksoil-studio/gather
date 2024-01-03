@@ -15,3 +15,5 @@ serde = { workspace = true }
 alerts_integrity = { workspace = true }
 hc_zome_trait_pending_notifications = { workspace = true }
 hc_zome_traits = { workspace = true }
+
+xliff = { git = "https://github.com/kkostov/hb-rs-xliff", branch = "master" }

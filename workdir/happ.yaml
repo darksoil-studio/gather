@@ -15,3 +15,15 @@ roles:
         origin_time: ~
       version: ~
       clone_limit: 0
+  - name: notifications
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: "./notifications.dna"
+      modifiers:
+        network_seed: ~
+        properties: ~
+        origin_time: ~
+      version: ~
+      clone_limit: 0
