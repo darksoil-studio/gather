@@ -24,7 +24,7 @@
   <source>Event was created.</source>
 </trans-unit>
 <trans-unit id="s93cd05d961caecf9">
-  <source>Event was cancelled because:</source>
+  <source>Event was cancelled.</source>
 </trans-unit>
 <trans-unit id="s30165140983beaf5">
   <source>Event was updated.</source>
@@ -33,7 +33,7 @@
   <source>New commitment to participate in the event.</source>
 </trans-unit>
 <trans-unit id="s8bc13748d664c5d1">
-  <source>New contribution:</source>
+  <source>New contribution.</source>
 </trans-unit>
 <trans-unit id="se14d143fa998e2e7">
   <source>Commitment to contribute <x id="0" equiv-text="${action.record.entry.amount}"/> to need "<x id="1" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>".</source>

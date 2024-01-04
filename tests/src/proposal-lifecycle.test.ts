@@ -1,8 +1,13 @@
 import { test, assert } from 'vitest';
 
-import { dhtSync, pause, runScenario } from '@holochain/tryorama';
+import { pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@holochain-open-dev/stores';
-import { sampleProposal, setup } from './utils';
+import {
+  readAndAssertNotification,
+  sampleProposal,
+  setup,
+  waitAndDhtSync,
+} from './utils';
 
 test('proposal: create and cancel', async t => {
   await runScenario(
@@ -19,13 +24,19 @@ test('proposal: create and cancel', async t => {
       assert.equal(cancelledProposals.length, 0);
 
       const proposal = await alice.store.client.createProposal(
-        await sampleProposal(alice.store)
+        await sampleProposal(alice.store, {
+          title: 'Cool Proposal',
+          hosts: [bob.player.agentPubKey],
+        })
       );
       assert.ok(proposal);
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
+      await waitAndDhtSync([alice.player, bob.player]);
+
+      await readAndAssertNotification(
+        bob.store,
+        'Cool Proposal',
+        'Förslaget skapades.'
       );
 
       let bobProposals = await toPromise(bob.store.myOpenProposals);
@@ -37,14 +48,21 @@ test('proposal: create and cancel', async t => {
       openProposals = await toPromise(bob.store.allOpenProposals);
       assert.equal(openProposals.length, 1);
 
+      await bob.store.client.addMyselfAsInterested(proposal.actionHash);
+
+      await waitAndDhtSync([alice.player, bob.player]);
+
       await alice.store.cancellationsStore.client.createCancellation(
         proposal.actionHash,
         "Let's not do this finally"
       );
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
+      await waitAndDhtSync([alice.player, bob.player]);
+
+      await readAndAssertNotification(
+        bob.store,
+        'Cool Proposal',
+        'Förslaget togs bort.'
       );
 
       openProposals = await toPromise(bob.store.allOpenProposals);
@@ -74,13 +92,24 @@ test('proposal: create and expire', async t => {
       assert.equal(expiredProposals.length, 0);
 
       const proposal = await alice.store.client.createProposal(
-        await sampleProposal(alice.store, {}, (Date.now() + 30_000) * 1000)
+        await sampleProposal(
+          alice.store,
+          {
+            title: 'Cool Proposal',
+            hosts: [bob.player.agentPubKey],
+          },
+          (Date.now() + 30_000) * 1000
+        )
       );
       assert.ok(proposal);
+      await alice.store.client.addMyselfAsInterested(proposal.actionHash);
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
+      await waitAndDhtSync([alice.player, bob.player]);
+
+      await readAndAssertNotification(
+        bob.store,
+        'Cool Proposal',
+        'Förslaget skapades.'
       );
 
       openProposals = await toPromise(bob.store.allOpenProposals);
@@ -91,13 +120,16 @@ test('proposal: create and expire', async t => {
       openProposals = await toPromise(bob.store.allOpenProposals);
       assert.equal(openProposals.length, 0);
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
-      );
+      await waitAndDhtSync([alice.player, bob.player]);
 
       expiredProposals = await toPromise(bob.store.allExpiredProposals);
       assert.equal(expiredProposals.length, 1);
+
+      await readAndAssertNotification(
+        alice.store,
+        'Cool Proposal',
+        'Förslaget gick ut utan att nå upp till minimi nivåer för behov.'
+      );
     },
     true,
     { timeout: 60000 }
@@ -119,36 +151,43 @@ test('proposal: create and fulfill', async t => {
       assert.equal(myOpenProposals.length, 0);
 
       const proposal = await alice.store.client.createProposal(
-        await sampleProposal(alice.store)
+        await sampleProposal(alice.store, {
+          title: 'Cool Proposal',
+          hosts: [bob.player.agentPubKey],
+        })
       );
       assert.ok(proposal);
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
+      await waitAndDhtSync([alice.player, bob.player]);
+
+      await readAndAssertNotification(
+        bob.store,
+        'Cool Proposal',
+        'Förslaget skapades.'
       );
+
+      await bob.store.client.addMyselfAsInterested(proposal.actionHash);
+
+      await waitAndDhtSync([alice.player, bob.player]);
 
       openProposals = await toPromise(bob.store.allOpenProposals);
       assert.equal(openProposals.length, 1);
       myOpenProposals = await toPromise(alice.store.myOpenProposals);
       assert.equal(myOpenProposals.length, 1);
 
+      // This should create the event automatically
       const assembly = await alice.store.assembleStore.client.createAssembly({
         call_to_action_hash: proposal.entry.call_to_action_hash,
         satisfactions_hashes: [],
       });
 
-      const event = await alice.store.client.createEvent({
-        from_proposal: {
-          proposal_hash: proposal.actionHash,
-          assembly_hash: assembly.actionHash,
-        },
-        ...(proposal.entry as any),
-      });
+      await waitAndDhtSync([alice.player, bob.player]);
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
+      await readAndAssertNotification(
+        bob.store,
+        'Cool Proposal',
+        // 'Alla behov har blivit tillfredställda!'
+        'Förslaget gick igenom! Det är nu ett event.'
       );
 
       myOpenProposals = await toPromise(alice.store.myOpenProposals);

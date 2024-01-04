@@ -108,64 +108,64 @@ export function actionTimestamp(action: EventAction): number {
 export type EventActionOnlyHash =
   | {
       type: 'ProposalCreated';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'ProposalUpdated';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'ProposalCancelled';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'ProposalUncancelled';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'ProposalExpired';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
       timestamp: number;
     }
   | {
       type: 'EventCreated';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'EventUpdated';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'EventCancelled';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'EventUncancelled';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'CommitmentCreated';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'CommitmentCancelled';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'CommitmentCancellationUndone';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'SatisfactionCreated';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'SatisfactionDeleted';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     }
   | {
       type: 'AssemblyCreated';
-      actionHash: ActionHash;
+      action_hash: ActionHash;
     };
 
 export type EventActivity = Array<EventAction>;
@@ -179,7 +179,7 @@ export function messageAndIcon(action: EventAction) {
       };
     case 'ProposalCancelled':
       return {
-        message: msg('Proposal was cancelled because:'),
+        message: msg('Proposal was cancelled.'),
         secondary: action.record.entry.reason,
         icon: wrapPathInSvg(mdiCancel),
       };
@@ -209,7 +209,7 @@ export function messageAndIcon(action: EventAction) {
       };
     case 'EventCancelled':
       return {
-        message: msg('Event was cancelled because:'),
+        message: msg('Event was cancelled.'),
         secondary: action.record.entry.reason,
         icon: wrapPathInSvg(mdiCancel),
       };
@@ -231,7 +231,7 @@ export function messageAndIcon(action: EventAction) {
         };
       }
       return {
-        message: msg('New contribution:'),
+        message: msg('New contribution.'),
         secondary: msg(
           str`Commitment to contribute ${action.record.entry.amount} to need "${
             action.callToAction.entry.needs[action.record.entry.need_index]
@@ -292,3 +292,7 @@ export function messageAndIcon(action: EventAction) {
       };
   }
 }
+
+/** Backend t */
+const _nws = msg('One of the needs was satisfied.');
+const _nwnls = msg('One of the needs is no longer satisfied.');

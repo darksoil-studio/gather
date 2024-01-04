@@ -3,7 +3,12 @@ import { test, assert } from 'vitest';
 import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { toPromise } from '@holochain-open-dev/stores';
 
-import { sampleEvent, setup } from './utils';
+import {
+  readAndAssertNotification,
+  sampleEvent,
+  setup,
+  waitAndDhtSync,
+} from './utils';
 
 test('event: create and cancel', async t => {
   await runScenario(
@@ -16,35 +21,46 @@ test('event: create and cancel', async t => {
       assert.equal(cancelledEvents.length, 0);
 
       const event = await alice.store.client.createEvent(
-        await sampleEvent(alice.store)
+        await sampleEvent(alice.store, {
+          title: 'Cool Event',
+          hosts: [bob.player.agentPubKey],
+        })
       );
       assert.ok(event);
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
-      );
+      await waitAndDhtSync([alice.player, bob.player]);
 
       upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 1);
+
+      await readAndAssertNotification(
+        bob.store,
+        'Cool Event',
+        'Eventet har skapats.'
+      );
+
+      await bob.store.client.addMyselfAsInterested(event.actionHash);
+
+      await waitAndDhtSync([alice.player, bob.player]);
 
       await alice.store.cancellationsStore.client.createCancellation(
         event.actionHash,
         "I can't make it"
       );
 
-      await pause(400);
-
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
-      );
+      await waitAndDhtSync([alice.player, bob.player]);
 
       upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 0);
 
       cancelledEvents = await toPromise(bob.store.allCancelledEvents);
       assert.equal(cancelledEvents.length, 1);
+
+      await readAndAssertNotification(
+        bob.store,
+        'Cool Event',
+        'Eventet ställdes.'
+      );
     },
     true,
     { timeout: 60_000 }
@@ -68,14 +84,13 @@ test('event: create and pass', async t => {
             start_time: (Date.now() + 25_000) * 1000,
             end_time: (Date.now() + 60_000) * 1000,
           },
+          title: 'Cool Event',
+          hosts: [bob.player.agentPubKey],
         })
       );
       assert.ok(event);
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
-      );
+      await waitAndDhtSync([alice.player, bob.player]);
 
       upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 1);
@@ -85,10 +100,7 @@ test('event: create and pass', async t => {
       upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
       assert.equal(upcomingEvents.length, 0);
 
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
-      );
+      await waitAndDhtSync([alice.player, bob.player]);
 
       pastEvents = await toPromise(bob.store.allPastEvents);
       assert.equal(pastEvents.length, 1);

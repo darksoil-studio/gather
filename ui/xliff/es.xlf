@@ -8,15 +8,15 @@
 </trans-unit>
 <trans-unit id="s52b1b9ae95705b3c">
   <source>Proposal was created.</source>
-  <target>La propuesta fue creada.</target>
+  <target>La propuesta ha sido creada.</target>
 </trans-unit>
 <trans-unit id="s45b98b5bf8532d39">
-  <source>Proposal was cancelled because:</source>
-  <target>La propuesta fue creada.</target>
+  <source>Proposal was cancelled.</source>
+  <target>La propuesta ha sido cancelada.</target>
 </trans-unit>
 <trans-unit id="s62d33cbd276324b5">
   <source>Proposal was updated.</source>
-  <target>La propuesta fue actualizada.</target>
+  <target>La propuesta ha sido actualizada.</target>
 </trans-unit>
 <trans-unit id="s016a7c24282e6342">
   <source>The proposal succeeded! It is now an event.</source>
@@ -24,11 +24,11 @@
 </trans-unit>
 <trans-unit id="s1e06d6883ee8db7c">
   <source>Event was created.</source>
-  <target>El evento fue creado</target>
+  <target>El evento ha sido creado</target>
 </trans-unit>
 <trans-unit id="s93cd05d961caecf9">
-  <source>Event was cancelled because:</source>
-  <target>El evento fue cancelado porque:</target>
+  <source>Event was cancelled.</source>
+  <target>El evento ha sido cancelado.</target>
 </trans-unit>
 <trans-unit id="s30165140983beaf5">
   <source>Event was updated.</source>
@@ -39,8 +39,8 @@
   <target>Nuevo compromiso para participar en el evento.</target>
 </trans-unit>
 <trans-unit id="s8bc13748d664c5d1">
-  <source>New contribution:</source>
-  <target>Nueva contribución:</target>
+  <source>New contribution.</source>
+  <target>Nueva contribución.</target>
 </trans-unit>
 <trans-unit id="se14d143fa998e2e7">
   <source>Commitment to contribute <x id="0" equiv-text="${action.record.entry.amount}"/> to need "<x id="1" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>".</source>

@@ -1,4 +1,5 @@
 import { ZomeClient } from '@holochain-open-dev/utils';
+import { createLinkToLink } from '@holochain-open-dev/stores';
 import {
   ActionHash,
   AgentPubKey,
@@ -22,7 +23,11 @@ export class AlertsClient<T> extends ZomeClient<AlertsSignal> {
   /** Alerts */
 
   async getUnreadAlerts(): Promise<Array<Link>> {
-    return this.callZome('get_unread_alerts', null);
+    const r: Array<SignedActionHashed<CreateLink>> = await this.callZome(
+      'get_unread_alerts',
+      null
+    );
+    return r.map(createLinkToLink);
   }
 
   async getReadAlerts(): Promise<
@@ -37,10 +42,7 @@ export class AlertsClient<T> extends ZomeClient<AlertsSignal> {
     await this.callZome('mark_alerts_as_read', actionHashes);
   }
 
-  notifyAlert(
-    agents: AgentPubKey[],
-    alert: T
-  ): Promise<Array<SignedActionHashed<CreateLink>>> {
+  notifyAlert(agents: AgentPubKey[], alert: T): Promise<void> {
     const alertBinary = encode(alert);
     return this.callZome('notify_alert', {
       agents,

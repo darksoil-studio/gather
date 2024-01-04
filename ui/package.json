@@ -20,7 +20,7 @@
     "@holochain-open-dev/file-storage": "^0.7.0",
     "@holochain-open-dev/profiles": "^0.17.1",
     "@holochain-open-dev/stores": "^0.8.3",
-    "@holochain-open-dev/utils": "^0.16.2",
+    "@holochain-open-dev/utils": "^0.16.4",
     "@holochain/client": "^0.16.0",
     "@lit/context": "^1.0.0",
     "@lit-labs/observers": "^2.0.0",

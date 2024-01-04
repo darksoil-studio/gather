@@ -7,10 +7,12 @@ pub mod proposal;
 
 use gather_integrity::*;
 use hdk::prelude::*;
+
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
     Ok(InitCallbackResult::Pass)
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Signal {

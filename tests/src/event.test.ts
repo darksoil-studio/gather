@@ -3,7 +3,12 @@ import { test, assert } from 'vitest';
 import { runScenario, dhtSync } from '@holochain/tryorama';
 import { cleanNodeDecoding } from '@holochain-open-dev/utils/dist/clean-node-decoding.js';
 import { toPromise } from '@holochain-open-dev/stores';
-import { sampleEvent, setup } from './utils.js';
+import {
+  readAndAssertNotification,
+  sampleEvent,
+  setup,
+  waitAndDhtSync,
+} from './utils.js';
 import { Event } from '../../ui/src/gather/gather/types.js';
 
 test('create and update event', async t => {
@@ -13,9 +18,23 @@ test('create and update event', async t => {
 
       // Alice creates a event
       const event = await alice.store.client.createEvent(
-        await sampleEvent(alice.store)
+        await sampleEvent(alice.store, {
+          title: 'Cool Event',
+          hosts: [bob.player.agentPubKey],
+        })
       );
       assert.ok(event);
+
+      await waitAndDhtSync([alice.player, bob.player]);
+
+      await readAndAssertNotification(
+        bob.store,
+        'Cool Event',
+        'Eventet har skapats.'
+      );
+
+      await bob.store.client.addMyselfAsInterested(event.actionHash);
+      await waitAndDhtSync([alice.player, bob.player]);
 
       const originalActionHash = event.actionHash;
 
@@ -52,9 +71,12 @@ test('create and update event', async t => {
       assert.ok(updatedEvent);
 
       // Wait for the updated entry to be propagated to the other node.
-      await dhtSync(
-        [alice.player, bob.player],
-        alice.player.cells[0].cell_id[0]
+      await waitAndDhtSync([alice.player, bob.player]);
+
+      await readAndAssertNotification(
+        bob.store,
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec eros quis enim hendrerit aliquet.',
+        'Eventet har uppdaterats.'
       );
 
       // Bob gets the updated event

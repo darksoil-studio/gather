@@ -6,10 +6,6 @@
   <source>Proposal was created.</source>
   <target>Förslaget skapades.</target>
 </trans-unit>
-<trans-unit id="s45b98b5bf8532d39">
-  <source>Proposal was cancelled because:</source>
-  <target>Förslaget togs bort på grund av:</target>
-</trans-unit>
 <trans-unit id="s05e0676a12371a86">
   <source>Proposal expired without meeting the minimum required needs.</source>
   <target>Förslaget gick ut utan att nå upp till minimi nivåer för behov.</target>
@@ -26,10 +22,6 @@
   <source>Event was created.</source>
   <target>Eventet har skapats.</target>
 </trans-unit>
-<trans-unit id="s93cd05d961caecf9">
-  <source>Event was cancelled because:</source>
-  <target>Eventet ställdes in på grund av:</target>
-</trans-unit>
 <trans-unit id="s30165140983beaf5">
   <source>Event was updated.</source>
   <target>Eventet har uppdaterats.</target>
@@ -37,10 +29,6 @@
 <trans-unit id="s6111a57d3ffdf7f9">
   <source>New commitment to participate in the event.</source>
   <target>Nytt åtagande att delta i eventet.</target>
-</trans-unit>
-<trans-unit id="s8bc13748d664c5d1">
-  <source>New contribution:</source>
-  <target>Nytt bidrag: </target>
 </trans-unit>
 <trans-unit id="se14d143fa998e2e7">
   <source>Commitment to contribute <x id="0" equiv-text="${action.record.entry.amount}"/> to need "<x id="1" equiv-text="${action.callToAction.entry.needs[action.record.entry.need_index]&#10;    .description}"/>".</source>
@@ -693,6 +681,26 @@
 <trans-unit id="s3a98b0872fc2d6d9">
   <source>Error fetching the unread alerts count</source>
   <target>Fel vid hämtning av antalet notifikationer</target>
+</trans-unit>
+<trans-unit id="s2e76d757a3710665">
+  <source>Proposal was cancelled.</source>
+  <target>Förslaget togs bort.</target>
+</trans-unit>
+<trans-unit id="s45c82a3cb3d107a5">
+  <source>Event was cancelled.</source>
+  <target>Eventet ställdes.</target>
+</trans-unit>
+<trans-unit id="s8bc14b48d664e7cd">
+  <source>New contribution.</source>
+  <target>Nytt bidrag.</target>
+</trans-unit>
+<trans-unit id="sbd214e68013a4d3b">
+  <source>One of the needs was satisfied.</source>
+  <target>Ett av behoven var tillfredsställt</target>
+</trans-unit>
+<trans-unit id="s586163ec6b1330b8">
+  <source>One of the needs is no longer satisfied.</source>
+  <target>Ett av behoven är inte längre tillfredsställt.</target>
 </trans-unit>
 </body>
 </file>

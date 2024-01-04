@@ -72,9 +72,9 @@ pub fn notify_alert(input: NotifyAlertInput) -> ExternResult<()> {
                 agent,
                 notification: input.alert.clone(),
             },
-        )? {
-            ZomeCallResponse::Ok(_) => {}
-            r => error!("Failed to notify agent: {r:?}"),
+        ) {
+            Ok(ZomeCallResponse::Ok(_)) => {}
+            r => warn!("Failed to notify agent: {r:?}"),
         };
     }
 

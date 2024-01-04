@@ -1,4 +1,4 @@
-import { AssembleStore, CallToAction, Commitment } from '@darksoil/assemble';
+import { AssembleStore, CallToAction } from '@darksoil/assemble';
 import {
   allRevisionsOfEntryStore,
   AsyncReadable,
@@ -22,10 +22,7 @@ import {
   HashType,
   retype,
 } from '@holochain-open-dev/utils';
-import {
-  Cancellation,
-  CancellationsStore,
-} from '@holochain-open-dev/cancellations';
+import { CancellationsStore } from '@holochain-open-dev/cancellations';
 import {
   ActionHash,
   AgentPubKey,
@@ -43,7 +40,7 @@ import {
   IndexedHash,
 } from './types.js';
 import { GatherClient } from './gather-client.js';
-import { intersection, isPast } from './utils.js';
+import { intersection, isPast, uniquify } from './utils.js';
 import { AlertsStore } from '../../alerts/alerts-store.js';
 import { Alert } from '../../alerts/alerts-client.js';
 import {
@@ -92,12 +89,12 @@ export function deriveProposalStatus(
 }
 
 export interface EventAlert {
-  eventHash: ActionHash;
+  event_hash: ActionHash;
   action: EventActionOnlyHash;
 }
 
 export interface ProposalAlert {
-  proposalHash: ActionHash;
+  proposal_hash: ActionHash;
   action: EventActionOnlyHash;
 }
 
@@ -125,45 +122,29 @@ export class GatherStore {
             ),
             {
               type: 'ProposalAlert',
-              proposalHash: signal.action.hashed.hash,
+              proposal_hash: signal.action.hashed.hash,
               action: {
                 type: 'ProposalCreated',
-                actionHash: signal.action.hashed.hash,
+                action_hash: signal.action.hashed.hash,
               },
             }
           );
         } else if (signal.app_entry.type === 'Event') {
           if (signal.app_entry.from_proposal) {
-            const proposal = this.proposals.get(
-              signal.app_entry.from_proposal.proposal_hash
-            );
-            const participants = await toPromise(proposal.participants);
-            const interested = await toPromise(proposal.interested);
-            await alertsStore.client.notifyAlert(
-              [
-                ...Array.from(participants.keys()),
-                ...interested,
-                ...signal.app_entry.hosts,
-              ].filter(
-                agent =>
-                  agent.toString() !== this.client.client.myPubKey.toString()
-              ),
+            await this.notifyOfProposalAction(
+              signal.app_entry.from_proposal.proposal_hash,
               {
-                type: 'EventAlert',
-                eventHash: signal.action.hashed.hash,
-                action: {
-                  type: 'EventCreated',
-                  actionHash: signal.action.hashed.hash,
-                },
+                type: 'EventCreated',
+                action_hash: signal.action.hashed.hash,
               }
             );
           } else {
             await alertsStore.client.notifyAlert(signal.app_entry.hosts, {
               type: 'EventAlert',
-              eventHash: signal.action.hashed.hash,
+              event_hash: signal.action.hashed.hash,
               action: {
                 type: 'EventCreated',
-                actionHash: signal.action.hashed.hash,
+                action_hash: signal.action.hashed.hash,
               },
             });
           }
@@ -176,7 +157,7 @@ export class GatherStore {
 
           while (lastUpdate) {
             const event: EntryRecord<Event> | undefined =
-              await this.client.getLatestEvent(lastUpdate);
+              await this.client.getOriginalEvent(lastUpdate);
             lastUpdate =
               event?.action.type === 'Update'
                 ? event.action.original_action_address
@@ -186,7 +167,7 @@ export class GatherStore {
             }
           }
           await this.notifyOfEventAction(originalAction, {
-            actionHash: signal.action.hashed.hash,
+            action_hash: signal.action.hashed.hash,
             type: 'EventUpdated',
           });
         }
@@ -224,22 +205,10 @@ export class GatherStore {
                   },
                 });
               } else {
-                const proposalStore = this.proposals.get(proposalHash);
-                const participants = await toPromise(
-                  proposalStore.participants
-                );
-                const interested = await toPromise(proposalStore.interested);
-                await this.alertsStore.client.notifyAlert(
-                  [...Array.from(participants.keys()), ...interested],
-                  {
-                    type: 'ProposalAlert',
-                    proposalHash,
-                    action: {
-                      type: 'AssemblyCreated',
-                      actionHash: signal.action.hashed.hash,
-                    },
-                  }
-                );
+                await this.notifyOfProposalAction(proposalHash, {
+                  type: 'AssemblyCreated',
+                  action_hash: signal.action.hashed.hash,
+                });
               }
             }
           }
@@ -264,20 +233,10 @@ export class GatherStore {
               proposal.entry.call_to_action_hash.toString() ===
               callToAction.actionHash.toString()
             ) {
-              const proposalStore = this.proposals.get(proposalHash);
-              const participants = await toPromise(proposalStore.participants);
-              const interested = await toPromise(proposalStore.interested);
-              await this.alertsStore.client.notifyAlert(
-                [...Array.from(participants.keys()), ...interested],
-                {
-                  type: 'ProposalAlert',
-                  proposalHash,
-                  action: {
-                    type: 'SatisfactionCreated',
-                    actionHash: signal.action.hashed.hash,
-                  },
-                }
-              );
+              await this.notifyOfProposalAction(proposalHash, {
+                type: 'SatisfactionCreated',
+                action_hash: signal.action.hashed.hash,
+              });
             }
           }
         }
@@ -305,7 +264,7 @@ export class GatherStore {
             ) {
               await this.notifyOfProposalAction(proposalHash, {
                 type: 'SatisfactionDeleted',
-                actionHash: signal.action.hashed.hash,
+                action_hash: signal.action.hashed.hash,
               });
             }
           }
@@ -329,7 +288,7 @@ export class GatherStore {
             ) {
               await this.notifyOfEventAction(eventHash, {
                 type: 'SatisfactionDeleted',
-                actionHash: signal.action.hashed.hash,
+                action_hash: signal.action.hashed.hash,
               });
             }
           }
@@ -346,19 +305,10 @@ export class GatherStore {
             const event = await toPromise(eventStore.latestVersion);
             if ('from_proposal' in event.entry) {
               await this.client.markEventAsCancelled(cancelledHash);
-              const participants = await toPromise(eventStore.participants);
-              const interested = await toPromise(eventStore.interested);
-              await this.alertsStore.client.notifyAlert(
-                [...Array.from(participants.keys()), ...interested],
-                {
-                  type: 'EventAlert',
-                  eventHash: cancelledHash,
-                  action: {
-                    type: 'EventCancelled',
-                    actionHash: signal.action.hashed.hash,
-                  },
-                }
-              );
+              await this.notifyOfEventAction(cancelledHash, {
+                type: 'EventCancelled',
+                action_hash: signal.action.hashed.hash,
+              });
               return;
             }
           } catch (e) {
@@ -369,19 +319,11 @@ export class GatherStore {
             const proposal = await toPromise(proposalStore.latestVersion);
             if ('hosts' in proposal.entry) {
               await this.client.markProposalAsCancelled(cancelledHash);
-              const participants = await toPromise(proposalStore.participants);
-              const interested = await toPromise(proposalStore.interested);
-              await this.alertsStore.client.notifyAlert(
-                [...Array.from(participants.keys()), ...interested],
-                {
-                  type: 'ProposalAlert',
-                  proposalHash: cancelledHash,
-                  action: {
-                    type: 'ProposalCancelled',
-                    actionHash: signal.action.hashed.hash,
-                  },
-                }
-              );
+
+              await this.notifyOfProposalAction(cancelledHash, {
+                type: 'ProposalCancelled',
+                action_hash: signal.action.hashed.hash,
+              });
               return;
             }
           } catch (e) {
@@ -437,7 +379,7 @@ export class GatherStore {
               await this.client.markEventAsUpcoming(cancelledHash);
               await this.notifyOfEventAction(cancelledHash, {
                 type: 'EventUncancelled',
-                actionHash: signal.action.hashed.content.deletes_address,
+                action_hash: signal.action.hashed.content.deletes_address,
               });
               return;
             }
@@ -451,7 +393,7 @@ export class GatherStore {
               await this.client.markProposalAsOpen(cancelledHash);
               await this.notifyOfProposalAction(cancelledHash, {
                 type: 'ProposalUncancelled',
-                actionHash: signal.action.hashed.content.deletes_address,
+                action_hash: signal.action.hashed.content.deletes_address,
               });
               return;
             }
@@ -1037,19 +979,28 @@ export class GatherStore {
 
   async notifyOfProposalAction(
     proposalHash: ActionHash,
-    action: EventActionOnlyHash
+    action: EventActionOnlyHash,
+    filterMyselfOut = true
   ) {
     const proposal = this.proposals.get(proposalHash);
     const participants = await toPromise(proposal.participants);
     const interested = await toPromise(proposal.interested);
-    await this.alertsStore.client.notifyAlert(
-      [...Array.from(participants.keys()), ...interested],
-      {
-        type: 'ProposalAlert',
-        proposalHash,
-        action,
-      }
-    );
+
+    let notified = uniquify([
+      ...Array.from(participants.keys()),
+      ...interested,
+    ]);
+
+    if (filterMyselfOut)
+      notified = notified.filter(
+        pk => pk.toString() !== this.client.client.myPubKey.toString()
+      );
+
+    return this.alertsStore.client.notifyAlert(notified, {
+      type: 'ProposalAlert',
+      proposal_hash: proposalHash,
+      action,
+    });
   }
 
   async notifyOfEventAction(
@@ -1059,11 +1010,13 @@ export class GatherStore {
     const event = this.events.get(eventHash);
     const participants = await toPromise(event.participants);
     const interested = await toPromise(event.interested);
-    await this.alertsStore.client.notifyAlert(
-      [...Array.from(participants.keys()), ...interested],
+    return this.alertsStore.client.notifyAlert(
+      uniquify([...Array.from(participants.keys()), ...interested]).filter(
+        pk => pk.toString() !== this.client.client.myPubKey.toString()
+      ),
       {
         type: 'EventAlert',
-        eventHash,
+        event_hash: eventHash,
         action,
       }
     );
@@ -1095,11 +1048,15 @@ export class GatherStore {
       ] of openProposals.entries()) {
         if (proposalWithStatus.status.type === 'expired_proposal') {
           this.client.markProposalAsExpired(proposalHash);
-          this.notifyOfProposalAction(proposalHash, {
-            type: 'ProposalExpired',
-            actionHash: proposalHash,
-            timestamp: proposalWithStatus.callToAction.entry.expiration_time!,
-          });
+          this.notifyOfProposalAction(
+            proposalHash,
+            {
+              type: 'ProposalExpired',
+              action_hash: proposalHash,
+              timestamp: proposalWithStatus.callToAction.entry.expiration_time!,
+            },
+            false
+          );
         } else if (
           proposalWithStatus.status.type === 'open_proposal' ||
           proposalWithStatus.status.type === 'fulfilled_proposal'
@@ -1458,7 +1415,7 @@ export class GatherStore {
       const actions = unreadAlerts.map(ua =>
         this.eventActionFromOnlyHash
           .get(ua.alert.action.type)
-          .get(ua.alert.action.actionHash)
+          .get(ua.alert.action.action_hash)
       );
 
       return joinAsync([
@@ -1492,7 +1449,7 @@ export class GatherStore {
       const actions = readAlerts.map(ua =>
         this.eventActionFromOnlyHash
           .get(ua.alert.action.type)
-          .get(ua.alert.action.actionHash)
+          .get(ua.alert.action.action_hash)
       );
 
       return joinAsync([

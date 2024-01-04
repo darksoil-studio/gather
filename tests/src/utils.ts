@@ -1,10 +1,4 @@
-import {
-  ActionHash,
-  AppAgentCallZomeRequest,
-  AppAgentWebsocket,
-} from '@holochain/client';
-import { encode } from '@msgpack/msgpack';
-import { Scenario } from '@holochain/tryorama';
+import { dhtSync, pause, Player, Scenario } from '@holochain/tryorama';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { AssembleClient, AssembleStore } from '@darksoil/assemble';
@@ -13,12 +7,15 @@ import {
   CancellationsStore,
 } from '@holochain-open-dev/cancellations';
 import { sampleCallToAction } from '@darksoil/assemble/dist/mocks.js';
+import { toPromise } from '@holochain-open-dev/stores';
+import { assert } from 'vitest';
 
 import { GatherClient } from '../../ui/src/gather/gather/gather-client.js';
 import { Event, Proposal } from '../../ui/src/gather/gather/types.js';
 import { GatherStore } from '../../ui/src/gather/gather/gather-store.js';
 import { AlertsStore } from '../../ui/src/alerts/alerts-store.js';
 import { AlertsClient } from '../../ui/src/alerts/alerts-client.js';
+import { decode } from '@msgpack/msgpack';
 
 export async function sampleProposal(
   gatherStore: GatherStore,
@@ -88,6 +85,48 @@ export async function sampleEvent(
     from_proposal: undefined,
     ...partialEvent,
   };
+}
+
+export async function waitAndDhtSync(players: Player[]) {
+  await pause(200); // Wait for postcommit things to happen
+  await dhtSync(players, players[0].namedCells.get('gather').cell_id[0]);
+}
+
+export async function readAndAssertNotification(
+  store: GatherStore,
+  title: string,
+  body: string
+) {
+  let notifications = await toPromise(store.alertsStore.unreadAlerts);
+
+  if (notifications.length == 0) {
+    await pause(5000);
+
+    notifications = await toPromise(store.alertsStore.unreadAlerts);
+  }
+
+  assert.equal(
+    notifications.length,
+    1,
+    `There was not one notification: ${JSON.stringify(
+      notifications.map(n => n.alert)
+    )}`
+  );
+
+  const notification = await (store.client as any).callZome(
+    'get_notification',
+    {
+      notification_hash: notifications[0].link.create_link_hash,
+      locale: 'sv',
+    }
+  );
+
+  await store.alertsStore.client.markAlertsAsRead([
+    notifications[0].link.create_link_hash,
+  ]);
+
+  assert.equal(notification.title, title);
+  assert.equal(notification.body, body);
 }
 
 export async function setup(scenario: Scenario) {
