@@ -103,10 +103,10 @@ export interface ProposalAlert {
 
 export type GatherAlert =
   | ({
-      type: 'event_alert';
+      type: 'EventAlert';
     } & EventAlert)
   | ({
-      type: 'proposal_alert';
+      type: 'ProposalAlert';
     } & ProposalAlert);
 
 export class GatherStore {
@@ -124,10 +124,10 @@ export class GatherStore {
               host => host.toString() !== this.client.client.myPubKey.toString()
             ),
             {
-              type: 'proposal_alert',
+              type: 'ProposalAlert',
               proposalHash: signal.action.hashed.hash,
               action: {
-                type: 'proposal_created',
+                type: 'ProposalCreated',
                 actionHash: signal.action.hashed.hash,
               },
             }
@@ -149,20 +149,20 @@ export class GatherStore {
                   agent.toString() !== this.client.client.myPubKey.toString()
               ),
               {
-                type: 'event_alert',
+                type: 'EventAlert',
                 eventHash: signal.action.hashed.hash,
                 action: {
-                  type: 'event_created',
+                  type: 'EventCreated',
                   actionHash: signal.action.hashed.hash,
                 },
               }
             );
           } else {
             await alertsStore.client.notifyAlert(signal.app_entry.hosts, {
-              type: 'event_alert',
+              type: 'EventAlert',
               eventHash: signal.action.hashed.hash,
               action: {
-                type: 'event_created',
+                type: 'EventCreated',
                 actionHash: signal.action.hashed.hash,
               },
             });
@@ -187,7 +187,7 @@ export class GatherStore {
           }
           await this.notifyOfEventAction(originalAction, {
             actionHash: signal.action.hashed.hash,
-            type: 'event_updated',
+            type: 'EventUpdated',
           });
         }
       }
@@ -232,10 +232,10 @@ export class GatherStore {
                 await this.alertsStore.client.notifyAlert(
                   [...Array.from(participants.keys()), ...interested],
                   {
-                    type: 'proposal_alert',
+                    type: 'ProposalAlert',
                     proposalHash,
                     action: {
-                      type: 'assembly_created',
+                      type: 'AssemblyCreated',
                       actionHash: signal.action.hashed.hash,
                     },
                   }
@@ -270,10 +270,10 @@ export class GatherStore {
               await this.alertsStore.client.notifyAlert(
                 [...Array.from(participants.keys()), ...interested],
                 {
-                  type: 'proposal_alert',
+                  type: 'ProposalAlert',
                   proposalHash,
                   action: {
-                    type: 'satisfaction_created',
+                    type: 'SatisfactionCreated',
                     actionHash: signal.action.hashed.hash,
                   },
                 }
@@ -304,7 +304,7 @@ export class GatherStore {
               callToAction.actionHash.toString()
             ) {
               await this.notifyOfProposalAction(proposalHash, {
-                type: 'satisfaction_deleted',
+                type: 'SatisfactionDeleted',
                 actionHash: signal.action.hashed.hash,
               });
             }
@@ -328,7 +328,7 @@ export class GatherStore {
               callToAction.actionHash.toString()
             ) {
               await this.notifyOfEventAction(eventHash, {
-                type: 'satisfaction_deleted',
+                type: 'SatisfactionDeleted',
                 actionHash: signal.action.hashed.hash,
               });
             }
@@ -351,10 +351,10 @@ export class GatherStore {
               await this.alertsStore.client.notifyAlert(
                 [...Array.from(participants.keys()), ...interested],
                 {
-                  type: 'event_alert',
+                  type: 'EventAlert',
                   eventHash: cancelledHash,
                   action: {
-                    type: 'event_cancelled',
+                    type: 'EventCancelled',
                     actionHash: signal.action.hashed.hash,
                   },
                 }
@@ -374,10 +374,10 @@ export class GatherStore {
               await this.alertsStore.client.notifyAlert(
                 [...Array.from(participants.keys()), ...interested],
                 {
-                  type: 'proposal_alert',
+                  type: 'ProposalAlert',
                   proposalHash: cancelledHash,
                   action: {
-                    type: 'proposal_cancelled',
+                    type: 'ProposalCancelled',
                     actionHash: signal.action.hashed.hash,
                   },
                 }
@@ -436,7 +436,7 @@ export class GatherStore {
             if ('from_proposal' in event.entry) {
               await this.client.markEventAsUpcoming(cancelledHash);
               await this.notifyOfEventAction(cancelledHash, {
-                type: 'event_uncancelled',
+                type: 'EventUncancelled',
                 actionHash: signal.action.hashed.content.deletes_address,
               });
               return;
@@ -450,7 +450,7 @@ export class GatherStore {
             if ('hosts' in proposal.entry) {
               await this.client.markProposalAsOpen(cancelledHash);
               await this.notifyOfProposalAction(cancelledHash, {
-                type: 'proposal_uncancelled',
+                type: 'ProposalUncancelled',
                 actionHash: signal.action.hashed.content.deletes_address,
               });
               return;
@@ -646,7 +646,7 @@ export class GatherStore {
       ([commitment, cancellations, undoneCancellations]) => {
         const commitmentActivity: EventActivity = [
           {
-            type: 'commitment_created',
+            type: 'CommitmentCreated',
             record: commitment.commitment,
             callToAction: commitment.callToAction,
           },
@@ -654,7 +654,7 @@ export class GatherStore {
         const cancellationsActivity: EventActivity = Array.from(
           cancellations.values()
         ).map(c => ({
-          type: 'commitment_cancelled',
+          type: 'CommitmentCancelled',
           record: c,
           commitment: commitment.commitment,
           callToAction: commitment.callToAction,
@@ -664,7 +664,7 @@ export class GatherStore {
         for (const uc of Array.from(undoneCancellations.values())) {
           for (const r of uc[1]) {
             undoneCancellationsActivity.push({
-              type: 'commitment_cancellation_undone',
+              type: 'CommitmentCancellationUndone',
               record: new EntryRecord({
                 signed_action: r,
                 entry: {
@@ -718,14 +718,14 @@ export class GatherStore {
         const satisfactionsActivity: EventActivity = Array.from(
           satisfactions.values()
         ).map(c => ({
-          type: 'satisfaction_created',
+          type: 'SatisfactionCreated',
           record: c,
           callToAction,
         }));
         const assembliesActivity: EventActivity = Array.from(
           assemblies.values()
         ).map(c => ({
-          type: 'assembly_created',
+          type: 'AssemblyCreated',
           record: c,
         }));
 
@@ -735,7 +735,7 @@ export class GatherStore {
           Date.now() * 1000 > callToAction.entry.expiration_time
             ? [
                 {
-                  type: 'proposal_expired',
+                  type: 'ProposalExpired',
                   timestamp: callToAction.entry.expiration_time,
                 },
               ]
@@ -775,16 +775,16 @@ export class GatherStore {
       ]),
       ([proposal, revisions, liveCancellations, undoneCancellations]) => {
         let activity: EventActivity = [
-          { type: 'proposal_created', record: revisions[0] },
+          { type: 'ProposalCreated', record: revisions[0] },
         ];
         const revisionsActivity: EventActivity = revisions.slice(1).map(c => ({
-          type: 'proposal_updated',
+          type: 'ProposalUpdated',
           record: c,
         }));
         const cancellationsActivity: EventActivity = Array.from(
           liveCancellations.values()
         ).map(c => ({
-          type: 'proposal_cancelled',
+          type: 'ProposalCancelled',
           record: c,
         }));
         let undoneCancellationsActivity: EventActivity = [];
@@ -794,13 +794,13 @@ export class GatherStore {
         ] of undoneCancellations.values()) {
           undoneCancellationsActivity = undoneCancellationsActivity.concat([
             {
-              type: 'proposal_cancelled',
+              type: 'ProposalCancelled',
               record: cancellation,
             },
             ...undoneRecords.map(
               deleteAction =>
                 ({
-                  type: 'proposal_uncancelled',
+                  type: 'ProposalUncancelled',
                   record: new EntryRecord({
                     signed_action: deleteAction,
                     entry: {
@@ -886,18 +886,18 @@ export class GatherStore {
           event
         ) => {
           let activity: EventActivity = [
-            { type: 'event_created', record: event },
+            { type: 'EventCreated', record: event },
           ];
           const revisionsActivity: EventActivity = revisions
             .slice(1)
             .map(c => ({
-              type: 'event_updated',
+              type: 'EventUpdated',
               record: c,
             }));
           const cancellationsActivity: EventActivity = Array.from(
             cancellations.values()
           ).map(c => ({
-            type: 'event_cancelled',
+            type: 'EventCancelled',
             record: c,
           }));
 
@@ -908,13 +908,13 @@ export class GatherStore {
           ] of undoneCancellations.values()) {
             undoneCancellationsActivity = undoneCancellationsActivity.concat([
               {
-                type: 'event_cancelled',
+                type: 'EventCancelled',
                 record: cancellation,
               },
               ...undoneRecords.map(
                 deleteAction =>
                   ({
-                    type: 'event_uncancelled',
+                    type: 'EventUncancelled',
                     record: new EntryRecord({
                       signed_action: deleteAction,
                       entry: {
@@ -1045,7 +1045,7 @@ export class GatherStore {
     await this.alertsStore.client.notifyAlert(
       [...Array.from(participants.keys()), ...interested],
       {
-        type: 'proposal_alert',
+        type: 'ProposalAlert',
         proposalHash,
         action,
       }
@@ -1062,7 +1062,7 @@ export class GatherStore {
     await this.alertsStore.client.notifyAlert(
       [...Array.from(participants.keys()), ...interested],
       {
-        type: 'event_alert',
+        type: 'EventAlert',
         eventHash,
         action,
       }
@@ -1096,7 +1096,7 @@ export class GatherStore {
         if (proposalWithStatus.status.type === 'expired_proposal') {
           this.client.markProposalAsExpired(proposalHash);
           this.notifyOfProposalAction(proposalHash, {
-            type: 'proposal_expired',
+            type: 'ProposalExpired',
             actionHash: proposalHash,
             timestamp: proposalWithStatus.callToAction.entry.expiration_time!,
           });
@@ -1260,33 +1260,33 @@ export class GatherStore {
       new LazyHoloHashMap<ActionHash, AsyncReadable<EventAction>>(
         (actionHash: ActionHash) => {
           switch (actionType) {
-            case 'proposal_created':
+            case 'ProposalCreated':
               return pipe(
                 this.proposals.get(actionHash).originalEntry,
                 proposal => ({
-                  type: 'proposal_created',
+                  type: 'ProposalCreated',
                   record: proposal,
                 })
               );
-            case 'proposal_updated':
+            case 'ProposalUpdated':
               return pipe(
                 this.proposals.get(actionHash).latestVersion,
                 proposal => ({
-                  type: 'proposal_updated',
+                  type: 'ProposalUpdated',
                   record: proposal,
                 })
               );
-            case 'proposal_cancelled':
+            case 'ProposalCancelled':
               return pipe(
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
                 ).originalEntry,
                 cancellation => ({
-                  type: 'proposal_cancelled',
+                  type: 'ProposalCancelled',
                   record: cancellation,
                 })
               );
-            case 'proposal_uncancelled':
+            case 'ProposalUncancelled':
               return pipe(
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
@@ -1295,7 +1295,7 @@ export class GatherStore {
                   this.proposals.get(deletes[0].hashed.content.deletes_address)
                     .latestVersion,
                 (proposal, deletes) => ({
-                  type: 'proposal_uncancelled',
+                  type: 'ProposalUncancelled',
                   record: new EntryRecord<void>({
                     signed_action: deletes[0],
                     entry: {
@@ -1305,7 +1305,7 @@ export class GatherStore {
                   proposal,
                 })
               );
-            case 'proposal_expired':
+            case 'ProposalExpired':
               return pipe(
                 this.proposals.get(actionHash).latestVersion,
                 proposal =>
@@ -1313,34 +1313,34 @@ export class GatherStore {
                     proposal.entry.call_to_action_hash
                   ).latestVersion,
                 callToAction => ({
-                  type: 'proposal_expired',
+                  type: 'ProposalExpired',
                   timestamp: callToAction.entry.expiration_time!,
                 })
               );
-            case 'event_created':
+            case 'EventCreated':
               return pipe(this.events.get(actionHash).originalEntry, event => ({
-                type: 'event_created',
+                type: 'EventCreated',
                 record: event,
               }));
-            case 'event_updated':
+            case 'EventUpdated':
               return pipe(
                 this.events.get(actionHash).originalEntry, // TODO: this is a bit hacky, since we are treating an update for an event as if it was the original create, but it should work
                 event => ({
-                  type: 'event_updated',
+                  type: 'EventUpdated',
                   record: event,
                 })
               );
-            case 'event_cancelled':
+            case 'EventCancelled':
               return pipe(
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
                 ).originalEntry,
                 cancellations => ({
-                  type: 'event_cancelled',
+                  type: 'EventCancelled',
                   record: cancellations,
                 })
               );
-            case 'event_uncancelled':
+            case 'EventUncancelled':
               return pipe(
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
@@ -1349,7 +1349,7 @@ export class GatherStore {
                   this.events.get(deletes[0].hashed.content.deletes_address)
                     .latestVersion,
                 (event, deletes) => ({
-                  type: 'event_uncancelled',
+                  type: 'EventUncancelled',
                   record: new EntryRecord<void>({
                     signed_action: deletes[0],
                     entry: {
@@ -1359,7 +1359,7 @@ export class GatherStore {
                   event,
                 })
               );
-            case 'commitment_created':
+            case 'CommitmentCreated':
               return pipe(
                 this.assembleStore.commitments.get(actionHash).entry,
                 commitment =>
@@ -1367,12 +1367,12 @@ export class GatherStore {
                     commitment.entry.call_to_action_hash
                   ).latestVersion,
                 (callToAction, commitment) => ({
-                  type: 'commitment_created',
+                  type: 'CommitmentCreated',
                   record: commitment,
                   callToAction,
                 })
               );
-            case 'commitment_cancelled':
+            case 'CommitmentCancelled':
               return pipe(
                 this.assembleStore.cancellationsStore.cancellations.get(
                   actionHash
@@ -1386,13 +1386,13 @@ export class GatherStore {
                     commitment.entry.call_to_action_hash
                   ).latestVersion,
                 (callToAction, commitment, cancellation) => ({
-                  type: 'commitment_cancelled',
+                  type: 'CommitmentCancelled',
                   record: cancellation,
                   commitment,
                   callToAction,
                 })
               );
-            case 'satisfaction_created':
+            case 'SatisfactionCreated':
               return pipe(
                 this.assembleStore.satisfactions.get(actionHash).latestVersion, // TODO: maybe add original entry here?
                 satisfaction =>
@@ -1400,12 +1400,12 @@ export class GatherStore {
                     satisfaction!.entry.call_to_action_hash
                   ).latestVersion,
                 (callToAction, satisfaction) => ({
-                  type: 'satisfaction_created',
+                  type: 'SatisfactionCreated',
                   record: satisfaction!,
                   callToAction,
                 })
               );
-            case 'satisfaction_deleted':
+            case 'SatisfactionDeleted':
               return pipe(
                 this.assembleStore.satisfactions.get(actionHash).latestVersion, // TODO: remove this hack
                 deleteAction =>
@@ -1422,17 +1422,17 @@ export class GatherStore {
                     satisfaction!.entry.call_to_action_hash
                   ).latestVersion,
                 (callToAction, satisfaction, _, deleteAction) => ({
-                  type: 'satisfaction_deleted',
+                  type: 'SatisfactionDeleted',
                   record: deleteAction as unknown as EntryRecord<void>,
                   satisfaction: satisfaction!,
                   callToAction,
                 })
               );
-            case 'assembly_created':
+            case 'AssemblyCreated':
               return pipe(
                 this.assembleStore.assemblies.get(actionHash),
                 assembly => ({
-                  type: 'assembly_created',
+                  type: 'AssemblyCreated',
                   record: assembly!,
                 })
               );
@@ -1449,10 +1449,10 @@ export class GatherStore {
     },
     unreadAlerts => {
       const eventsHashes = unreadAlerts
-        .filter(a => a.alert.type === 'event_alert')
+        .filter(a => a.alert.type === 'EventAlert')
         .map(a => (a.alert as any).eventHash);
       const proposalsHashes = unreadAlerts
-        .filter(a => a.alert.type === 'proposal_alert')
+        .filter(a => a.alert.type === 'ProposalAlert')
         .map(a => (a.alert as any).proposalHash);
 
       const actions = unreadAlerts.map(ua =>
@@ -1483,10 +1483,10 @@ export class GatherStore {
     },
     readAlerts => {
       const eventsHashes = readAlerts
-        .filter(a => a.alert.type === 'event_alert')
+        .filter(a => a.alert.type === 'EventAlert')
         .map(a => (a.alert as any).eventHash);
       const proposalsHashes = readAlerts
-        .filter(a => a.alert.type === 'proposal_alert')
+        .filter(a => a.alert.type === 'ProposalAlert')
         .map(a => (a.alert as any).proposalHash);
 
       const actions = readAlerts.map(ua =>

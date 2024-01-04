@@ -26,73 +26,73 @@ import { ActionHash } from '@holochain/client';
 
 export type EventAction =
   | {
-      type: 'proposal_created';
+      type: 'ProposalCreated';
       record: EntryRecord<Proposal>;
     }
   | {
-      type: 'proposal_updated';
+      type: 'ProposalUpdated';
       record: EntryRecord<Proposal>;
     }
   | {
-      type: 'proposal_cancelled';
+      type: 'ProposalCancelled';
       record: EntryRecord<Cancellation>;
     }
   | {
-      type: 'proposal_uncancelled';
+      type: 'ProposalUncancelled';
       record: EntryRecord<void>;
       proposal: EntryRecord<Proposal>;
     }
   | {
-      type: 'proposal_expired';
+      type: 'ProposalExpired';
       timestamp: number;
     }
   | {
-      type: 'event_created';
+      type: 'EventCreated';
       record: EntryRecord<Event>;
     }
   | {
-      type: 'event_updated';
+      type: 'EventUpdated';
       record: EntryRecord<Event>;
     }
   | {
-      type: 'event_cancelled';
+      type: 'EventCancelled';
       record: EntryRecord<Cancellation>;
     }
   | {
-      type: 'event_uncancelled';
+      type: 'EventUncancelled';
       record: EntryRecord<void>;
       event: EntryRecord<Event>;
     }
   | {
-      type: 'commitment_created';
+      type: 'CommitmentCreated';
       record: EntryRecord<Commitment>;
       callToAction: EntryRecord<CallToAction>;
     }
   | {
-      type: 'commitment_cancelled';
+      type: 'CommitmentCancelled';
       record: EntryRecord<Cancellation>;
       commitment: EntryRecord<Commitment>;
       callToAction: EntryRecord<CallToAction>;
     }
   | {
-      type: 'commitment_cancellation_undone';
+      type: 'CommitmentCancellationUndone';
       record: EntryRecord<void>;
       cancellation: EntryRecord<Cancellation>;
       commitment: EntryRecord<Commitment>;
     }
   | {
-      type: 'satisfaction_created';
+      type: 'SatisfactionCreated';
       record: EntryRecord<Satisfaction>;
       callToAction: EntryRecord<CallToAction>;
     }
   | {
-      type: 'satisfaction_deleted';
+      type: 'SatisfactionDeleted';
       record: EntryRecord<void>;
       satisfaction: EntryRecord<Satisfaction>;
       callToAction: EntryRecord<CallToAction>;
     }
   | {
-      type: 'assembly_created';
+      type: 'AssemblyCreated';
       record: EntryRecord<Assembly>;
     };
 
@@ -107,64 +107,64 @@ export function actionTimestamp(action: EventAction): number {
 
 export type EventActionOnlyHash =
   | {
-      type: 'proposal_created';
+      type: 'ProposalCreated';
       actionHash: ActionHash;
     }
   | {
-      type: 'proposal_updated';
+      type: 'ProposalUpdated';
       actionHash: ActionHash;
     }
   | {
-      type: 'proposal_cancelled';
+      type: 'ProposalCancelled';
       actionHash: ActionHash;
     }
   | {
-      type: 'proposal_uncancelled';
+      type: 'ProposalUncancelled';
       actionHash: ActionHash;
     }
   | {
-      type: 'proposal_expired';
+      type: 'ProposalExpired';
       actionHash: ActionHash;
       timestamp: number;
     }
   | {
-      type: 'event_created';
+      type: 'EventCreated';
       actionHash: ActionHash;
     }
   | {
-      type: 'event_updated';
+      type: 'EventUpdated';
       actionHash: ActionHash;
     }
   | {
-      type: 'event_cancelled';
+      type: 'EventCancelled';
       actionHash: ActionHash;
     }
   | {
-      type: 'event_uncancelled';
+      type: 'EventUncancelled';
       actionHash: ActionHash;
     }
   | {
-      type: 'commitment_created';
+      type: 'CommitmentCreated';
       actionHash: ActionHash;
     }
   | {
-      type: 'commitment_cancelled';
+      type: 'CommitmentCancelled';
       actionHash: ActionHash;
     }
   | {
-      type: 'commitment_cancellation_undone';
+      type: 'CommitmentCancellationUndone';
       actionHash: ActionHash;
     }
   | {
-      type: 'satisfaction_created';
+      type: 'SatisfactionCreated';
       actionHash: ActionHash;
     }
   | {
-      type: 'satisfaction_deleted';
+      type: 'SatisfactionDeleted';
       actionHash: ActionHash;
     }
   | {
-      type: 'assembly_created';
+      type: 'AssemblyCreated';
       actionHash: ActionHash;
     };
 
@@ -172,58 +172,58 @@ export type EventActivity = Array<EventAction>;
 
 export function messageAndIcon(action: EventAction) {
   switch (action.type) {
-    case 'proposal_created':
+    case 'ProposalCreated':
       return {
         message: msg('Proposal was created.'),
         icon: wrapPathInSvg(mdiCreation),
       };
-    case 'proposal_cancelled':
+    case 'ProposalCancelled':
       return {
         message: msg('Proposal was cancelled because:'),
         secondary: action.record.entry.reason,
         icon: wrapPathInSvg(mdiCancel),
       };
-    case 'proposal_uncancelled':
+    case 'ProposalUncancelled':
       return {
         message: msg('Proposal was uncancelled!'),
         icon: wrapPathInSvg(mdiUndoVariant),
       };
-    case 'proposal_expired':
+    case 'ProposalExpired':
       return {
         message: msg(
           'Proposal expired without meeting the minimum required needs.'
         ),
         icon: wrapPathInSvg(mdiClockRemove),
       };
-    case 'proposal_updated':
+    case 'ProposalUpdated':
       return {
         message: msg('Proposal was updated.'),
         icon: wrapPathInSvg(mdiUpdate),
       };
-    case 'event_created':
+    case 'EventCreated':
       return {
         message: action.record.entry.from_proposal
           ? msg('The proposal succeeded! It is now an event.')
           : msg('Event was created.'),
         icon: wrapPathInSvg(mdiCreation),
       };
-    case 'event_cancelled':
+    case 'EventCancelled':
       return {
         message: msg('Event was cancelled because:'),
         secondary: action.record.entry.reason,
         icon: wrapPathInSvg(mdiCancel),
       };
-    case 'event_uncancelled':
+    case 'EventUncancelled':
       return {
         message: msg('Event was uncancelled!'),
         icon: wrapPathInSvg(mdiUndoVariant),
       };
-    case 'event_updated':
+    case 'EventUpdated':
       return {
         message: msg('Event was updated.'),
         icon: wrapPathInSvg(mdiUpdate),
       };
-    case 'commitment_created':
+    case 'CommitmentCreated':
       if (action.record.entry.need_index === 0) {
         return {
           message: msg('New commitment to participate in the event.'),
@@ -240,7 +240,7 @@ export function messageAndIcon(action: EventAction) {
         ),
         icon: wrapPathInSvg(mdiHandshake),
       };
-    case 'commitment_cancelled':
+    case 'CommitmentCancelled':
       return {
         message: msg(
           str`Commitment to contribute to need "${
@@ -251,12 +251,12 @@ export function messageAndIcon(action: EventAction) {
         secondary: action.record.entry.reason,
         icon: wrapPathInSvg(mdiCancel),
       };
-    case 'commitment_cancellation_undone':
+    case 'CommitmentCancellationUndone':
       return {
         message: msg('Commitment was uncancelled.'),
         icon: wrapPathInSvg(mdiUndo),
       };
-    case 'satisfaction_created':
+    case 'SatisfactionCreated':
       if (action.record.entry.need_index === 0) {
         return {
           message: msg(
@@ -274,7 +274,7 @@ export function messageAndIcon(action: EventAction) {
         ),
         icon: wrapPathInSvg(mdiCheckBold),
       };
-    case 'satisfaction_deleted':
+    case 'SatisfactionDeleted':
       return {
         message: msg(
           str`Need "${
@@ -285,7 +285,7 @@ export function messageAndIcon(action: EventAction) {
         ),
         icon: wrapPathInSvg(mdiAlert),
       };
-    case 'assembly_created':
+    case 'AssemblyCreated':
       return {
         message: msg('All needs have been satisfied!'),
         icon: wrapPathInSvg(mdiPartyPopper),

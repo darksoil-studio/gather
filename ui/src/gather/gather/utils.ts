@@ -5,7 +5,13 @@ import {
   pipe,
   Readable,
 } from '@holochain-open-dev/stores';
-import { EntryRecord, HoloHashMap, mapValues } from '@holochain-open-dev/utils';
+import {
+  EntryRecord,
+  HoloHashMap,
+  Hrl,
+  mapValues,
+  parseHrl,
+} from '@holochain-open-dev/utils';
 import {
   AppAgentWebsocket,
   CallZomeRequest,
@@ -146,4 +152,22 @@ export function joinAsyncValues<
     }
     return obj;
   });
+}
+
+export function getHrlToRender(): Hrl | undefined {
+  if (window.location.search.length === 0) return undefined;
+  const queryString = window.location.search.slice(1);
+  return queryStringToRenderView(queryString);
+}
+
+export function queryStringToRenderView(s: string): Hrl | undefined {
+  const args = s.split('&');
+
+  const hrlArg = args.find(arg => arg.startsWith('hrl='));
+
+  if (!hrlArg) return undefined;
+
+  const hrl = hrlArg.split('hrl=')[1];
+
+  return parseHrl(hrl);
 }

@@ -1,6 +1,4 @@
 use alerts_integrity::*;
-use hc_zome_trait_pending_notifications::*;
-use hc_zome_traits::*;
 use hdk::prelude::*;
 
 pub mod alerts;
@@ -81,34 +79,4 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
         }
         _ => Ok(()),
     }
-}
-
-struct AlertsNotifications;
-
-#[implement_zome_trait_as_externs]
-impl PendingNotifications for AlertsNotifications {
-    fn get_notification(input: GetNotificationInput) -> ExternResult<Option<Notification>> {
-        let Some(alert_record) = get(input.notification_hash, GetOptions::default())? else {
-            return Ok(None);
-        };
-
-        let Action::CreateLink(create_link) = alert_record.action().clone() else {
-          return Err(wasm_error!(WasmErrorInner::Guest(format!("Notification hash is not for a create link"))));
-        };
-
-        Ok(Some(Notification {
-            title: String::from("hey"),
-            body: String::from("ho"),
-            hrl_to_navigate_to_on_click: HrlWithContext {
-                hrl: (dna_info()?.dna_hash, input.notification_hash),
-                context: SerializedBytes::from(UnsafeBytes::from(vec![])),
-            },
-            pending: true,
-        }))
-    }
-}
-
-#[implemented_zome_traits]
-pub enum ZomeTraits {
-    PendingNotifications(AlertsNotifications),
 }

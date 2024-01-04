@@ -1,4 +1,5 @@
 use alerts_integrity::*;
+use hc_zome_notifications_types::*;
 use hdk::prelude::*;
 
 #[hdk_extern]
@@ -57,10 +58,24 @@ pub fn notify_alert(input: NotifyAlertInput) -> ExternResult<()> {
     for agent in input.agents {
         create_link_relaxed(
             agent.clone(),
-            agent,
+            agent.clone(),
             LinkTypes::MyAlerts,
             input.alert.bytes().clone(),
         )?;
+
+        match call(
+            CallTargetCell::OtherRole("notifications".into()),
+            "notifications",
+            "request_notify_agent".into(),
+            None,
+            NotifyAgentInput {
+                agent,
+                notification: input.alert.clone(),
+            },
+        )? {
+            ZomeCallResponse::Ok(_) => {}
+            r => error!("Failed to notify agent: {r:?}"),
+        };
     }
 
     Ok(())

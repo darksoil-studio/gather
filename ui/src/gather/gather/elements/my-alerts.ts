@@ -54,16 +54,16 @@ export class MyAlerts extends LitElement {
     proposals: ReadonlyMap<ActionHash, ProposalWithStatus>
   ) {
     const title =
-      alert.alert.type === 'event_alert'
+      alert.alert.type === 'EventAlert'
         ? events.get(alert.alert.eventHash)!.currentEvent.entry.title
         : proposals.get(alert.alert.proposalHash)!.currentProposal.entry.title;
 
     const info = messageAndIcon(action)!;
-    if (action.type === 'proposal_created') {
+    if (action.type === 'ProposalCreated') {
       info.message = msg(
         'A new proposal was created and you were added as one of its hosts.'
       );
-    } else if (action.type === 'event_created') {
+    } else if (action.type === 'EventCreated') {
       if (!action.record.entry.from_proposal) {
         info.message = msg(
           'A new event was created and you were added as one of its hosts.'
@@ -84,7 +84,7 @@ export class MyAlerts extends LitElement {
             this.gatherStore.alertsStore.client.markAlertsAsRead([
               alert.link.create_link_hash,
             ]);
-            if (alert.alert.type === 'event_alert') {
+            if (alert.alert.type === 'EventAlert') {
               this.dispatchEvent(
                 new CustomEvent('event-selected', {
                   bubbles: true,

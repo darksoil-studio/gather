@@ -80,7 +80,7 @@ import {
 } from './gather/gather/context.js';
 import { GatherStore } from './gather/gather/gather-store.js';
 import { GatherClient } from './gather/gather/gather-client.js';
-import { MOBILE_WIDTH_PX } from './gather/gather/utils.js';
+import { getHrlToRender, MOBILE_WIDTH_PX } from './gather/gather/utils.js';
 import { AlertsClient } from './alerts/alerts-client.js';
 import { AlertsStore } from './alerts/alerts-store.js';
 import { setLocale } from './locales.js';
@@ -195,6 +195,24 @@ export class HolochainApp extends LitElement {
     // installLogger(this._client as any);
 
     await this.initStores(this._client);
+
+    const hrl = getHrlToRender();
+    if (hrl) {
+      const event = await this._gatherStore.client.getOriginalEvent(hrl[1]);
+      if (event) {
+        if ('from_proposal' in event.entry) {
+          this._view = {
+            view: 'event_detail',
+            selectedEventHash: hrl[1],
+          };
+        } else {
+          this._view = {
+            view: 'proposal_detail',
+            selectedProposalHash: hrl[1],
+          };
+        }
+      }
+    }
 
     this._loading = false;
   }
