@@ -10,10 +10,11 @@ resolver = "2"
 members = ["dnas/*/zomes/coordinator/*", "dnas/*/zomes/integrity/*"]
 
 [workspace.dependencies]
-hdi = "0.3.4"
-hdk = "0.2.4"
-holochain = "0.2.4"
-serde = "1"
+hdi = "0.4.0-beta-dev.20"
+hdk = "0.3.0-beta-dev.24"
+holochain = "0.3.0-beta-dev.29"
+serde = "1.0.193"
+
 hc_zome_traits = { git = "https://github.com/holochain-open-dev/zome-traits", branch = "main" }
 hc_zome_trait_pending_notifications = { git = "https://github.com/darksoil-studio/notifications", branch = "main" }
 
