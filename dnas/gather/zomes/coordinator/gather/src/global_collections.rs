@@ -149,9 +149,8 @@ pub fn get_all_cancelled_proposals(_: ()) -> ExternResult<Vec<Link>> {
 /** Helpers */
 
 fn get_from_path(path: Path, link_type: LinkTypes) -> ExternResult<Vec<Link>> {
-    let mut links = get_links(
-        
-GetLinksInputBuilder::try_new(        path.path_entry_hash()?, link_type)?.build() )?;
+    let mut links =
+        get_links(GetLinksInputBuilder::try_new(path.path_entry_hash()?, link_type)?.build())?;
     links.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     Ok(links)
 }
@@ -161,9 +160,8 @@ pub fn remove_from_collection(
     path: Path,
     link_type: LinkTypes,
 ) -> ExternResult<()> {
-    let links = get_links(
-        
-GetLinksInputBuilder::try_new(        path.path_entry_hash()?, link_type)?.build())?;
+    let links =
+        get_links(GetLinksInputBuilder::try_new(path.path_entry_hash()?, link_type)?.build())?;
     for link in links {
         if let Some(action_hash) = link.target.into_action_hash() {
             if action_hash.eq(&hash) {

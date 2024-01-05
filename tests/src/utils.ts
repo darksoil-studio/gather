@@ -15,7 +15,6 @@ import { Event, Proposal } from '../../ui/src/gather/gather/types.js';
 import { GatherStore } from '../../ui/src/gather/gather/gather-store.js';
 import { AlertsStore } from '../../ui/src/alerts/alerts-store.js';
 import { AlertsClient } from '../../ui/src/alerts/alerts-client.js';
-import { decode } from '@msgpack/msgpack';
 
 export async function sampleProposal(
   gatherStore: GatherStore,

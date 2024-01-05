@@ -2291,7 +2291,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_assemble_coordinator"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/assemble?branch=for-hdk-0.3.0-beta-dev#c205d4291bf4e28c91906a78fb87132752d0712c"
+source = "git+https://github.com/darksoil-studio/assemble?branch=for-hdk-0.3.0-beta-dev#0ee2566f2b2ee1a0f793a27bb755fbb209189b78"
 dependencies = [
  "hc_zome_assemble_integrity",
  "hdk",
@@ -2301,7 +2301,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_assemble_integrity"
 version = "0.0.1"
-source = "git+https://github.com/darksoil-studio/assemble?branch=for-hdk-0.3.0-beta-dev#c205d4291bf4e28c91906a78fb87132752d0712c"
+source = "git+https://github.com/darksoil-studio/assemble?branch=for-hdk-0.3.0-beta-dev#0ee2566f2b2ee1a0f793a27bb755fbb209189b78"
 dependencies = [
  "hdi",
  "serde",
@@ -2348,7 +2348,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_notifications_types"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/notifications?branch=for-hdk-0.3.0-beta-dev#9e15564ae43032d5f510c1d3e049d16047d94ecf"
+source = "git+https://github.com/darksoil-studio/notifications?branch=for-hdk-0.3.0-beta-dev#2b6fdee6b0a6c79b9b9561ae3f05b084f2591bcb"
 dependencies = [
  "hdi",
  "serde",
@@ -2378,7 +2378,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_trait_pending_notifications"
 version = "0.1.0"
-source = "git+https://github.com/darksoil-studio/notifications?branch=for-hdk-0.3.0-beta-dev#9e15564ae43032d5f510c1d3e049d16047d94ecf"
+source = "git+https://github.com/darksoil-studio/notifications?branch=for-hdk-0.3.0-beta-dev#2b6fdee6b0a6c79b9b9561ae3f05b084f2591bcb"
 dependencies = [
  "hc_zome_traits",
  "hdk",
