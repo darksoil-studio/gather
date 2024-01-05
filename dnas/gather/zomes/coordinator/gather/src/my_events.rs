@@ -4,9 +4,9 @@ use hdk::prelude::*;
 pub fn get_my_events(_: ()) -> ExternResult<Vec<Link>> {
     let agent_pub_key = agent_info()?;
     get_links(
-        agent_pub_key.agent_initial_pubkey,
-        LinkTypes::MyEvents,
-        None,
+
+GetLinksInputBuilder::try_new(        agent_pub_key.agent_initial_pubkey,
+        LinkTypes::MyEvents,)?.build()
     )
 }
 
@@ -26,7 +26,9 @@ pub fn add_to_my_events(event_or_proposal_hash: ActionHash) -> ExternResult<()> 
 #[hdk_extern]
 pub fn remove_from_my_events(event_or_proposal_hash: ActionHash) -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
-    let links = get_links(my_pub_key, LinkTypes::MyEvents, None)?;
+    let links = get_links(
+        
+GetLinksInputBuilder::try_new(        my_pub_key, LinkTypes::MyEvents)?.build())?;
 
     for link in links {
         if let Some(action_hash) = link.target.into_action_hash() {

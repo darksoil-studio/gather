@@ -28,7 +28,9 @@ pub fn add_myself_as_interested(event_or_proposal_hash: ActionHash) -> ExternRes
 pub fn remove_myself_as_interested(event_or_proposal_hash: ActionHash) -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
 
-    let links = get_links(event_or_proposal_hash.clone(), LinkTypes::Interested, None)?;
+    let links = get_links(
+        
+GetLinksInputBuilder::try_new(        event_or_proposal_hash.clone(), LinkTypes::Interested)?.build())?;
 
     for link in links {
         if let Some(pubkey) = link.target.into_agent_pub_key() {
@@ -45,5 +47,7 @@ pub fn remove_myself_as_interested(event_or_proposal_hash: ActionHash) -> Extern
 
 #[hdk_extern]
 pub fn get_interested_in(event_or_proposal_hash: ActionHash) -> ExternResult<Vec<Link>> {
-    get_links(event_or_proposal_hash.clone(), LinkTypes::Interested, None)
+    get_links(
+        
+GetLinksInputBuilder::try_new(        event_or_proposal_hash.clone(), LinkTypes::Interested)?.build() )
 }

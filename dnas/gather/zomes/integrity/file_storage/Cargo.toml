@@ -12,4 +12,4 @@ hdi = { workspace = true }
 
 serde = { workspace = true }
 
-hc_zome_file_storage_integrity = { git = "https://github.com/holochain-open-dev/file-storage", branch = "main" }
+hc_zome_file_storage_integrity = { git = "https://github.com/holochain-open-dev/file-storage", branch = "for-hdk-0.3.0-beta-dev" }

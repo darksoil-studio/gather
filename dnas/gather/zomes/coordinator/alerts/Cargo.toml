@@ -13,4 +13,4 @@ hdk = { workspace = true }
 serde = { workspace = true }
 
 alerts_integrity = { workspace = true }
-hc_zome_notifications_types = { git = "https://github.com/darksoil-studio/notifications", branch = "main" }
+hc_zome_notifications_types = { git = "https://github.com/darksoil-studio/notifications", branch = "for-hdk-0.3.0-beta-dev" }

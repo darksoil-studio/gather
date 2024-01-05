@@ -12,4 +12,4 @@ hdk = { workspace = true }
 
 serde = { workspace = true }
 
-hc_zome_cancellations_coordinator = { git = "https://github.com/holochain-open-dev/cancellations", branch = "main" }
+hc_zome_cancellations_coordinator = { git = "https://github.com/holochain-open-dev/cancellations", branch = "for-hdk-0.3.0-beta-dev" }

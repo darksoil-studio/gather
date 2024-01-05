@@ -59,7 +59,9 @@ pub fn get_original_event(original_event_hash: ActionHash) -> ExternResult<Optio
 
 #[hdk_extern]
 pub fn get_latest_event(original_event_hash: ActionHash) -> ExternResult<Option<Record>> {
-    let links = get_links(original_event_hash.clone(), LinkTypes::Updates, None)?;
+    let links = get_links(
+        
+GetLinksInputBuilder::try_new(        original_event_hash.clone(), LinkTypes::Updates)?.build() )?;
     let latest_link = links
         .into_iter()
         .max_by(|link_a, link_b| link_a.timestamp.cmp(&link_b.timestamp));
