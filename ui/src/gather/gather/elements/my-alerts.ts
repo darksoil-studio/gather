@@ -56,7 +56,7 @@ export class MyAlerts extends LitElement {
     const title =
       alert.alert.type === 'EventAlert'
         ? events.get(alert.alert.event_hash)!.currentEvent.entry.title
-        : proposals.get(alert.alert.proposalHash)!.currentProposal.entry.title;
+        : proposals.get(alert.alert.proposal_hash)!.currentProposal.entry.title;
 
     const info = messageAndIcon(action)!;
     if (action.type === 'ProposalCreated') {
@@ -101,7 +101,7 @@ export class MyAlerts extends LitElement {
                   bubbles: true,
                   composed: true,
                   detail: {
-                    proposalHash: proposals.get(alert.alert.proposalHash)!
+                    proposalHash: proposals.get(alert.alert.proposal_hash)!
                       .originalActionHash,
                   },
                 })
