@@ -94,6 +94,7 @@ export class ProposalDetail extends LitElement {
   /**
    * @internal
    */
+  @consume({ context: isMobileContext, subscribe: true })
   @property()
   _isMobile!: boolean;
 

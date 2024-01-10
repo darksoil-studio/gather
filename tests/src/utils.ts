@@ -87,8 +87,9 @@ export async function sampleEvent(
 }
 
 export async function waitAndDhtSync(players: Player[]) {
-  await pause(200); // Wait for postcommit things to happen
+  await pause(500); // Wait for postcommit things to happen
   await dhtSync(players, players[0].namedCells.get('gather').cell_id[0]);
+  await pause(500); // Wait for postcommit things to happen
 }
 
 export async function readAndAssertNotification(

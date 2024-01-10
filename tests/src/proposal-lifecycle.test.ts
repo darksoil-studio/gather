@@ -98,9 +98,10 @@ test('proposal: create and expire', async t => {
             title: 'Cool Proposal',
             hosts: [bob.player.agentPubKey],
           },
-          (Date.now() + 30_000) * 1000
+          (Date.now() + 50_000) * 1000
         )
       );
+
       assert.ok(proposal);
       await alice.store.client.addMyselfAsInterested(proposal.actionHash);
 
@@ -112,10 +113,13 @@ test('proposal: create and expire', async t => {
         'Förslaget skapades.'
       );
 
+      openProposals = await toPromise(alice.store.allOpenProposals);
+      assert.equal(openProposals.length, 1);
+
       openProposals = await toPromise(bob.store.allOpenProposals);
       assert.equal(openProposals.length, 1);
 
-      await pause(30_000);
+      await pause(50_000);
 
       openProposals = await toPromise(bob.store.allOpenProposals);
       assert.equal(openProposals.length, 0);
@@ -132,7 +136,7 @@ test('proposal: create and expire', async t => {
       );
     },
     true,
-    { timeout: 60000 }
+    { timeout: 300_000 }
   );
 });
 

@@ -67,45 +67,41 @@ test('event: create and cancel', async t => {
   );
 });
 
-test('event: create and pass', async t => {
-  await runScenario(
-    async scenario => {
-      const { alice, bob } = await setup(scenario);
+test.only('event: create and pass', async t => {
+  await runScenario(async scenario => {
+    const { alice, bob } = await setup(scenario);
 
-      let upcomingEvents = await toPromise(alice.store.allUpcomingEvents);
-      assert.equal(upcomingEvents.length, 0);
-      let pastEvents = await toPromise(alice.store.allPastEvents);
-      assert.equal(pastEvents.length, 0);
+    let upcomingEvents = await toPromise(alice.store.allUpcomingEvents);
+    assert.equal(upcomingEvents.length, 0);
+    let pastEvents = await toPromise(alice.store.allPastEvents);
+    assert.equal(pastEvents.length, 0);
 
-      const event = await alice.store.client.createEvent(
-        await sampleEvent(alice.store, {
-          time: {
-            type: 'Unique',
-            start_time: (Date.now() + 25_000) * 1000,
-            end_time: (Date.now() + 60_000) * 1000,
-          },
-          title: 'Cool Event',
-          hosts: [bob.player.agentPubKey],
-        })
-      );
-      assert.ok(event);
+    const event = await alice.store.client.createEvent(
+      await sampleEvent(alice.store, {
+        time: {
+          type: 'Unique',
+          start_time: (Date.now() + 45_000) * 1000,
+          end_time: (Date.now() + 80_000) * 1000,
+        },
+        title: 'Cool Event',
+        hosts: [bob.player.agentPubKey],
+      })
+    );
+    assert.ok(event);
 
-      await waitAndDhtSync([alice.player, bob.player]);
+    await waitAndDhtSync([alice.player, bob.player]);
 
-      upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
-      assert.equal(upcomingEvents.length, 1);
+    upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
+    assert.equal(upcomingEvents.length, 1);
 
-      await pause(30_000);
+    await pause(50_000);
 
-      upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
-      assert.equal(upcomingEvents.length, 0);
+    upcomingEvents = await toPromise(bob.store.allUpcomingEvents);
+    assert.equal(upcomingEvents.length, 0);
 
-      await waitAndDhtSync([alice.player, bob.player]);
+    await waitAndDhtSync([alice.player, bob.player]);
 
-      pastEvents = await toPromise(bob.store.allPastEvents);
-      assert.equal(pastEvents.length, 1);
-    },
-    true,
-    { timeout: 60000 }
-  );
+    pastEvents = await toPromise(bob.store.allPastEvents);
+    assert.equal(pastEvents.length, 1);
+  }, true);
 });

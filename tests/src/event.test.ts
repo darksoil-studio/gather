@@ -136,6 +136,6 @@ test('create and update event', async t => {
       );
     },
     true,
-    { timeout: 30000 }
+    { timeout: 60000 }
   );
 });

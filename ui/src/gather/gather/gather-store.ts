@@ -139,14 +139,20 @@ export class GatherStore {
               }
             );
           } else {
-            await alertsStore.client.notifyAlert(signal.app_entry.hosts, {
-              type: 'EventAlert',
-              event_hash: signal.action.hashed.hash,
-              action: {
-                type: 'EventCreated',
-                action_hash: signal.action.hashed.hash,
-              },
-            });
+            await alertsStore.client.notifyAlert(
+              signal.app_entry.hosts.filter(
+                host =>
+                  host.toString() !== this.client.client.myPubKey.toString()
+              ),
+              {
+                type: 'EventAlert',
+                event_hash: signal.action.hashed.hash,
+                action: {
+                  type: 'EventCreated',
+                  action_hash: signal.action.hashed.hash,
+                },
+              }
+            );
           }
         }
       } else if (signal.type === 'EntryUpdated') {
