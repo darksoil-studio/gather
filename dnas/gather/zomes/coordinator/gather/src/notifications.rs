@@ -14,6 +14,21 @@ struct AlertsNotifications;
 
 #[implement_zome_trait_as_externs]
 impl PendingNotifications for AlertsNotifications {
+    fn mark_notification_as_read(notification_hash: AnyDhtHash) -> ExternResult<()> {
+        match call(
+            CallTargetCell::Local,
+            ZomeName::from("alerts"),
+            FunctionName::from("mark_alerts_as_read"),
+            None,
+            vec![notification_hash.into_action_hash().unwrap()],
+        )? {
+            ZomeCallResponse::Ok(_) => Ok(()),
+            err => Err(wasm_error!(WasmErrorInner::Guest(format!(
+                "Error marking the notification as read: {err:?}"
+            )))),
+        }
+    }
+
     fn get_notification(input: GetNotificationInput) -> ExternResult<Option<Notification>> {
         let Some(alert_record) = get(input.notification_hash.clone(), GetOptions::default())? else {
             return Ok(None);
