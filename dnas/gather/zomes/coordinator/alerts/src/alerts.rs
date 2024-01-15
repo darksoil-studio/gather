@@ -63,19 +63,19 @@ pub fn notify_alert(input: NotifyAlertInput) -> ExternResult<()> {
             input.alert.bytes().clone(),
         )?;
 
-        match call(
-            CallTargetCell::OtherRole("notifications".into()),
-            "notifications",
-            "request_notify_agent".into(),
-            None,
-            NotifyAgentInput {
-                agent,
-                notification: input.alert.clone(),
-            },
-        ) {
-            Ok(ZomeCallResponse::Ok(_)) => {}
-            r => warn!("Failed to notify agent: {r:?}"),
-        };
+        // match call(
+        //     CallTargetCell::OtherRole("notifications".into()),
+        //     "notifications",
+        //     "request_notify_agent".into(),
+        //     None,
+        //     NotifyAgentInput {
+        //         agent,
+        //         notification: input.alert.clone(),
+        //     },
+        // ) {
+        //     Ok(ZomeCallResponse::Ok(_)) => {}
+        //     r => warn!("Failed to notify agent: {r:?}"),
+        // };
     }
 
     Ok(())
