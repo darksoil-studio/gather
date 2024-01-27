@@ -1413,10 +1413,10 @@ export class GatherStore {
     unreadAlerts => {
       const eventsHashes = unreadAlerts
         .filter(a => a.alert.type === 'EventAlert')
-        .map(a => (a.alert as any).eventHash);
+        .map(a => (a.alert as any).event_hash);
       const proposalsHashes = unreadAlerts
         .filter(a => a.alert.type === 'ProposalAlert')
-        .map(a => (a.alert as any).proposalHash);
+        .map(a => (a.alert as any).proposal_hash);
 
       const actions = unreadAlerts.map(ua =>
         this.eventActionFromOnlyHash
@@ -1447,10 +1447,10 @@ export class GatherStore {
     readAlerts => {
       const eventsHashes = readAlerts
         .filter(a => a.alert.type === 'EventAlert')
-        .map(a => (a.alert as any).eventHash);
+        .map(a => (a.alert as any).event_hash);
       const proposalsHashes = readAlerts
         .filter(a => a.alert.type === 'ProposalAlert')
-        .map(a => (a.alert as any).proposalHash);
+        .map(a => (a.alert as any).proposal_hash);
 
       const actions = readAlerts.map(ua =>
         this.eventActionFromOnlyHash
