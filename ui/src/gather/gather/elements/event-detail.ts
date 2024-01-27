@@ -171,7 +171,7 @@ export class EventDetail extends LitElement {
         ),
       ]),
       renderAsyncStatus({
-        completed: ([participantsMap, callToAction]) => {
+        complete: ([participantsMap, callToAction]) => {
           const participants = Array.from(participantsMap.keys());
           const myPubKeyStr =
             this.gatherStore.client.client.myPubKey.toString();
@@ -600,7 +600,7 @@ export class EventDetail extends LitElement {
     return html`${subscribe(
       this.gatherStore.events.get(this.eventHash).status,
       withSpinnerAndDisplayError({
-        completed: event => html` <create-cancellation-dialog
+        complete: event => html` <create-cancellation-dialog
             id="cancel-event"
             .label=${msg('Cancel Event')}
             .warning=${msg(

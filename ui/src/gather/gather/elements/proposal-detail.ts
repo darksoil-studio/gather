@@ -4,15 +4,11 @@ import {
   withSpinnerAndDisplayError,
   wrapPathInSvg,
 } from '@holochain-open-dev/elements';
-import { ActionHash, AgentPubKey } from '@holochain/client';
+import { ActionHash } from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
-import { LitElement, html, css, PropertyValueMap } from 'lit';
-import {
-  joinAsync,
-  StoreSubscriber,
-  subscribe,
-} from '@holochain-open-dev/stores';
+import { LitElement, html, css } from 'lit';
+import { subscribe } from '@holochain-open-dev/stores';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import {
@@ -129,7 +125,7 @@ export class ProposalDetail extends LitElement {
     return html`${subscribe(
       this.gatherStore.proposals.get(this.proposalHash).participants,
       renderAsyncStatus({
-        completed: participantsMap => {
+        complete: participantsMap => {
           const participants = Array.from(participantsMap.keys());
           const proposalStatus = proposal.status.type;
 
@@ -565,7 +561,7 @@ export class ProposalDetail extends LitElement {
     return html`${subscribe(
       this.gatherStore.proposals.get(this.proposalHash).status,
       withSpinnerAndDisplayError({
-        completed: proposal => {
+        complete: proposal => {
           if (proposal.status.type === 'actual_event') {
             return html`<event-detail
               style="flex: 1"

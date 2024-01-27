@@ -10,8 +10,8 @@
   "license": "CAL-1.0",
   "dependencies": {
     "@holochain/client": "^0.16.1",
-    "@holochain/tryorama": "file:~/projects/holochain/core/tryorama",
-    "@holochain-open-dev/stores": "^0.8.4",
+    "@holochain/tryorama": "^0.16.0-dev.0",
+    "@holochain-open-dev/stores": "^0.8.10",
     "@holochain-open-dev/utils": "^0.16.4",
     "@msgpack/msgpack": "^2.7.0",
     "vitest": "^0.34.5"

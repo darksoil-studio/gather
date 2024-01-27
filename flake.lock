@@ -189,10 +189,7 @@
           "holochain",
           "empty"
         ],
-        "launcher": [
-          "holochain",
-          "empty"
-        ],
+        "launcher": "launcher",
         "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs",
         "pre-commit-hooks-nix": "pre-commit-hooks-nix",
@@ -255,6 +252,23 @@
       }
     },
     "launcher": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1706291930,
+        "narHash": "sha256-92Qc6hBMFfHo3w1m1+EpNAAV+7whpkgRHiGqNiXaMCg=",
+        "owner": "holochain",
+        "repo": "launcher",
+        "rev": "194576a0fdb90746e775dbd361ca76b99254fa10",
+        "type": "github"
+      },
+      "original": {
+        "owner": "holochain",
+        "ref": "bump-weekly-0.3-32",
+        "repo": "launcher",
+        "type": "github"
+      }
+    },
+    "launcher_2": {
       "flake": false,
       "locked": {
         "lastModified": 1701093498,
@@ -442,7 +456,7 @@
       "inputs": {
         "holochain": "holochain_2",
         "lair": "lair",
-        "launcher": "launcher",
+        "launcher": "launcher_2",
         "scaffolding": "scaffolding"
       },
       "locked": {

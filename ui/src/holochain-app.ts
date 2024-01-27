@@ -478,7 +478,7 @@ export class HolochainApp extends LitElement {
             ${subscribe(
               pipe(this._gatherStore.alertsStore.unreadAlerts, ua => ua.length),
               renderAsyncStatus({
-                completed: v =>
+                complete: v =>
                   v > 0
                     ? html`
                         <sl-badge variant="primary" pill pulse>${v}</sl-badge>
