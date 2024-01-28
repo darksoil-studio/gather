@@ -2329,7 +2329,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_file_storage_coordinator"
 version = "0.2.0"
-source = "git+https://github.com/holochain-open-dev/file-storage?branch=for-hdk-0.3.0-beta-dev#d71422626e982c263b1a8f2beb651130feda5e82"
+source = "git+https://github.com/holochain-open-dev/file-storage?branch=for-hdk-0.3.0-beta-dev#73d6d6e7a232969151b9097b4532396f39604515"
 dependencies = [
  "hc_zome_file_storage_integrity",
  "hdk",
@@ -2339,7 +2339,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_file_storage_integrity"
 version = "0.2.0"
-source = "git+https://github.com/holochain-open-dev/file-storage?branch=for-hdk-0.3.0-beta-dev#d71422626e982c263b1a8f2beb651130feda5e82"
+source = "git+https://github.com/holochain-open-dev/file-storage?branch=for-hdk-0.3.0-beta-dev#73d6d6e7a232969151b9097b4532396f39604515"
 dependencies = [
  "hdi",
  "serde",

@@ -2,9 +2,10 @@ import { configureLocalization } from '@lit/localize';
 import { sendRequest } from './holochain-app.js';
 
 export async function setLocale() {
-  const locales = (await sendRequest({
+  let locales = (await sendRequest({
     type: 'get-locales',
   })) as Array<string>;
+  locales = locales.map(l => l.slice(0, 2));
   // const locales = ['es-419'];
 
   const sourceLocale = 'en';
